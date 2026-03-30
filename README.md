@@ -306,7 +306,7 @@ AgriSense-Lanka/
 
 ## 14. GitHub Repository
 
-[https://github.com/your-repo-link](https://github.com/your-repo-link)
+[https://github.com/your-repo-link](https://github.com/Raashidh-Rizvi/Agro)
 
 ---
 
