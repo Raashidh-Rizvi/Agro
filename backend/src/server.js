@@ -12,6 +12,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Request logger
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+});
+
+// Routes
+const authRoutes = require('./routes/auth.routes');
+
+// Use Routes
+app.use('/api/auth', authRoutes);
+
 // Basic Test Route
 app.get('/', (req, res) => {
     res.json({ message: 'AgriSense Lanka Backend is running' });
@@ -19,6 +31,23 @@ app.get('/', (req, res) => {
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'OK', timestamp: new Date() });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error('--- Backend Error ---');
+    console.error('Timestamp:', new Date().toISOString());
+    console.error('Method:', req.method);
+    console.error('URL:', req.url);
+    console.error('Error:', err.message);
+    console.error('Stack:', err.stack);
+    console.error('----------------------');
+
+    res.status(500).json({
+        success: false,
+        message: 'Internal Server Error',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 });
 
 // Configure MongoDB connection

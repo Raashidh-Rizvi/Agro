@@ -164,15 +164,15 @@ Build the mandatory authentication system first because all other modules depend
 
 ## Main Points That Must Be Completed
 
-- [ ] User model created
-- [ ] Register API works
-- [ ] Login API works
-- [ ] Password hashing works
-- [ ] JWT generation works
-- [ ] Protected route middleware works
-- [ ] Login screen works
-- [ ] Register screen works
-- [ ] Token is stored and sent correctly from mobile app
+- [x] User model created
+- [x] Register API works
+- [x] Login API works
+- [x] Password hashing works
+- [x] JWT generation works
+- [x] Protected route middleware works
+- [x] Login screen works
+- [x] Register screen works
+- [x] Token is stored and sent correctly from mobile app
 
 ## Deliverables
 

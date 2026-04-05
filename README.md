@@ -257,7 +257,11 @@ AgriSense-Lanka/
 
 ## 12. How to Run the Project
 
-### Backend Setup
+For a detailed, step-by-step guide on how to set up and run the project locally, please refer to the **[RUN_GUIDE.md](RUN_GUIDE.md)**.
+
+### Quick Start:
+
+#### Backend Setup
 
 1. Open a terminal and navigate to the `backend` folder:
    ```bash
