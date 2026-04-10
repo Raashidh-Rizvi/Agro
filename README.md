@@ -63,7 +63,7 @@ Agro provides an integrated platform with the following capabilities:
 - **GitHub** – version control
 - **Render / Railway** – backend hosting
 - **Weather API** – advisory suggestions
-- **Pre‑trained AI model/API** – disease detection
+- **FastAPI / TensorFlow** – ML inference service
 
 ---
 
@@ -217,39 +217,14 @@ DELETE /api/market-prices/:id
 ```
 AgriSense-Lanka/
 ├─ backend/
-│   └─ src/
-│       ├─ config/
-│       ├─ models/
-│       │   ├─ User.js
-│       │   ├─ Crop.js
-│       │   ├─ Diagnosis.js
-│       │   ├─ ProduceListing.js
-│       │   ├─ ExpertQuery.js
-│       │   ├─ AdvisoryAlert.js
-│       │   └─ MarketPrice.js
-│       ├─ controllers/
-│       ├─ routes/
-│       ├─ middleware/
-│       ├─ services/
-│       ├─ utils/
-│       ├─ app.js
-│       └─ server.js
+│   └─ src/ ...
 ├─ mobile/
-│   └─ src/
-│       ├─ screens/
-│       ├─ components/
-│       ├─ navigation/
-│       ├─ services/
-│       ├─ context/
-│       └─ assets/
-│   └─ App.js
+│   └─ src/ ...
+├─ ml-service/          # Python ML Service
+│   ├─ app/
+│   ├─ models/
+│   └─ README.md
 ├─ docs/
-│   ├─ Problem_Statement.pdf
-│   ├─ System_Architecture_Diagram.png
-│   ├─ Database_Schema_Diagram.png
-│   ├─ API_Endpoint_Table.pdf
-│   ├─ Team_Responsibility.pdf
-│   └─ README.txt
 └─ README.md
 ```
 
@@ -280,6 +255,21 @@ For a detailed, step-by-step guide on how to set up and run the project locally,
 4. Start the server:
    ```bash
    npm start
+   ```
+
+#### ML Service Setup
+
+1. Open a terminal and navigate to the `ml-service` folder:
+   ```bash
+   cd ml-service
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Start the FastAPI server:
+   ```bash
+   python -m app.main
    ```
 
 ### Mobile Setup
