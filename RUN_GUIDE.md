@@ -24,20 +24,10 @@ The backend is built with Node.js, Express, and MongoDB.
 
 1.  **Navigate to the backend directory:**
 
-    ```powershell
+    ````powershell
     cd backend
 
-          npm run dev
 
-    ```
-
-2.  **Install dependencies:**
-
-    ```powershell
-    npm install
-    ```
-
-3.  **Environment Configuration:**
     - Create a `.env` file in the `backend` folder (if it doesn't exist).
     - Add the following variables (replacing placeholders with your actual credentials):
       ```env
@@ -45,9 +35,9 @@ The backend is built with Node.js, Express, and MongoDB.
       MONGO_URI=your_mongodb_atlas_connection_string
       JWT_SECRET=your_super_secret_jwt_key
       NODE_ENV=development
-      ```
+    ````
 
-4.  **Start the Backend Server:**
+2.  **Start the Backend Server:**
     - For development (with auto-reload):
       ```powershell
       npm run dev
@@ -96,6 +86,46 @@ The mobile application is built using React Native and Expo.
     - **Physical Device:** Open the Expo Go app and scan the QR code displayed in the terminal.
     - **iOS Device:** Open the Expo Go app on your iPhone and scan the QR code (iOS Simulator requires macOS).
     - **Android Emulator:** Press `a` in the terminal (requires Android Studio).
+
+---
+
+### 3. Machine Learning Service Setup
+
+The ML service handles automated plant disease diagnosis using TensorFlow.
+
+> [!IMPORTANT]
+> **Python Version**: TensorFlow currently supports **Python 3.10, 3.11, and 3.12**. Python 3.14 (the latest) is not yet supported.
+
+1.  **Navigate to the ml-service directory:**
+
+    ```powershell
+    cd ml-service
+    ```
+
+2.  **Create a Virtual Environment (Recommended):**
+    Using a supported Python version (e.g., 3.12):
+
+    ```powershell
+    py -3.14 -m venv venv
+    .\venv\Scripts\activate
+    ```
+
+3.  **Install dependencies:**
+
+    ```powershell
+    pip install -r requirements.txt
+    ```
+
+4.  **Verify Model Files:**
+    Ensure `models/cnn_efficientnet_2.h5` and `models/cnn_class_names_2.joblib` are present.
+
+5.  **Start the ML Service:**
+
+    ```powershell
+    python -m app.main
+    ```
+
+    The service will run on `http://localhost:8000`.
 
 ---
 

@@ -20,9 +20,14 @@ app.use((req, res, next) => {
 
 // Routes
 const authRoutes = require('./routes/auth.routes');
+const diagnosisRoutes = require('./routes/diagnosis.routes');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/diagnosis', diagnosisRoutes);
+
+// Static folder for uploaded images
+app.use('/uploads', express.static('uploads'));
 
 // Basic Test Route
 app.get('/', (req, res) => {
