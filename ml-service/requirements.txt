@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-tensorflow
-pillow
-joblib
-numpy
-python-multipart
-python-dotenv
