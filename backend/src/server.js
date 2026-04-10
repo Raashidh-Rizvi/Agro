@@ -11,18 +11,27 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
+app.use('/uploads', express.static('public/uploads'));
 
 // Request logger
 app.use((req, res, next) => {
+    if (req.url.startsWith('/api/expert-query')) {
+        console.log(`--- [DEBUG] Query Request ---`);
+        console.log(`Method: ${req.method}`);
+        console.log(`Content-Type: ${req.headers['content-type']}`);
+    }
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
 });
 
 // Routes
 const authRoutes = require('./routes/auth.routes');
+const expertQueryRoutes = require('./routes/expertQuery.routes');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/expert-query', expertQueryRoutes);
 
 // Basic Test Route
 app.get('/', (req, res) => {
@@ -53,6 +62,9 @@ app.use((err, req, res, next) => {
 // Configure MongoDB connection
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
+
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']); // Bypass ISP/University SRV blocks
 
 mongoose.connect(MONGO_URI)
     .then(() => {
