@@ -6,7 +6,7 @@ const getApiUrl = () => {
         return 'http://localhost:5000/api';
     }
     // For physical mobile devices or simulators not on localhost
-    return 'http://172.28.24.38:5000/api';
+    return 'http://10.176.134.217:5000/api';
 };
 
 export const API_URL = getApiUrl();
