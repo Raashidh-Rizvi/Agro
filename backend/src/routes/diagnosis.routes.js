@@ -4,12 +4,18 @@ const path = require('path');
 const { predictDisease, getDiagnosisHistory } = require('../controllers/diagnosis.controller');
 const { protect } = require('../middleware/auth.middleware');
 
+const fs = require('fs');
+
 const router = express.Router();
 
 // Multer configuration for image uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/');
+        const uploadDir = path.join(__dirname, '../../public/uploads/diagnosis');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
         cb(null, `leaf-${Date.now()}${path.extname(file.originalname)}`);

@@ -28,10 +28,12 @@ app.use((req, res, next) => {
 // Routes
 const authRoutes = require('./routes/auth.routes');
 const expertQueryRoutes = require('./routes/expertQuery.routes');
+const diagnosisRoutes = require('./routes/diagnosis.routes');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/expert-query', expertQueryRoutes);
+app.use('/api/diagnosis', diagnosisRoutes);
 
 // Basic Test Route
 app.get('/', (req, res) => {

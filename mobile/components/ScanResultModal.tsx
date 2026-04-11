@@ -12,9 +12,10 @@ interface ScanResultModalProps {
     onClose: () => void;
     result: DiagnosisResult | null;
     isLoading: boolean;
+    selectedImage?: string | null;
 }
 
-export function ScanResultModal({ visible, onClose, result, isLoading }: ScanResultModalProps) {
+export function ScanResultModal({ visible, onClose, result, isLoading, selectedImage }: ScanResultModalProps) {
     const C = useAppColors();
 
     if (!visible) return null;
@@ -38,6 +39,12 @@ export function ScanResultModal({ visible, onClose, result, isLoading }: ScanRes
 
                     {isLoading ? (
                         <View style={styles.loadingContainer}>
+                            {selectedImage && (
+                                <View style={styles.previewContainer}>
+                                    <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+                                    <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.3)' }]} />
+                                </View>
+                            )}
                             <MaterialCommunityIcons name="molecule" size={60} color={C.primary} style={styles.loadingIcon} />
                             <ThemedText style={styles.loadingText}>Analyzing leaf patterns...</ThemedText>
                             <ThemedText style={[styles.subText, { color: C.muted }]}>Our AI is diagnosing the condition</ThemedText>
@@ -163,6 +170,20 @@ const styles = StyleSheet.create({
     },
     subText: {
         fontSize: 14,
+    },
+    previewContainer: {
+        width: '100%',
+        height: 200,
+        borderRadius: Radius.lg,
+        overflow: 'hidden',
+        marginBottom: Spacing.lg,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    previewImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     badgeRow: {
         flexDirection: 'row',

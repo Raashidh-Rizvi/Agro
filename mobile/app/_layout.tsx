@@ -6,73 +6,85 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { AppThemeProvider, useAppTheme } from '../context/AppThemeContext';
 
-// Remove unstable_settings that forces a specific route group
 
-function RootLayoutNav() {
-  const { user, isLoading } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (!user && !inAuthGroup) {
-      // Redirect to login if user is not authenticated and not in auth screens
-      router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
-      // Redirect to home if user is authenticated and is in auth screens
-      router.replace('/(tabs)');
-    }
-  }, [user, isLoading, segments, router]);
-
-  return (
-    <Stack>
-      <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-    </Stack>
-  );
-}
-
-const LightTheme = {
+// ─── Navigation Themes ────────────────────────────────────────────────────────
+const AgriLightTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#0A5C36',
-    background: '#F7F9FB',
-    card: '#FFFFFF',
-    text: '#11181C',
-    border: '#E5E7EB',
-    notification: '#0A5C36',
+    primary:      '#0F9D58',
+    background:   '#F4F9F6',
+    card:         '#FFFFFF',
+    text:         '#0D1F17',
+    border:       '#E2EDE8',
+    notification: '#0F9D58',
   },
 };
 
-const DeepGreenDarkTheme = {
+const AgriDarkTheme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    primary: '#0A5C36',
-    background: '#1D2E28',
-    card: '#2A3F36',
-    text: '#ECEDEE',
-    border: '#18392B',
-    notification: '#0A5C36',
+    primary:      '#34C759',
+    background:   '#0A0F0D',
+    card:         '#141F18',
+    text:         '#E8F0EC',
+    border:       '#243020',
+    notification: '#0F9D58',
   },
 };
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+// ─── Auth Guard ───────────────────────────────────────────────────────────────
+function RootLayoutNav() {
+  const { user, isLoading } = useAuth();
+  const segments = useSegments();
+  const router   = useRouter();
+
+  const inAuthGroup = segments[0] === '(auth)';
+  const inTabs      = segments[0] === '(tabs)';
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user && !inAuthGroup) {
+      router.replace('/(auth)/login');
+    } else if (user && inAuthGroup) {
+      router.replace('/(tabs)');
+    }
+  }, [user, isLoading, segments, router, inAuthGroup]);
 
   return (
-    <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DeepGreenDarkTheme : LightTheme}>
-        <RootLayoutNav />
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </AuthProvider>
+    <>
+      <StatusBar style={inTabs ? 'auto' : 'light'} />
+      <Stack>
+        <Stack.Screen name="(auth)/login"    options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)"          options={{ headerShown: false }} />
+        <Stack.Screen name="modal"           options={{ presentation: 'modal', title: 'Info' }} />
+      </Stack>
+    </>
+  );
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+export default function RootLayout() {
+  return (
+    <AppThemeProvider>
+      <AuthProvider>
+        <RootLayoutInner />
+      </AuthProvider>
+    </AppThemeProvider>
+  );
+}
+
+function RootLayoutInner() {
+  const { mode } = useAppTheme();
+  const theme = mode === 'dark' ? AgriDarkTheme : AgriLightTheme;
+
+  return (
+    <ThemeProvider value={theme}>
+      <RootLayoutNav />
+    </ThemeProvider>
   );
 }

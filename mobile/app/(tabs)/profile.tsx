@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
-import { useAppColors } from '@/context/AppThemeContext';
+import { useAppColors, useAppTheme } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
 
 const SETTINGS = [
@@ -20,6 +20,7 @@ const SETTINGS = [
   {
     section: 'Preferences',
     items: [
+      { id: 'theme',  icon: 'moon-outline',               label: 'Dark Mode',            color: '#8B5CF6' },
       { id: 'notif',  icon: 'notifications-outline',      label: 'Notifications',        color: '#F59E0B' },
       { id: 'lang',   icon: 'language-outline',           label: 'Language',             color: '#3B82F6' },
       { id: 'unit',   icon: 'scale-outline',              label: 'Units & Measurements', color: '#6B7280' },
@@ -37,6 +38,7 @@ const SETTINGS = [
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const { mode, toggleTheme } = useAppTheme();
   const C = useAppColors();
 
   const initials = user?.name
@@ -103,11 +105,18 @@ export default function ProfileScreen() {
                   key={item.id}
                   style={[styles.settingsItem, idx < section.items.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}
                   activeOpacity={0.7}
+                  onPress={item.id === 'theme' ? toggleTheme : undefined}
                 >
                   <View style={[styles.settingsIconWrap, { backgroundColor: item.color + '15' }]}>
-                    <Ionicons name={item.icon as any} size={19} color={item.color} />
+                    <Ionicons 
+                      name={item.id === 'theme' ? (mode === 'dark' ? 'sunny-outline' : 'moon-outline') : item.icon as any} 
+                      size={19} 
+                      color={item.color} 
+                    />
                   </View>
-                  <ThemedText style={[styles.settingsLabel, { color: C.text }]}>{item.label}</ThemedText>
+                  <ThemedText style={[styles.settingsLabel, { color: C.text }]}>
+                    {item.id === 'theme' ? (mode === 'dark' ? 'Light Mode' : 'Dark Mode') : item.label}
+                  </ThemedText>
                   <Ionicons name="chevron-forward" size={16} color={C.muted} />
                 </TouchableOpacity>
               ))}
