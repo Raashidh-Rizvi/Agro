@@ -9,125 +9,109 @@ This guide provides step-by-step instructions on how to set up and run the **Agr
 Before you begin, ensure you have the following installed on your computer:
 
 - **Node.js** (v18.x or higher)
-- **npm** (comes with Node.js)
-- **Expo Go** application (on your mobile device for testing)
-- **Git** (optional, for cloning the repository)
-- A **MongoDB Atlas** account (or a local MongoDB instance)
+- **Git** (for managing code)
+- **Expo Go** app (download from App Store/Play Store to test on your phone)
+- **Docker Desktop** (Required for converting the AI model if using Python 3.14+)
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Step 1: Backend Setup (Node.js/Express)
 
-### 1. Backend Setup
+1. **Navigate to the backend directory**:
 
-The backend is built with Node.js, Express, and MongoDB.
+   ```powershell
+   cd backend
+   ```
 
-1.  **Navigate to the backend directory:**
+2. **Install dependencies**:
 
-    ```powershell
-    cd backend
+   ```powershell
+   npm install
+   ```
 
-          npm run dev
+3. **Environment Setup**:
+   - Verify there is a `.env` file in the `backend` folder.
+   - It should contain your `MONGO_URI`, `JWT_SECRET`, and `ML_SERVICE_URL` (usually `http://localhost:8000`).
 
-    ```
-
-2.  **Install dependencies:**
-
-    ```powershell
-    npm install
-    ```
-
-3.  **Environment Configuration:**
-    - Create a `.env` file in the `backend` folder (if it doesn't exist).
-    - Add the following variables (replacing placeholders with your actual credentials):
-      ```env
-      PORT=5000
-      MONGO_URI=your_mongodb_atlas_connection_string
-      JWT_SECRET=your_super_secret_jwt_key
-      NODE_ENV=development
-      ```
-
-4.  **Start the Backend Server:**
-    - For development (with auto-reload):
-      ```powershell
-      npm run dev
-      ```
-    - For production/normal start:
-      ```powershell
-      npm start
-      ```
-    - The server should now be running on `http://localhost:5000`.
+4. **Start the server**:
+   ```powershell
+   npm run dev
+   ```
+   _The backend will run on `http://localhost:5000`._
 
 ---
 
-### 2. Mobile Setup
+## 🚀 Step 2: Machine Learning Service (Python/FastAPI)
 
-The mobile application is built using React Native and Expo.
+Due to **Python 3.14** being the latest experimental version, the original AI model (`.h5`) must be converted to **ONNX** format to run real predictions.
 
-1.  **Navigate to the mobile directory:**
+1. **Navigate to the ml-service directory**:
 
-    ```powershell
-    cd mobile
+   ```powershell
+   cd ml-service
+   ```
 
-        npx expo start
+2. **Create and Activate a Virtual Environment**:
 
+   ```powershell
+   python -m venv venv
+   .\venv\Scripts\activate
+   ```
 
-    ```
+3. **Install dependencies**:
 
-2.  **Install dependencies:**
+   ```powershell
+   pip install -r requirements.txt
+   ```
 
-    ```powershell
-    npm install
-    ```
+4. **Model Conversion (One-time setup for Real AI)**:
+   If you see "MOCK MODE" in the logs, it means you need the `.onnx` model file. Run this command while **Docker Desktop** is open:
 
-3.  **Backend API Configuration:**
-    - Open `mobile/constants/Config.ts`.
-    - Update `API_URL` with your **computer's local IP address**. This is necessary for Expo Go to connect to your local backend.
-    - Example: `export const API_URL = 'http://203.94.92.133:5000/api';`
-    - _Tip: Run `ipconfig` (Windows) or `ifconfig` (macOS/Linux) in your terminal to find your local IP address._
+   ```powershell
+   docker run --rm -v "d:/Project/Agro/ml-service/models:/models" python:3.11-slim bash -c "pip install tensorflow==2.15.0 tf2onnx && python -m tf2onnx.convert --keras /models/cnn_efficientnet_2.h5 --output /models/cnn_efficientnet_2.onnx"
+   ```
 
-4.  **Start the Expo Development Server:**
-
-    ```powershell
-    npx expo start
-    ```
-
-5.  **Run on Device/Emulator:**
-    - **Physical Device:** Open the Expo Go app and scan the QR code displayed in the terminal.
-    - **iOS Device:** Open the Expo Go app on your iPhone and scan the QR code (iOS Simulator requires macOS).
-    - **Android Emulator:** Press `a` in the terminal (requires Android Studio).
-
----
-
-## 🛠️ Common Troubleshooting
-
-### 1. Backend Connection Issues
-
-- **Error:** `MongoDB connection error`
-- **Solution:** Ensure your `MONGO_URI` is correct and your IP address is whitelisted in MongoDB Atlas.
-
-### 2. Mobile cannot connect to Backend
-
-- **Error:** `Network Error` or `Connection Timeout`
-- **Solution:**
-  - Ensure both your computer and mobile device are on the **same Wi-Fi network**.
-  - Check that the `API_URL` in `Config.ts` uses your computer's **local IP address**, not `localhost`.
-  - Disable any firewalls that might be blocking port `5000`.
-
-### 3. Missing Dependencies
-
-- **Error:** `Module not found`
-- **Solution:** Run `npm install` in the respective directory (`backend` or `mobile`).
+5. **Start the ML Service**:
+   ```powershell
+   python -m app.main
+   ```
+   _The service will run on `http://localhost:8000`._
 
 ---
 
-## 📁 Project Structure Summary
+## 🚀 Step 3: Mobile Application (React Native/Expo)
 
-- `/backend`: Node.js/Express API server.
-- `/mobile`: React Native (Expo) mobile application.
-- `/docs`: Project documentation and diagrams.
-- `README.md`: General project information.
+1. **Navigate to the mobile directory**:
+
+   ```powershell
+   cd mobile
+   ```
+
+2. **Install dependencies**:
+
+   ```powershell
+   npm install
+   ```
+
+3. **Configure your IP Address**:
+   - Open `mobile/constants/Config.ts`.
+   - Update `API_URL` with your computer's **Local IP Address** so your phone can reach it.
+   - _Example:_ `export const API_URL = 'http://192.168.1.10:5000/api';`
+
+4. **Start the Mobile app**:
+   ```powershell
+   npx expo start
+   ```
+   _Scan the QR code with your phone's camera (iOS) or the Expo Go app (Android)._
 
 ---
 
-_Need help? Contact the development team or check the project documentation in the `/docs` folder._
+## 🛠️ Troubleshooting
+
+- **503 Service Unavailable**: Ensure the `ml-service` is running on port 8000.
+- **Network Error (Mobile)**: Double-check that your computer and phone are on the **SAME Wi-Fi network** and your IP address in `Config.ts` is correct.
+- **Mock Predictions**: If you see "SIMULATION" in red in results, the `.onnx` model file is missing. Follow Step 2, Point 4 above.
+
+---
+
+_Need help? Please check the logs in your terminal for specific error messages._
