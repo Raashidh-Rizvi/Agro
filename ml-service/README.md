@@ -27,9 +27,8 @@ Ensure the following files are placed in the `models/` directory:
 
 ### 2. Python Environment
 
-- Python 3.10 - 3.12 (A version supported by TensorFlow).
-- Python 3.14+ is currently **not supported** by stable TensorFlow versions.
-- A virtual environment is highly recommended.
+- Python 3.14 or higher.
+- A virtual environment is recommended.
 
 ## 🚀 Setup & Running
 

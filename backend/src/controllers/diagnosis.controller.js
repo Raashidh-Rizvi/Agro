@@ -34,14 +34,16 @@ exports.predictDisease = async (req, res) => {
             }
         });
 
-        const { predicted_class, confidence } = response.data;
+        const { predicted_class, confidence, is_mock } = response.data;
+        console.log(`Prediction received: ${predicted_class} (Conf: ${confidence}, Mock: ${is_mock})`);
 
         // 3. Save diagnosis to MongoDB
         const diagnosis = await Diagnosis.create({
             userId: req.user.id,
             imageUrl: imagePath,
             diseaseName: predicted_class,
-            confidenceScore: confidence
+            confidenceScore: confidence,
+            isMock: is_mock || false
             // recommendation filled by default schema
         });
 

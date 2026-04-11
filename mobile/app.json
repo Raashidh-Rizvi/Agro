@@ -39,7 +39,14 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app needs access to your gallery to scan plant diseases.",
+          "cameraPermission": "The app needs access to your camera to scan plant diseases."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,13 +1,16 @@
-import React from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, ScrollView, TouchableOpacity, View, Alert, Platform } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import * as ImagePicker from 'expo-image-picker';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
 import { useAppColors, useAppTheme } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
+import { DiagnosisResult, DiagnosisService } from '../../services/DiagnosisService';
+import { ScanResultModal } from '@/components/ScanResultModal';
 
 const quickActions = [
   { id: '1', title: 'Scan Disease', icon: 'camera-outline',     lib: 'ion', color: '#0F9D58', bg: '#E6F4EA' },
@@ -32,6 +35,95 @@ export default function FarmerDashboard() {
   const { user, logout } = useAuth();
   const { toggleTheme, isDark } = useAppTheme();
   const C = useAppColors();
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<DiagnosisResult | null>(null);
+
+  const handleScan = async () => {
+    console.log('[DEBUG] handleScan triggered on', Platform.OS);
+    
+    if (Platform.OS === 'web') {
+      // Direct selection for web since Alert.alert is not supported
+      const useCamera = window.confirm('Use Camera? (Cancel to choose from Gallery)');
+      openPicker(useCamera);
+      return;
+    }
+
+    Alert.alert(
+      'Scan Disease',
+      'Select the source of the leaf image',
+      [
+        {
+          text: 'Take Photo',
+          onPress: () => openPicker(true),
+        },
+        {
+          text: 'Choose from Gallery',
+          onPress: () => openPicker(false),
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const openPicker = async (useCamera: boolean) => {
+    try {
+      let permissionResult;
+      if (useCamera) {
+        permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      } else {
+        permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      }
+
+      if (permissionResult.granted === false) {
+        Alert.alert('Permission Denied', `We need access to your ${useCamera ? 'camera' : 'gallery'} to scan plant diseases.`);
+        return;
+      }
+
+      const pickerResult = useCamera 
+        ? await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
+          });
+
+      if (!pickerResult.canceled) {
+        const imageUri = pickerResult.assets[0].uri;
+        processDiagnosis(imageUri);
+      }
+    } catch (error) {
+      console.error('Picker error:', error);
+      Alert.alert('Error', 'Something went wrong while choosing an image.');
+    }
+  };
+
+  const processDiagnosis = async (uri: string) => {
+    setIsLoading(true);
+    setResult(null);
+    setModalVisible(true);
+
+    try {
+      const diagnosis = await DiagnosisService.predict(uri);
+      setResult(diagnosis);
+    } catch (error: any) {
+      console.error('Diagnosis error:', error);
+      Alert.alert('Analysis Failed', error.message || 'Could not connect to the analysis service.');
+      setModalVisible(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: C.bg }]}>
@@ -64,23 +156,30 @@ export default function FarmerDashboard() {
           </View>
         </View>
 
-        {/* ── AI Hero Card ─────────────────────────── */}
-        <View style={[styles.heroCard, Shadows.colored(C.primary)]}>
-          <View style={[styles.heroOverlay, { backgroundColor: C.heroOverlay }]} />
+        {/* ── AI Hero Card (Scan Disease) ─────────── */}
+        <TouchableOpacity 
+          style={[styles.heroCard, Shadows.colored(C.primary)]}
+          onPress={handleScan}
+          activeOpacity={0.9}
+        >
+          <View 
+            style={[styles.heroOverlay, { backgroundColor: C.heroOverlay }]} 
+            pointerEvents="none" 
+          />
           <View style={styles.heroLeft}>
             <View style={styles.aiBadge}>
               <MaterialCommunityIcons name="chip" size={11} color="#FFFFFF" />
-              <ThemedText style={styles.aiBadgeText}>AI INSIGHT</ThemedText>
+              <ThemedText style={styles.aiBadgeText}>DIAGNOSTIC AI</ThemedText>
             </View>
-            <ThemedText style={styles.heroTitle}>🌱 Optimal Planting Day</ThemedText>
+            <ThemedText style={styles.heroTitle}>🌱 Scan for Diseases</ThemedText>
             <ThemedText style={styles.heroSubtitle}>
-              Today is ideal for sowing paddy. Soil moisture: 68%.
+              Capture a photo of your crop for an instant diagnostic report and treatment plan.
             </ThemedText>
           </View>
-          <View style={styles.heroIcon}>
-            <MaterialCommunityIcons name="weather-partly-cloudy" size={46} color="#FFFFFF" />
+          <View style={styles.heroIcon} pointerEvents="none">
+            <MaterialCommunityIcons name="camera-plus" size={46} color="#FFFFFF" />
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* ── Metrics Row ──────────────────────────── */}
         <View style={styles.metricsRow}>
@@ -106,6 +205,7 @@ export default function FarmerDashboard() {
               key={a.id}
               style={[styles.actionCard, { backgroundColor: C.card, borderColor: C.border }]}
               activeOpacity={0.8}
+              onPress={a.id === '1' ? handleScan : undefined}
             >
               <View style={[styles.actionIconWrap, { backgroundColor: a.bg }]}>
                 <Ionicons name={a.icon as any} size={26} color={a.color} />
@@ -166,6 +266,14 @@ export default function FarmerDashboard() {
 
         <View style={{ height: Spacing.xxl }} />
       </ScrollView>
+
+      {/* Disease Analysis Modal */}
+      <ScanResultModal 
+        visible={modalVisible} 
+        onClose={() => setModalVisible(false)} 
+        result={result} 
+        isLoading={isLoading} 
+      />
     </ThemedView>
   );
 }
