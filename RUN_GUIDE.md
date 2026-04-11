@@ -18,11 +18,13 @@ Before you begin, ensure you have the following installed on your computer:
 ## 🚀 Step 1: Backend Setup (Node.js/Express)
 
 1. **Navigate to the backend directory**:
+
    ```powershell
    cd backend
    ```
 
 2. **Install dependencies**:
+
    ```powershell
    npm install
    ```
@@ -35,7 +37,7 @@ Before you begin, ensure you have the following installed on your computer:
    ```powershell
    npm run dev
    ```
-   *The backend will run on `http://localhost:5000`.*
+   _The backend will run on `http://localhost:5000`._
 
 ---
 
@@ -44,23 +46,27 @@ Before you begin, ensure you have the following installed on your computer:
 Due to **Python 3.14** being the latest experimental version, the original AI model (`.h5`) must be converted to **ONNX** format to run real predictions.
 
 1. **Navigate to the ml-service directory**:
+
    ```powershell
    cd ml-service
    ```
 
 2. **Create and Activate a Virtual Environment**:
+
    ```powershell
    python -m venv venv
    .\venv\Scripts\activate
    ```
 
 3. **Install dependencies**:
+
    ```powershell
    pip install -r requirements.txt
    ```
 
 4. **Model Conversion (One-time setup for Real AI)**:
    If you see "MOCK MODE" in the logs, it means you need the `.onnx` model file. Run this command while **Docker Desktop** is open:
+
    ```powershell
    docker run --rm -v "d:/Project/Agro/ml-service/models:/models" python:3.11-slim bash -c "pip install tensorflow==2.15.0 tf2onnx && python -m tf2onnx.convert --keras /models/cnn_efficientnet_2.h5 --output /models/cnn_efficientnet_2.onnx"
    ```
@@ -69,18 +75,20 @@ Due to **Python 3.14** being the latest experimental version, the original AI mo
    ```powershell
    python -m app.main
    ```
-   *The service will run on `http://localhost:8000`.*
+   _The service will run on `http://localhost:8000`._
 
 ---
 
 ## 🚀 Step 3: Mobile Application (React Native/Expo)
 
 1. **Navigate to the mobile directory**:
+
    ```powershell
    cd mobile
    ```
 
 2. **Install dependencies**:
+
    ```powershell
    npm install
    ```
@@ -88,13 +96,13 @@ Due to **Python 3.14** being the latest experimental version, the original AI mo
 3. **Configure your IP Address**:
    - Open `mobile/constants/Config.ts`.
    - Update `API_URL` with your computer's **Local IP Address** so your phone can reach it.
-   - *Example:* `export const API_URL = 'http://192.168.1.10:5000/api';`
+   - _Example:_ `export const API_URL = 'http://192.168.1.10:5000/api';`
 
 4. **Start the Mobile app**:
    ```powershell
    npx expo start
    ```
-   *Scan the QR code with your phone's camera (iOS) or the Expo Go app (Android).*
+   _Scan the QR code with your phone's camera (iOS) or the Expo Go app (Android)._
 
 ---
 
