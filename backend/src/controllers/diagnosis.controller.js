@@ -26,7 +26,8 @@ exports.predictDisease = async (req, res) => {
         });
 
         // 2. Call ML service
-        const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+        const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
+        console.log(`--- [DEBUG] Calling ML Service: ${mlServiceUrl}/predict ---`);
         
         const response = await axios.post(`${mlServiceUrl}/predict`, form, {
             headers: {
@@ -35,12 +36,17 @@ exports.predictDisease = async (req, res) => {
         });
 
         const { predicted_class, confidence, is_mock } = response.data;
-        console.log(`Prediction received: ${predicted_class} (Conf: ${confidence}, Mock: ${is_mock})`);
+        console.log(`--- [DEBUG] Prediction received: ${predicted_class} (Conf: ${confidence}, Mock: ${is_mock}) ---`);
 
         // 3. Save diagnosis to MongoDB
+        if (!req.user || !req.user._id) {
+            console.error('--- [ERROR] req.user is missing in predictDisease ---');
+            throw new Error('User context missing');
+        }
+
         const diagnosis = await Diagnosis.create({
-            userId: req.user.id,
-            imageUrl: imagePath,
+            userId: req.user._id,
+            imageUrl: `/uploads/diagnosis/${req.file.filename}`,
             diseaseName: predicted_class,
             confidenceScore: confidence,
             isMock: is_mock || false
@@ -56,8 +62,11 @@ exports.predictDisease = async (req, res) => {
         
         // Cleanup local file if prediction fails
         if (req.file && fs.existsSync(req.file.path)) {
-            // Optional: keep it or delete it. Usually we keep it if we want to debug, 
-            // but for production failures we might want to clean up.
+            try {
+                fs.unlinkSync(req.file.path);
+            } catch (cleanupErr) {
+                console.error('File cleanup error:', cleanupErr.message);
+            }
         }
 
         res.status(500).json({

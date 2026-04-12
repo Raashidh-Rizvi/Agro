@@ -1,12 +1,13 @@
 import { Platform } from 'react-native';
 
-const getApiUrl = () => {
+const getBaseUrl = () => {
     // If running in web browser on the same machine
     if (Platform.OS === 'web') {
-        return 'http://localhost:5000/api';
+        return 'http://localhost:5000';
     }
     // For physical mobile devices or simulators not on localhost
-    return 'http://10.176.134.217:5000/api';
+    return 'http://10.176.134.217:5000';
 };
 
-export const API_URL = getApiUrl();
+export const BASE_URL = getBaseUrl();
+export const API_URL = `${BASE_URL}/api`;
