@@ -6,7 +6,7 @@ const getBaseUrl = () => {
         return 'http://localhost:5000';
     }
     // For physical mobile devices or simulators not on localhost
-    return 'http://172.28.24.38:5000';
+    return 'http://10.176.134.217:5000';
 };
 
 export const BASE_URL = getBaseUrl();

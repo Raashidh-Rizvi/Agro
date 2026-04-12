@@ -9,6 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
 import { useAppColors, useAppTheme } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
+import { useRouter } from 'expo-router';
 import { DiagnosisResult, DiagnosisService } from '../../services/DiagnosisService';
 import { ScanResultModal } from '@/components/ScanResultModal';
 
@@ -35,6 +36,7 @@ export default function FarmerDashboard() {
   const { user, logout } = useAuth();
   const { toggleTheme, isDark } = useAppTheme();
   const C = useAppColors();
+  const router = useRouter();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -192,7 +194,13 @@ export default function FarmerDashboard() {
               key={a.id}
               style={[styles.actionCard, { backgroundColor: C.card, borderColor: C.border }]}
               activeOpacity={0.8}
-              onPress={a.id === '1' ? handleScan : undefined}
+              onPress={
+                a.id === '1' ? handleScan
+                : a.id === '2' ? () => router.push('/(tabs)/expert-queries')
+                : a.id === '3' ? () => router.push('/(tabs)/crops')
+                : a.id === '4' ? () => router.push('/(tabs)/explore')
+                : undefined
+              }
             >
               <View style={[styles.actionIconWrap, { backgroundColor: a.bg }]}>
                 <Ionicons name={a.icon as any} size={26} color={a.color} />
