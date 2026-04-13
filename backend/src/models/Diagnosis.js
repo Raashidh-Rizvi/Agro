@@ -22,6 +22,22 @@ const diagnosisSchema = new mongoose.Schema({
         type: String,
         default: 'Consult with an agricultural expert for detailed management steps.'
     },
+    cause: {
+        type: String,
+        default: ''
+    },
+    symptoms: {
+        type: [String],
+        default: []
+    },
+    treatment: {
+        type: [String],
+        default: []
+    },
+    prevention: {
+        type: [String],
+        default: []
+    },
     isMock: {
         type: Boolean,
         default: false

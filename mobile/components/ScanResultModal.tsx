@@ -78,15 +78,75 @@ export function ScanResultModal({ visible, onClose, result, isLoading, selectedI
 
                             <View style={[styles.divider, { backgroundColor: C.border }]} />
 
-                            <View style={styles.section}>
-                                <View style={styles.sectionHeader}>
-                                    <Ionicons name="shield-checkmark-outline" size={20} color={C.primary} />
-                                    <ThemedText style={styles.sectionTitle}>Management Recommendation</ThemedText>
+                            {/* Detailed Info Sections */}
+                            {result.cause && (
+                                <View style={styles.section}>
+                                    <View style={styles.sectionHeader}>
+                                        <Ionicons name="help-circle-outline" size={20} color={C.primary} />
+                                        <ThemedText style={styles.sectionTitle}>Cause</ThemedText>
+                                    </View>
+                                    <ThemedText style={[styles.recommendationText, { color: C.subtext }]}>
+                                        {result.cause}
+                                    </ThemedText>
                                 </View>
-                                <ThemedText style={[styles.recommendationText, { color: C.subtext }]}>
-                                    {result.recommendation}
-                                </ThemedText>
-                            </View>
+                            )}
+
+                            {result.symptoms && result.symptoms.length > 0 && (
+                                <View style={styles.section}>
+                                    <View style={styles.sectionHeader}>
+                                        <Ionicons name="eye-outline" size={20} color={C.primary} />
+                                        <ThemedText style={styles.sectionTitle}>Symptoms</ThemedText>
+                                    </View>
+                                    {result.symptoms.map((item, idx) => (
+                                        <View key={idx} style={styles.listItem}>
+                                            <View style={[styles.bullet, { backgroundColor: C.primary }]} />
+                                            <ThemedText style={[styles.recommendationText, { color: C.subtext }]}>{item}</ThemedText>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+
+                            {result.treatment && result.treatment.length > 0 && (
+                                <View style={styles.section}>
+                                    <View style={styles.sectionHeader}>
+                                        <Ionicons name="medkit-outline" size={20} color={C.primary} />
+                                        <ThemedText style={styles.sectionTitle}>Treatment</ThemedText>
+                                    </View>
+                                    {result.treatment.map((item, idx) => (
+                                        <View key={idx} style={styles.listItem}>
+                                            <View style={[styles.bullet, { backgroundColor: C.accent }]} />
+                                            <ThemedText style={[styles.recommendationText, { color: C.subtext }]}>{item}</ThemedText>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+
+                            {result.prevention && result.prevention.length > 0 && (
+                                <View style={styles.section}>
+                                    <View style={styles.sectionHeader}>
+                                        <Ionicons name="shield-checkmark-outline" size={20} color={C.primary} />
+                                        <ThemedText style={styles.sectionTitle}>Prevention</ThemedText>
+                                    </View>
+                                    {result.prevention.map((item, idx) => (
+                                        <View key={idx} style={styles.listItem}>
+                                            <View style={[styles.bullet, { backgroundColor: C.success }]} />
+                                            <ThemedText style={[styles.recommendationText, { color: C.subtext }]}>{item}</ThemedText>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+
+                            {!result.cause && (
+                                <View style={styles.section}>
+                                    <View style={styles.sectionHeader}>
+                                        <Ionicons name="information-circle-outline" size={20} color={C.primary} />
+                                        <ThemedText style={styles.sectionTitle}>General Recommendation</ThemedText>
+                                    </View>
+                                    <ThemedText style={[styles.recommendationText, { color: C.subtext }]}>
+                                        {result.recommendation}
+                                    </ThemedText>
+                                </View>
+                            )}
 
                             <View style={[
                                 styles.infoBox, 
@@ -230,6 +290,19 @@ const styles = StyleSheet.create({
     recommendationText: {
         fontSize: 14,
         lineHeight: 22,
+    },
+    listItem: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 10,
+        marginBottom: 8,
+        paddingLeft: 4,
+    },
+    bullet: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        marginTop: 8,
     },
     infoBox: {
         flexDirection: 'row',

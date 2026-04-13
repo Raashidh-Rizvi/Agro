@@ -3,6 +3,7 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 const Diagnosis = require('../models/Diagnosis');
+const { getDiseaseDetails } = require('../constants/DiseaseInfo');
 
 // @desc    Predict disease from image
 // @route   POST /api/diagnosis/predict
@@ -38,7 +39,10 @@ exports.predictDisease = async (req, res) => {
         const { predicted_class, confidence, is_mock } = response.data;
         console.log(`--- [DEBUG] Prediction received: ${predicted_class} (Conf: ${confidence}, Mock: ${is_mock}) ---`);
 
-        // 3. Save diagnosis to MongoDB
+        // 3. Look up enriched disease details
+        const details = getDiseaseDetails(predicted_class);
+
+        // 4. Save diagnosis to MongoDB
         if (!req.user || !req.user._id) {
             console.error('--- [ERROR] req.user is missing in predictDisease ---');
             throw new Error('User context missing');
@@ -49,8 +53,14 @@ exports.predictDisease = async (req, res) => {
             imageUrl: `/uploads/diagnosis/${req.file.filename}`,
             diseaseName: predicted_class,
             confidenceScore: confidence,
-            isMock: is_mock || false
-            // recommendation filled by default schema
+            isMock: is_mock || false,
+            // Enriched fields
+            cause: details ? details.cause : 'Unknown',
+            symptoms: details ? details.symptoms : [],
+            treatment: details ? details.treatment : [],
+            prevention: details ? details.prevention : [],
+            // Fallback recommendation if details found
+            recommendation: details ? `Follow the suggested treatment: ${details.treatment.join(', ')}` : undefined
         });
 
         res.status(200).json({

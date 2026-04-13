@@ -7,6 +7,10 @@ export interface DiagnosisResult {
     diseaseName: string;
     confidenceScore: number;
     recommendation: string;
+    cause?: string;
+    symptoms?: string[];
+    treatment?: string[];
+    prevention?: string[];
     imageUrl: string;
     isMock: boolean;
     createdAt: string;
