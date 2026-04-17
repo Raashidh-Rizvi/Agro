@@ -55,38 +55,63 @@ export const Palette = {
 // ─── Shadow Tokens ─────────────────────────────────────────────────────────────
 export const Shadows = {
   xs: {
-    shadowColor: '#0B6B3A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    ...Platform.select({
+      web: { boxShadow: '0px 2px 4px rgba(11, 107, 58, 0.04)' },
+      default: {
+        shadowColor: '#0B6B3A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      }
+    }),
     elevation: 2,
   },
   sm: {
-    shadowColor: '#0B6B3A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 8px rgba(11, 107, 58, 0.07)' },
+      default: {
+        shadowColor: '#0B6B3A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.07,
+        shadowRadius: 8,
+      }
+    }),
     elevation: 3,
   },
   md: {
-    shadowColor: '#0B6B3A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.10,
-    shadowRadius: 16,
+    ...Platform.select({
+      web: { boxShadow: '0px 8px 16px rgba(11, 107, 58, 0.10)' },
+      default: {
+        shadowColor: '#0B6B3A',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.10,
+        shadowRadius: 16,
+      }
+    }),
     elevation: 6,
   },
   lg: {
-    shadowColor: '#0B6B3A',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.13,
-    shadowRadius: 24,
+    ...Platform.select({
+      web: { boxShadow: '0px 16px 24px rgba(11, 107, 58, 0.13)' },
+      default: {
+        shadowColor: '#0B6B3A',
+        shadowOffset: { width: 0, height: 16 },
+        shadowOpacity: 0.13,
+        shadowRadius: 24,
+      }
+    }),
     elevation: 10,
   },
   colored: (color: string) => ({
-    shadowColor: color,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.28,
-    shadowRadius: 14,
+    ...Platform.select({
+      web: { boxShadow: `0px 6px 14px ${color}47` }, // Adding 28% opacity in hex (47)
+      default: {
+        shadowColor: color,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.28,
+        shadowRadius: 14,
+      }
+    }),
     elevation: 8,
   }),
 };

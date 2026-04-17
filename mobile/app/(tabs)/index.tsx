@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, View, Alert, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, ScrollView, TouchableOpacity, View, Alert, Platform, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
+import axios from 'axios';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -12,6 +13,8 @@ import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import { DiagnosisResult, DiagnosisService } from '../../services/DiagnosisService';
 import { ScanResultModal } from '@/components/ScanResultModal';
+import { API_URL } from '@/constants/Config';
+import { AdvisoryAlert, ALERT_META } from '@/features/alerts/AlertsScreen';
 
 const quickActions = [
   { id: '1', title: 'Scan Disease', icon: 'camera-outline',     lib: 'ion', color: '#0F9D58', bg: '#E6F4EA' },
@@ -26,11 +29,7 @@ const metrics = [
   { id: '3', label: 'CROP SCORE',  value: '9.2',  delta: '+0.4', icon: 'ribbon-outline' as const,     good: true  },
 ];
 
-const recentAlerts = [
-  { id: '1', title: 'Pest Alert',    desc: 'Possible fall armyworm detected near your area.', time: '2h ago', color: '#EF4444' },
-  { id: '2', title: 'Market Update', desc: 'Rice prices increased by 5% today.',               time: '5h ago', color: '#3B82F6' },
-  { id: '3', title: 'Irrigation',    desc: 'Recommended window: 5–7 AM tomorrow.',            time: '8h ago', color: '#34C759' },
-];
+// (Removed hardcoded recentAlerts)
 
 export default function FarmerDashboard() {
   const { user, logout } = useAuth();
@@ -42,6 +41,30 @@ export default function FarmerDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<AdvisoryAlert[]>([]);
+  const [isAlertsLoading, setIsAlertsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchRealAlerts();
+  }, []);
+
+  const fetchRealAlerts = async () => {
+    setIsAlertsLoading(true);
+    try {
+      const resp = await axios.get(`${API_URL}/alerts`);
+      // Take only top 3 most recent
+      const fetched = (resp.data.alerts || []).slice(0, 3);
+      setAlerts(fetched);
+    } catch (err) {
+      console.error('Failed to fetch home alerts:', err);
+    } finally {
+      setIsAlertsLoading(false);
+    }
+  };
+
+  const navigateToAlerts = () => {
+    router.push('/(tabs)/alerts');
+  };
 
   const handleScan = async () => {
     if (Platform.OS === 'web') {
@@ -135,9 +158,12 @@ export default function FarmerDashboard() {
             >
               <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={20} color={C.primary} />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.iconBtn, { backgroundColor: C.card, borderColor: C.border }]}>
+            <TouchableOpacity 
+              style={[styles.iconBtn, { backgroundColor: C.card, borderColor: C.border }]}
+              onPress={navigateToAlerts}
+            >
               <Ionicons name="notifications-outline" size={20} color={C.text} />
-              <View style={styles.notifDot} />
+              {alerts.length > 0 && <View style={styles.notifDot} />}
             </TouchableOpacity>
             <TouchableOpacity onPress={logout} style={[styles.iconBtn, { backgroundColor: C.card, borderColor: C.border }]}>
               <Ionicons name="log-out-outline" size={20} color={C.primary} />
@@ -152,8 +178,7 @@ export default function FarmerDashboard() {
           activeOpacity={0.9}
         >
           <View 
-            style={[styles.heroOverlay, { backgroundColor: C.heroOverlay }]} 
-            pointerEvents="none" 
+            style={[styles.heroOverlay, { backgroundColor: C.heroOverlay, pointerEvents: 'none' }]} 
           />
           <View style={styles.heroLeft}>
             <View style={styles.aiBadge}>
@@ -165,7 +190,7 @@ export default function FarmerDashboard() {
               Capture a photo of your crop for an instant diagnostic report and treatment plan.
             </ThemedText>
           </View>
-          <View style={styles.heroIcon} pointerEvents="none">
+          <View style={[styles.heroIcon, { pointerEvents: 'none' }]}>
             <MaterialCommunityIcons name="camera-plus" size={46} color="#FFFFFF" />
           </View>
         </TouchableOpacity>
@@ -213,26 +238,40 @@ export default function FarmerDashboard() {
         {/* ── Recent Alerts ──────────────────────── */}
         <View style={styles.sectionRow}>
           <ThemedText style={[styles.sectionTitle, { color: C.text }]}>Recent Alerts</ThemedText>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={navigateToAlerts}>
             <ThemedText style={[styles.viewAll, { color: C.primary }]}>View All</ThemedText>
           </TouchableOpacity>
         </View>
 
-        {recentAlerts.map((a) => (
-          <TouchableOpacity
-            key={a.id}
-            style={[styles.alertCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: a.color }]}
-            activeOpacity={0.85}
-          >
-            <View style={[styles.alertDot, { backgroundColor: a.color }]} />
-            <View style={styles.alertBody}>
-              <ThemedText style={[styles.alertTitle, { color: C.text }]}>{a.title}</ThemedText>
-              <ThemedText style={[styles.alertDesc, { color: C.subtext }]}>{a.desc}</ThemedText>
-              <ThemedText style={[styles.alertTime, { color: C.muted }]}>{a.time}</ThemedText>
-            </View>
-            <Ionicons name="chevron-forward" size={17} color={C.muted} />
-          </TouchableOpacity>
-        ))}
+        {isAlertsLoading ? (
+          <ActivityIndicator size="small" color={C.primary} style={{ marginVertical: 20 }} />
+        ) : alerts.length === 0 ? (
+          <View style={[styles.alertCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.muted, justifyContent: 'center', opacity: 0.7 }]}>
+            <ThemedText style={{ color: C.muted, fontSize: 13, textAlign: 'center', width: '100%' }}>No recent alerts</ThemedText>
+          </View>
+        ) : (
+          alerts.map((a) => {
+            const meta = ALERT_META[a.alertType] || ALERT_META.general;
+            return (
+              <TouchableOpacity
+                key={a._id}
+                style={[styles.alertCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: meta.color }]}
+                activeOpacity={0.85}
+                onPress={navigateToAlerts}
+              >
+                <View style={[styles.alertDot, { backgroundColor: meta.color }]} />
+                <View style={styles.alertBody}>
+                  <ThemedText style={[styles.alertTitle, { color: C.text }]}>{a.title}</ThemedText>
+                  <ThemedText style={[styles.alertDesc, { color: C.subtext }]} numberOfLines={2}>{a.message}</ThemedText>
+                  <ThemedText style={[styles.alertTime, { color: C.muted }]}>
+                    {new Date(a.createdAt).toLocaleDateString()}
+                  </ThemedText>
+                </View>
+                <Ionicons name="chevron-forward" size={17} color={C.muted} />
+              </TouchableOpacity>
+            );
+          })
+        )}
 
         <View style={{ height: Spacing.xxl }} />
       </ScrollView>

@@ -10,10 +10,12 @@ const { protect, authorize } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
+router.route('/')
+    .get(getAlerts);
+
 router.use(protect);
 
 router.route('/')
-    .get(getAlerts)
     .post(authorize('Expert', 'Admin'), createAlert);
 
 router.route('/:id')

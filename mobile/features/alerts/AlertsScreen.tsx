@@ -25,7 +25,7 @@ import { Shadows, Radius, Spacing } from '@/constants/theme';
 type AlertType = 'weather' | 'fertilizer' | 'pest' | 'irrigation' | 'general';
 type Filter = 'All' | AlertType;
 
-type AdvisoryAlert = {
+export type AdvisoryAlert = {
   _id: string;
   title: string;
   cropType: string;
@@ -53,7 +53,7 @@ type AlertFormState = {
 
 const FILTER_TABS: Filter[] = ['All', 'weather', 'pest', 'irrigation', 'fertilizer', 'general'];
 
-const ALERT_META: Record<AlertType, { color: string; bg: string; icon: keyof typeof Ionicons.glyphMap; label: string }> = {
+export const ALERT_META: Record<AlertType, { color: string; bg: string; icon: keyof typeof Ionicons.glyphMap; label: string }> = {
   weather:    { color: '#F59E0B', bg: '#FEF3C7', icon: 'rainy-outline',         label: 'Weather' },
   fertilizer: { color: '#3B82F6', bg: '#EFF6FF', icon: 'flask-outline',         label: 'Fertilizer' },
   pest:       { color: '#EF4444', bg: '#FEE2E2', icon: 'bug-outline',           label: 'Pest' },
