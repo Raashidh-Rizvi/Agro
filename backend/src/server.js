@@ -56,6 +56,36 @@ app.use((err, req, res, next) => {
     console.error('Stack:', err.stack);
     console.error('----------------------');
 
+    const validationDetails = Object.values(err.errors || {}).map((fieldError) => fieldError.message);
+    const isValidationError =
+        err.name === 'ValidationError' ||
+        validationDetails.length > 0 ||
+        /validation failed/i.test(err.message || '');
+
+    if (isValidationError) {
+        const details = validationDetails.length > 0 ? validationDetails : [err.message || 'Validation failed'];
+        return res.status(400).json({
+            success: false,
+            message: details[0] || 'Validation failed',
+            errors: details
+        });
+    }
+
+    if (err.code === 11000) {
+        const duplicateField = Object.keys(err.keyValue || {})[0] || 'field';
+        return res.status(400).json({
+            success: false,
+            message: `${duplicateField} already exists`
+        });
+    }
+
+    if (err.name === 'CastError') {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid resource identifier'
+        });
+    }
+
     res.status(500).json({
         success: false,
         message: 'Internal Server Error',
