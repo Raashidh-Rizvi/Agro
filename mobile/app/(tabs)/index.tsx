@@ -181,7 +181,8 @@ export default function FarmerDashboard() {
           activeOpacity={0.9}
         >
           <View 
-            style={[styles.heroOverlay, { backgroundColor: C.heroOverlay, pointerEvents: 'none' }]} 
+            pointerEvents={Platform.OS === 'web' ? undefined : 'none'}
+            style={[styles.heroOverlay, { backgroundColor: C.heroOverlay }, Platform.OS === 'web' ? { pointerEvents: 'none' } : {}]} 
           />
           <View style={styles.heroLeft}>
             <View style={styles.aiBadge}>
@@ -193,7 +194,10 @@ export default function FarmerDashboard() {
               Capture a photo of your crop for an instant diagnostic report and treatment plan.
             </ThemedText>
           </View>
-          <View style={[styles.heroIcon, { pointerEvents: 'none' }]}>
+          <View 
+            pointerEvents={Platform.OS === 'web' ? undefined : 'none'} 
+            style={[styles.heroIcon, Platform.OS === 'web' ? { pointerEvents: 'none' } : {}]}
+          >
             <MaterialCommunityIcons name="camera-plus" size={46} color="#FFFFFF" />
           </View>
         </TouchableOpacity>
@@ -272,6 +276,7 @@ export default function FarmerDashboard() {
                 <Image 
                   source={{ uri: s.imageUrl.startsWith('http') ? s.imageUrl : `${API_URL.replace('/api', '')}${s.imageUrl}` }} 
                   style={styles.scanMiniThumb} 
+                  contentFit="cover"
                 />
                 <View style={styles.scanMiniInfo}>
                   <ThemedText style={[styles.scanMiniTitle, { color: C.text }]} numberOfLines={1}>

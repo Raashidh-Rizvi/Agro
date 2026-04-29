@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FlatList, RefreshControl, Alert, StyleSheet, TouchableOpacity, Text, View, ActivityIndicator, Image, Platform } from 'react-native';
+import { FlatList, RefreshControl, Alert, StyleSheet, TouchableOpacity, Text, View, ActivityIndicator, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import { Shadows } from '@/constants/theme';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
@@ -120,8 +121,8 @@ const renderQuery = ({ item }: { item: Query }) => {
           <Image 
             source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${API_URL.replace('/api', '')}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}` }} 
             style={styles.queryImage} 
-            resizeMode="cover"
-            onError={(e) => console.log('MyQuery Image Load Error:', (e as any).nativeEvent?.error || 'Unknown error')}
+            contentFit="cover"
+            onError={(e) => console.log('MyQuery Image Load Error:', (e as any)?.nativeEvent?.error || (e as any)?.error || 'Unknown error')}
           />
         )}
         

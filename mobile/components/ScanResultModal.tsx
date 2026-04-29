@@ -42,7 +42,7 @@ export function ScanResultModal({ visible, onClose, result, isLoading, selectedI
                         <View style={styles.loadingContainer}>
                             {selectedImage && (
                                 <View style={styles.previewContainer}>
-                                    <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+                                    <Image source={{ uri: selectedImage }} style={styles.previewImage} contentFit="cover" />
                                     <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.3)' }]} />
                                 </View>
                             )}
@@ -244,7 +244,6 @@ const styles = StyleSheet.create({
     previewImage: {
         width: '100%',
         height: '100%',
-        resizeMode: 'cover',
     },
     badgeRow: {
         flexDirection: 'row',

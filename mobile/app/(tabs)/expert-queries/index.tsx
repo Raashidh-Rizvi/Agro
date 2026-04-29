@@ -163,8 +163,8 @@ const renderQuery = ({ item }: { item: Query }) => {
             <Image 
               source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${API_URL.replace('/api', '')}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}` }} 
               style={styles.thumbnailImage} 
-              resizeMode="cover"
-              onError={(e) => console.log('Thumbnail Load Error:', (e as any).nativeEvent?.error || 'Unknown error')}
+              contentFit="cover"
+              onError={(e) => console.log('Thumbnail Load Error:', (e as any)?.nativeEvent?.error || (e as any)?.error || 'Unknown error')}
             />
           )}
 
@@ -179,8 +179,8 @@ const renderQuery = ({ item }: { item: Query }) => {
               <Image 
                 source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${API_URL.replace('/api', '')}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}` }} 
                 style={styles.queryImage} 
-                resizeMode="contain"
-                onError={(e) => console.log('Full Image Load Error:', (e as any).nativeEvent?.error || 'Unknown error')}
+                contentFit="contain"
+                onError={(e) => console.log('Full Image Load Error:', (e as any)?.nativeEvent?.error || (e as any)?.error || 'Unknown error')}
               />
             )}
             <Text style={styles.description}>{item.description}</Text>
@@ -548,11 +548,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 14,
     borderRadius: 8,
-    shadowColor: '#0A5C36',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    ...Shadows.colored('#0A5C36'),
   },
   createButtonText: {
     color: 'white',
@@ -589,9 +585,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,
+    ...Shadows.xs,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
 });

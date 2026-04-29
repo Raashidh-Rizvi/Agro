@@ -63,7 +63,7 @@ export default function DiagnosisHistoryScreen() {
         onPress={() => handleItemPress(item)}
         activeOpacity={0.7}
       >
-        <Image source={{ uri: imageUrl }} style={styles.thumbnail} />
+        <Image source={{ uri: imageUrl }} style={styles.thumbnail} contentFit="cover" />
         <View style={styles.cardInfo}>
           <View style={styles.cardHeader}>
             <ThemedText style={[styles.diseaseName, { color: C.text }]} numberOfLines={1}>
