@@ -215,41 +215,32 @@ DELETE /api/market-prices/:id
 ## 11. Project Structure
 
 ```
-AgriSense-Lanka/
+Agro/
 ├─ backend/
-│   └─ src/
-│       ├─ config/
-│       ├─ models/
-│       │   ├─ User.js
-│       │   ├─ Crop.js
-│       │   ├─ Diagnosis.js
-│       │   ├─ ProduceListing.js
-│       │   ├─ ExpertQuery.js
-│       │   ├─ AdvisoryAlert.js
-│       │   └─ MarketPrice.js
-│       ├─ controllers/
-│       ├─ routes/
-│       ├─ middleware/
-│       ├─ services/
-│       ├─ utils/
-│       ├─ app.js
-│       └─ server.js
+│   ├─ src/
+│   │   ├─ controllers/
+│   │   ├─ middleware/
+│   │   ├─ models/
+│   │   ├─ routes/
+│   │   └─ server.js
+│   ├─ .env.example
+│   ├─ package.json
+│   └─ package-lock.json
 ├─ mobile/
-│   └─ src/
-│       ├─ screens/
-│       ├─ components/
-│       ├─ navigation/
-│       ├─ services/
-│       ├─ context/
-│       └─ assets/
-│   └─ App.js
+│   ├─ app/
+│   ├─ assets/
+│   ├─ components/
+│   ├─ constants/
+│   ├─ context/
+│   ├─ features/
+│   ├─ hooks/
+│   ├─ utils/
+│   ├─ app.json
+│   └─ package.json
 ├─ docs/
-│   ├─ Problem_Statement.pdf
-│   ├─ System_Architecture_Diagram.png
-│   ├─ Database_Schema_Diagram.png
-│   ├─ API_Endpoint_Table.pdf
-│   ├─ Team_Responsibility.pdf
-│   └─ README.txt
+│   ├─ run-guide.md
+│   ├─ phase-3-setup.md
+│   └─ progress.md
 └─ README.md
 ```
 
@@ -257,7 +248,7 @@ AgriSense-Lanka/
 
 ## 12. How to Run the Project
 
-For a detailed, step-by-step guide on how to set up and run the project locally, please refer to the **[RUN_GUIDE.md](RUN_GUIDE.md)**.
+For a detailed, step-by-step guide on how to set up and run the project locally, please refer to the **[docs/run-guide.md](docs/run-guide.md)**.
 
 ### Quick Start:
 

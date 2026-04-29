@@ -1,0 +1,31 @@
+# dependencies
+backend/node_modules/
+mobile/node_modules/
+
+# local environment files
+backend/.env
+backend/.env.*
+!backend/.env.example
+mobile/.env
+mobile/.env.*
+!mobile/.env.example
+!mobile/.env*.example
+
+# Expo / editor state
+mobile/.expo/
+mobile/.vscode/
+mobile/expo-env.d.ts
+mobile/dist/
+mobile/web-build/
+mobile/.metro-health-check*
+mobile/ios/
+mobile/android/
+
+# logs and caches
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
