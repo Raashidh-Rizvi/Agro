@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
@@ -12,38 +13,61 @@ const SETTINGS = [
   {
     section: 'Account',
     items: [
-      { id: 'edit',   icon: 'person-outline',             label: 'Edit Profile',         color: '#0F9D58' },
-      { id: 'farm',   icon: 'leaf-outline',               label: 'Farm Details',         color: '#0F9D58' },
-      { id: 'pass',   icon: 'lock-closed-outline',        label: 'Change Password',      color: '#3B82F6' },
+      { id: 'edit',   icon: 'person-outline',             label: 'Edit Profile',         color: '#0F9D58', route: '/profile/edit' },
+      { id: 'farm',   icon: 'leaf-outline',               label: 'Farm Details',         color: '#0F9D58', route: '/profile/farm-details' },
+      { id: 'pass',   icon: 'lock-closed-outline',        label: 'Change Password',      color: '#3B82F6', route: '/profile/change-password' },
     ],
   },
   {
     section: 'Preferences',
     items: [
       { id: 'theme',  icon: 'moon-outline',               label: 'Dark Mode',            color: '#8B5CF6' },
-      { id: 'notif',  icon: 'notifications-outline',      label: 'Notifications',        color: '#F59E0B' },
-      { id: 'lang',   icon: 'language-outline',           label: 'Language',             color: '#3B82F6' },
-      { id: 'unit',   icon: 'scale-outline',              label: 'Units & Measurements', color: '#6B7280' },
+      { id: 'notif',  icon: 'notifications-outline',      label: 'Notifications',        color: '#F59E0B', route: '/profile/notifications' },
+      { id: 'lang',   icon: 'language-outline',           label: 'Language',             color: '#3B82F6', route: '/profile/language' },
+      { id: 'unit',   icon: 'scale-outline',              label: 'Units & Measurements', color: '#6B7280', route: '/profile/units' },
     ],
   },
   {
     section: 'Support',
     items: [
-      { id: 'help',   icon: 'help-circle-outline',        label: 'Help & Support',       color: '#6B7280' },
-      { id: 'about',  icon: 'information-circle-outline', label: 'About AgriSense',      color: '#6B7280' },
-      { id: 'privacy',icon: 'shield-checkmark-outline',   label: 'Privacy Policy',       color: '#6B7280' },
+      { id: 'help',   icon: 'help-circle-outline',        label: 'Help & Support',       color: '#6B7280', route: '/profile/help' },
+      { id: 'about',  icon: 'information-circle-outline', label: 'About AgriSense',      color: '#6B7280', route: '/profile/about' },
+      { id: 'privacy',icon: 'shield-checkmark-outline',   label: 'Privacy Policy',       color: '#6B7280', route: '/profile/privacy' },
     ],
   },
 ];
+
+const ADMIN_SETTINGS = {
+  section: 'Administration',
+  items: [
+    { id: 'users',  icon: 'people-outline',             label: 'User Management',      color: '#8B5CF6', route: '/admin/users' },
+    { id: 'system', icon: 'settings-outline',           label: 'System Health',        color: '#6B7280' },
+  ],
+};
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { mode, toggleTheme } = useAppTheme();
   const C = useAppColors();
+  const router = useRouter();
 
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
     : 'AS';
+
+  const handlePress = (item: any) => {
+    if (item.id === 'theme') {
+      toggleTheme();
+    } else if (item.route) {
+      router.push(item.route as any);
+    } else {
+      Alert.alert('Coming Soon', `${item.label} feature is currently under development.`);
+    }
+  };
+
+  const navigateToTab = (tab: string) => {
+    router.push(`/(tabs)/${tab}` as any);
+  };
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: C.bg }]}>
@@ -57,10 +81,14 @@ export default function ProfileScreen() {
               <ThemedText style={styles.avatarText}>{initials}</ThemedText>
             </View>
           </View>
-          <ThemedText style={[styles.userName, { color: C.text }]}>{user?.name || 'Farmer'}</ThemedText>
-          <ThemedText style={[styles.userEmail, { color: C.muted }]}>{user?.email || 'farmer@agrisense.lk'}</ThemedText>
+          <ThemedText style={[styles.userName, { color: C.text }]}>{user?.name || 'User'}</ThemedText>
+          <ThemedText style={[styles.userEmail, { color: C.muted }]}>{user?.email || 'user@agrisense.lk'}</ThemedText>
           <View style={[styles.roleBadge, { backgroundColor: C.primaryDim, borderColor: C.primary + '40' }]}>
-            <MaterialCommunityIcons name="tractor" size={13} color={C.primary} />
+            <MaterialCommunityIcons 
+              name={user?.role === 'Expert' ? 'school-outline' : user?.role === 'Admin' ? 'shield-account' : 'tractor'} 
+              size={13} 
+              color={C.primary} 
+            />
             <ThemedText style={[styles.roleBadgeText, { color: C.primary }]}>{user?.role || 'Farmer'}</ThemedText>
           </View>
         </View>
@@ -68,20 +96,29 @@ export default function ProfileScreen() {
         {/* Farm Stats */}
         <View style={styles.statsRow}>
           {[
-            { label: 'Crops',   value: '5',  icon: 'leaf-outline'          as const },
-            { label: 'Queries', value: '12', icon: 'chatbubble-outline'    as const },
-            { label: 'Alerts',  value: '8',  icon: 'notifications-outline' as const },
+            { label: 'Crops',   value: '5',  icon: 'leaf-outline'          as const, tab: 'crops' },
+            { label: 'Queries', value: '12', icon: 'chatbubble-outline'    as const, tab: 'expert-queries' },
+            { label: 'Alerts',  value: '8',  icon: 'notifications-outline' as const, tab: 'alerts' },
           ].map((stat) => (
-            <View key={stat.label} style={[styles.statCard, { backgroundColor: C.card, borderColor: C.border }]}>
+            <TouchableOpacity 
+              key={stat.label} 
+              style={[styles.statCard, { backgroundColor: C.card, borderColor: C.border }]}
+              onPress={() => navigateToTab(stat.tab)}
+              activeOpacity={0.7}
+            >
               <Ionicons name={stat.icon} size={18} color={C.primary} />
               <ThemedText style={[styles.statValue, { color: C.text }]}>{stat.value}</ThemedText>
               <ThemedText style={[styles.statLabel, { color: C.muted }]}>{stat.label}</ThemedText>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
         {/* AI Advisor Banner */}
-        <View style={[styles.aiBanner, { backgroundColor: C.primaryDim, borderColor: C.primary + '40' }]}>
+        <TouchableOpacity 
+          style={[styles.aiBanner, { backgroundColor: C.primaryDim, borderColor: C.primary + '40' }]}
+          onPress={() => Alert.alert('AgriSense Pro', 'Upgrade to Pro to unlock advanced AI Advisor features!')}
+          activeOpacity={0.8}
+        >
           <View style={styles.aiBannerLeft}>
             <View style={[styles.aiBadge, { backgroundColor: C.primary + '20' }]}>
               <MaterialCommunityIcons name="chip" size={11} color={C.primary} />
@@ -93,7 +130,30 @@ export default function ProfileScreen() {
             </ThemedText>
           </View>
           <MaterialCommunityIcons name="robot-happy-outline" size={52} color={C.primary} style={{ opacity: 0.3 }} />
-        </View>
+        </TouchableOpacity>
+
+        {/* Admin Section */}
+        {user?.role === 'Admin' && (
+          <View style={styles.settingsSection}>
+            <ThemedText style={[styles.settingsSectionTitle, { color: C.muted }]}>{ADMIN_SETTINGS.section}</ThemedText>
+            <View style={[styles.settingsGroup, { backgroundColor: C.card, borderColor: C.border }]}>
+              {ADMIN_SETTINGS.items.map((item, idx) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.settingsItem, idx < ADMIN_SETTINGS.items.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}
+                  activeOpacity={0.7}
+                  onPress={() => handlePress(item)}
+                >
+                  <View style={[styles.settingsIconWrap, { backgroundColor: item.color + '15' }]}>
+                    <Ionicons name={item.icon as any} size={19} color={item.color} />
+                  </View>
+                  <ThemedText style={[styles.settingsLabel, { color: C.text }]}>{item.label}</ThemedText>
+                  <Ionicons name="chevron-forward" size={16} color={C.muted} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Settings */}
         {SETTINGS.map((section) => (
@@ -105,7 +165,7 @@ export default function ProfileScreen() {
                   key={item.id}
                   style={[styles.settingsItem, idx < section.items.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}
                   activeOpacity={0.7}
-                  onPress={item.id === 'theme' ? toggleTheme : undefined}
+                  onPress={() => handlePress(item)}
                 >
                   <View style={[styles.settingsIconWrap, { backgroundColor: item.color + '15' }]}>
                     <Ionicons 

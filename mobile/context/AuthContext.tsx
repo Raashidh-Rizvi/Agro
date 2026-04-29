@@ -9,6 +9,8 @@ interface AuthContextType {
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;
     register: (userData: any) => Promise<void>;
+    updateProfile: (userData: any) => Promise<void>;
+    updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
     logout: () => Promise<void>;
 }
 
@@ -78,6 +80,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const updateProfile = async (userData: any) => {
+        setIsLoading(true);
+        try {
+            const response = await axios.put(`${API_URL}/auth/update-details`, userData);
+            const updatedUser = response.data.data;
+
+            await storage.setItemAsync('userData', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Update failed';
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const updatePassword = async (currentPassword: string, newPassword: string) => {
+        setIsLoading(true);
+        try {
+            await axios.put(`${API_URL}/auth/update-password`, { currentPassword, newPassword });
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Password update failed';
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const logout = async () => {
         await storage.deleteItemAsync('userToken');
         await storage.deleteItemAsync('userData');
@@ -87,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, token, isLoading, login, register, updateProfile, updatePassword, logout }}>
             {children}
         </AuthContext.Provider>
     );
