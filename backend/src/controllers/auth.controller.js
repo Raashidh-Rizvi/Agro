@@ -88,3 +88,56 @@ exports.getMe = async (req, res, next) => {
         next(error);
     }
 };
+
+// Update user details
+exports.updateDetails = async (req, res, next) => {
+    try {
+        const fieldsToUpdate = {
+            name: req.body.name,
+            email: req.body.email,
+            farmName: req.body.farmName,
+            location: req.body.location,
+            farmSize: req.body.farmSize,
+            farmType: req.body.farmType
+        };
+
+        // Remove undefined fields
+        Object.keys(fieldsToUpdate).forEach(key => 
+            fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key]
+        );
+
+        const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+            new: true,
+            runValidators: true
+        });
+
+        res.status(200).json({
+            success: true,
+            data: user
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Update password
+exports.updatePassword = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user.id).select('+password');
+
+        // Check current password
+        if (!(await user.matchPassword(req.body.currentPassword))) {
+            return res.status(401).json({ success: false, message: 'Password is incorrect' });
+        }
+
+        user.password = req.body.newPassword;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Password updated successfully'
+        });
+    } catch (error) {
+        next(error);
+    }
+};

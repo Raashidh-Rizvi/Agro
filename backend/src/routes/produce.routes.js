@@ -10,7 +10,7 @@ const {
     deleteProduce,
     getMyProduce
 } = require('../controllers/produce.controller');
-const { protect } = require('../middleware/auth.middleware');
+const { protect, authorize } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
@@ -52,8 +52,8 @@ router.get('/:id', getProduceById);
 // Protected routes
 router.use(protect);
 router.get('/my/listings', getMyProduce);
-router.post('/', upload.single('image'), createProduce);
-router.put('/:id', upload.single('image'), updateProduce);
-router.delete('/:id', deleteProduce);
+router.post('/', authorize('Farmer', 'Admin'), upload.single('image'), createProduce);
+router.put('/:id', authorize('Farmer', 'Admin'), upload.single('image'), updateProduce);
+router.delete('/:id', authorize('Farmer', 'Admin'), deleteProduce);
 
 module.exports = router;

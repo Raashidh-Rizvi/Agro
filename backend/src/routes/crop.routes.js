@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth.middleware');
+const { protect, authorize } = require('../middleware/auth.middleware');
 const {
     createCrop,
     getCrops,
@@ -12,12 +12,12 @@ const {
 router.use(protect);
 
 router.route('/')
-    .post(createCrop)
+    .post(authorize('Admin'), createCrop)
     .get(getCrops);
 
 router.route('/:id')
     .get(getCropById)
-    .put(updateCrop)
-    .delete(deleteCrop);
+    .put(authorize('Admin'), updateCrop)
+    .delete(authorize('Admin'), deleteCrop);
 
 module.exports = router;
