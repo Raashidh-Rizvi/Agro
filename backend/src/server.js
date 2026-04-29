@@ -31,6 +31,7 @@ const expertQueryRoutes = require('./routes/expertQuery.routes');
 const cropRoutes = require('./routes/crop.routes');
 const diagnosisRoutes = require('./routes/diagnosis.routes');
 const alertRoutes = require('./routes/alert.routes');
+const produceRoutes = require('./routes/produce.routes');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -38,6 +39,7 @@ app.use('/api/expert-query', expertQueryRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/diagnosis', diagnosisRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/produce', produceRoutes);
 
 // Basic Test Route
 app.get('/', (req, res) => {
