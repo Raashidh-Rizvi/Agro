@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Tabs, useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
@@ -186,8 +187,8 @@ export default function MyQueryEdit() {
         <Image 
           source={{ uri: query.imageUrl.startsWith('http') ? query.imageUrl : `${SERVER_BASE}${query.imageUrl.startsWith('/') ? '' : '/'}${query.imageUrl}` }} 
           style={styles.image} 
-          resizeMode="contain"
-          onError={(e) => console.log('Edit Image Load Error:', e.nativeEvent.error)}
+          contentFit="contain"
+          onError={(e) => console.log('Edit Image Load Error:', (e as any)?.nativeEvent?.error || (e as any)?.error || 'Unknown error')}
         />
       )}
 
@@ -196,7 +197,7 @@ export default function MyQueryEdit() {
           <Text style={styles.label}>Photo of the Problem</Text>
           {newImage ? (
             <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: newImage.uri }} style={styles.imagePreview} />
+              <Image source={{ uri: newImage.uri }} style={styles.imagePreview} contentFit="cover" />
               <TouchableOpacity style={styles.removeImageBtn} onPress={() => setNewImage(null)}>
                 <IconSymbol name="xmark.circle.fill" size={28} color="#FF3B30" />
               </TouchableOpacity>

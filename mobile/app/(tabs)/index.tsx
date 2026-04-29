@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, ScrollView, TouchableOpacity, View, Alert, Platform, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
@@ -13,6 +14,7 @@ import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import { DiagnosisResult, DiagnosisService } from '../../services/DiagnosisService';
 import { ScanResultModal } from '@/components/ScanResultModal';
+import { PremiumSelectionModal, SelectionOption } from '@/components/PremiumSelectionModal';
 import { API_URL } from '@/constants/Config';
 import { AdvisoryAlert, ALERT_META } from '@/features/alerts/AlertsScreen';
 
@@ -43,10 +45,26 @@ export default function FarmerDashboard() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [alerts, setAlerts] = useState<AdvisoryAlert[]>([]);
   const [isAlertsLoading, setIsAlertsLoading] = useState(false);
+  const [pickerModalVisible, setPickerModalVisible] = useState(false);
+  const [recentScans, setRecentScans] = useState<DiagnosisResult[]>([]);
+  const [isScansLoading, setIsScansLoading] = useState(false);
 
   useEffect(() => {
     fetchRealAlerts();
+    fetchRecentScans();
   }, []);
+
+  const fetchRecentScans = async () => {
+    setIsScansLoading(true);
+    try {
+      const data = await DiagnosisService.getHistory();
+      setRecentScans(data.slice(0, 3));
+    } catch (err) {
+      console.error('Failed to fetch home scans:', err);
+    } finally {
+      setIsScansLoading(false);
+    }
+  };
 
   const fetchRealAlerts = async () => {
     setIsAlertsLoading(true);
@@ -67,22 +85,7 @@ export default function FarmerDashboard() {
   };
 
   const handleScan = async () => {
-    if (Platform.OS === 'web') {
-      const useCamera = window.confirm('Use Camera? (Cancel to choose from Gallery)');
-      openPicker(useCamera);
-      return;
-    }
-
-    Alert.alert(
-      'Scan Disease',
-      'Select the source of the leaf image',
-      [
-        { text: 'Take Photo', onPress: () => openPicker(true) },
-        { text: 'Choose from Gallery', onPress: () => openPicker(false) },
-        { text: 'Cancel', style: 'cancel' },
-      ],
-      { cancelable: true }
-    );
+    setPickerModalVisible(true);
   };
 
   const openPicker = async (useCamera: boolean) => {
@@ -178,7 +181,8 @@ export default function FarmerDashboard() {
           activeOpacity={0.9}
         >
           <View 
-            style={[styles.heroOverlay, { backgroundColor: C.heroOverlay, pointerEvents: 'none' }]} 
+            pointerEvents={Platform.OS === 'web' ? undefined : 'none'}
+            style={[styles.heroOverlay, { backgroundColor: C.heroOverlay }, Platform.OS === 'web' ? { pointerEvents: 'none' } : {}]} 
           />
           <View style={styles.heroLeft}>
             <View style={styles.aiBadge}>
@@ -190,7 +194,10 @@ export default function FarmerDashboard() {
               Capture a photo of your crop for an instant diagnostic report and treatment plan.
             </ThemedText>
           </View>
-          <View style={[styles.heroIcon, { pointerEvents: 'none' }]}>
+          <View 
+            pointerEvents={Platform.OS === 'web' ? undefined : 'none'} 
+            style={[styles.heroIcon, Platform.OS === 'web' ? { pointerEvents: 'none' } : {}]}
+          >
             <MaterialCommunityIcons name="camera-plus" size={46} color="#FFFFFF" />
           </View>
         </TouchableOpacity>
@@ -198,7 +205,12 @@ export default function FarmerDashboard() {
         {/* ── Metrics Row ────────────────────────── */}
         <View style={styles.metricsRow}>
           {metrics.map((m) => (
-            <View key={m.id} style={[styles.metricCard, { backgroundColor: C.card, borderColor: C.border }]}>
+            <TouchableOpacity 
+              key={m.id} 
+              style={[styles.metricCard, { backgroundColor: C.card, borderColor: C.border }]}
+              activeOpacity={0.7}
+              onPress={() => Alert.alert('Available Soon', `Detailed ${m.label.toLowerCase()} analysis will be available soon.`)}
+            >
               <View style={styles.metricHeader}>
                 <Ionicons name={m.icon} size={15} color={C.primary} />
                 <ThemedText style={[styles.metricDelta, { color: m.good ? C.accent : C.danger }]}>
@@ -207,14 +219,14 @@ export default function FarmerDashboard() {
               </View>
               <ThemedText style={[styles.metricValue, { color: C.text }]}>{m.value}</ThemedText>
               <ThemedText style={[styles.metricLabel, { color: C.muted }]}>{m.label}</ThemedText>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
         {/* ── Quick Actions ──────────────────────── */}
         <ThemedText style={[styles.sectionTitle, { color: C.text }]}>Quick Actions</ThemedText>
         <View style={styles.actionsGrid}>
-          {quickActions.map((a) => (
+          {quickActions.filter(a => !(user?.role === 'Expert' && a.id === '2')).map((a) => (
             <TouchableOpacity
               key={a.id}
               style={[styles.actionCard, { backgroundColor: C.card, borderColor: C.border }]}
@@ -234,6 +246,50 @@ export default function FarmerDashboard() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* ── Recent Scans ────────────────────────── */}
+        <View style={styles.sectionRow}>
+          <ThemedText style={[styles.sectionTitle, { color: C.text }]}>Recent Scans</ThemedText>
+          <TouchableOpacity onPress={() => router.push('/diagnosis/history')}>
+            <ThemedText style={[styles.viewAll, { color: C.primary }]}>View History</ThemedText>
+          </TouchableOpacity>
+        </View>
+
+        {isScansLoading ? (
+          <ActivityIndicator size="small" color={C.primary} style={{ marginVertical: 20 }} />
+        ) : recentScans.length === 0 ? (
+          <View style={[styles.alertCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.muted, justifyContent: 'center', opacity: 0.7, marginBottom: Spacing.lg }]}>
+            <ThemedText style={{ color: C.muted, fontSize: 13, textAlign: 'center', width: '100%' }}>No recent scans</ThemedText>
+          </View>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scansScroll}>
+            {recentScans.map((s: any) => (
+              <TouchableOpacity 
+                key={s._id || s.id} 
+                style={[styles.scanMiniCard, { backgroundColor: C.card, borderColor: C.border }]}
+                onPress={() => {
+                  setResult(s);
+                  setSelectedImage(s.imageUrl.startsWith('http') ? s.imageUrl : `${API_URL.replace('/api', '')}${s.imageUrl}`);
+                  setModalVisible(true);
+                }}
+              >
+                <Image 
+                  source={{ uri: s.imageUrl.startsWith('http') ? s.imageUrl : `${API_URL.replace('/api', '')}${s.imageUrl}` }} 
+                  style={styles.scanMiniThumb} 
+                  contentFit="cover"
+                />
+                <View style={styles.scanMiniInfo}>
+                  <ThemedText style={[styles.scanMiniTitle, { color: C.text }]} numberOfLines={1}>
+                    {s.diseaseName.replace(/_/g, ' ')}
+                  </ThemedText>
+                  <ThemedText style={[styles.scanMiniDate, { color: C.muted }]}>
+                    {new Date(s.createdAt).toLocaleDateString()}
+                  </ThemedText>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
         {/* ── Recent Alerts ──────────────────────── */}
         <View style={styles.sectionRow}>
@@ -283,6 +339,46 @@ export default function FarmerDashboard() {
         result={result} 
         isLoading={isLoading} 
         selectedImage={selectedImage}
+      />
+
+      {/* Premium Photo Source Selection Modal */}
+      <PremiumSelectionModal
+        visible={pickerModalVisible}
+        onClose={() => setPickerModalVisible(false)}
+        title="Scan Disease"
+        description="Select the source of the leaf image for diagnosis"
+        recentHistory={recentScans.map(s => ({
+          ...s,
+          imageUrl: s.imageUrl.startsWith('http') ? s.imageUrl : `${API_URL.replace('/api', '')}${s.imageUrl}`
+        }))}
+        onHistoryItemPress={(item) => {
+          setResult(item);
+          setSelectedImage(item.imageUrl.startsWith('http') ? item.imageUrl : `${API_URL.replace('/api', '')}${item.imageUrl}`);
+          setModalVisible(true);
+        }}
+        options={[
+          {
+            id: 'camera',
+            label: 'Take Photo',
+            icon: 'camera-outline',
+            color: C.primary,
+            onPress: () => openPicker(true),
+          },
+          {
+            id: 'gallery',
+            label: 'Choose from Gallery',
+            icon: 'images-outline',
+            color: '#3B82F6',
+            onPress: () => openPicker(false),
+          },
+          {
+            id: 'history',
+            label: 'View Full History',
+            icon: 'time-outline',
+            color: '#8B5CF6',
+            onPress: () => router.push('/diagnosis/history'),
+          },
+        ]}
       />
     </ThemedView>
   );
@@ -360,4 +456,14 @@ const styles = StyleSheet.create({
   alertTitle: { fontWeight: '700', fontSize: 14, marginBottom: 2 },
   alertDesc: { fontSize: 12, lineHeight: 17, marginBottom: 3 },
   alertTime: { fontSize: 10, fontWeight: '600' },
+
+  scansScroll: { gap: 12, paddingBottom: Spacing.lg },
+  scanMiniCard: {
+    width: 160, borderRadius: Radius.lg, borderWidth: 1,
+    overflow: 'hidden', ...Shadows.xs,
+  },
+  scanMiniThumb: { width: '100%', height: 90, backgroundColor: '#EEE' },
+  scanMiniInfo: { padding: 10 },
+  scanMiniTitle: { fontSize: 13, fontWeight: '700', textTransform: 'capitalize', marginBottom: 2 },
+  scanMiniDate: { fontSize: 10, fontWeight: '600' },
 });

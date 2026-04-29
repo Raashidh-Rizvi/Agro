@@ -1,19 +1,22 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
 import { useAppColors, useAppTheme } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
+import axios from 'axios';
+import { API_URL } from '@/constants/Config';
 
 const SETTINGS = [
   {
     section: 'Account',
     items: [
       { id: 'edit',   icon: 'person-outline',             label: 'Edit Profile',         color: '#0F9D58', route: '/profile/edit' },
+      { id: 'history',icon: 'time-outline',               label: 'Diagnosis History',    color: '#0F9D58', route: '/diagnosis/history' },
       { id: 'farm',   icon: 'leaf-outline',               label: 'Farm Details',         color: '#0F9D58', route: '/profile/farm-details' },
       { id: 'pass',   icon: 'lock-closed-outline',        label: 'Change Password',      color: '#3B82F6', route: '/profile/change-password' },
     ],
@@ -45,11 +48,46 @@ const ADMIN_SETTINGS = {
   ],
 };
 
+const EXPERT_SETTINGS = {
+  section: 'Expert Tools',
+  items: [
+    { id: 'dashboard', icon: 'speedometer-outline',      label: 'Expert Dashboard',     color: '#0F9D58', route: '/expert/dashboard' },
+    { id: 'queries',   icon: 'chatbubbles-outline',      label: 'Farmer Queries',       color: '#8B5CF6', route: '/(tabs)/expert-queries' },
+    { id: 'alerts',    icon: 'notifications-outline',    label: 'Manage Alerts',        color: '#F59E0B', route: '/(tabs)/alerts' },
+  ],
+};
+
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const { mode, toggleTheme } = useAppTheme();
   const C = useAppColors();
   const router = useRouter();
+
+  const [stats, setStats] = useState({ crops: 0, queries: 0, alerts: 0 });
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = async () => {
+    if (!token) return;
+    try {
+      const response = await axios.get(`${API_URL}/stats/summary`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        setStats(response.data.data);
+      }
+    } catch (error) {
+      console.error('Fetch profile stats error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchStats();
+    }, [token])
+  );
+
 
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
@@ -96,10 +134,11 @@ export default function ProfileScreen() {
         {/* Farm Stats */}
         <View style={styles.statsRow}>
           {[
-            { label: 'Crops',   value: '5',  icon: 'leaf-outline'          as const, tab: 'crops' },
-            { label: 'Queries', value: '12', icon: 'chatbubble-outline'    as const, tab: 'expert-queries' },
-            { label: 'Alerts',  value: '8',  icon: 'notifications-outline' as const, tab: 'alerts' },
+            { label: 'Crops',   value: stats.crops.toString(),   icon: 'leaf-outline'          as const, tab: 'crops' },
+            { label: 'Queries', value: stats.queries.toString(), icon: 'chatbubble-outline'    as const, tab: 'expert-queries' },
+            { label: 'Alerts',  value: stats.alerts.toString(),  icon: 'notifications-outline' as const, tab: 'alerts' },
           ].map((stat) => (
+
             <TouchableOpacity 
               key={stat.label} 
               style={[styles.statCard, { backgroundColor: C.card, borderColor: C.border }]}
@@ -116,7 +155,7 @@ export default function ProfileScreen() {
         {/* AI Advisor Banner */}
         <TouchableOpacity 
           style={[styles.aiBanner, { backgroundColor: C.primaryDim, borderColor: C.primary + '40' }]}
-          onPress={() => Alert.alert('AgriSense Pro', 'Upgrade to Pro to unlock advanced AI Advisor features!')}
+          onPress={() => Alert.alert('Available Soon', 'The AgriSense Pro subscription will be available soon!')}
           activeOpacity={0.8}
         >
           <View style={styles.aiBannerLeft}>
@@ -141,6 +180,29 @@ export default function ProfileScreen() {
                 <TouchableOpacity
                   key={item.id}
                   style={[styles.settingsItem, idx < ADMIN_SETTINGS.items.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}
+                  activeOpacity={0.7}
+                  onPress={() => handlePress(item)}
+                >
+                  <View style={[styles.settingsIconWrap, { backgroundColor: item.color + '15' }]}>
+                    <Ionicons name={item.icon as any} size={19} color={item.color} />
+                  </View>
+                  <ThemedText style={[styles.settingsLabel, { color: C.text }]}>{item.label}</ThemedText>
+                  <Ionicons name="chevron-forward" size={16} color={C.muted} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Expert Section */}
+        {(user?.role === 'Expert' || user?.role === 'Admin') && (
+          <View style={styles.settingsSection}>
+            <ThemedText style={[styles.settingsSectionTitle, { color: C.muted }]}>{EXPERT_SETTINGS.section}</ThemedText>
+            <View style={[styles.settingsGroup, { backgroundColor: C.card, borderColor: C.border }]}>
+              {EXPERT_SETTINGS.items.map((item, idx) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.settingsItem, idx < EXPERT_SETTINGS.items.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}
                   activeOpacity={0.7}
                   onPress={() => handlePress(item)}
                 >

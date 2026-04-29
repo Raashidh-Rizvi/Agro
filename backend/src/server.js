@@ -33,6 +33,8 @@ const diagnosisRoutes = require('./routes/diagnosis.routes');
 const alertRoutes = require('./routes/alert.routes');
 const produceRoutes = require('./routes/produce.routes');
 const userRoutes = require('./routes/user.routes');
+const statsRoutes = require('./routes/stats.routes');
+
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -42,6 +44,8 @@ app.use('/api/diagnosis', diagnosisRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/produce', produceRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/stats', statsRoutes);
+
 
 // Basic Test Route
 app.get('/', (req, res) => {

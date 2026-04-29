@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, StyleSheet, View, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { Modal, StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
@@ -41,7 +42,7 @@ export function ScanResultModal({ visible, onClose, result, isLoading, selectedI
                         <View style={styles.loadingContainer}>
                             {selectedImage && (
                                 <View style={styles.previewContainer}>
-                                    <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+                                    <Image source={{ uri: selectedImage }} style={styles.previewImage} contentFit="cover" />
                                     <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.3)' }]} />
                                 </View>
                             )}
@@ -243,7 +244,6 @@ const styles = StyleSheet.create({
     previewImage: {
         width: '100%',
         height: '100%',
-        resizeMode: 'cover',
     },
     badgeRow: {
         flexDirection: 'row',

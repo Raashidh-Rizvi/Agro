@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { FlatList, RefreshControl, Alert, StyleSheet, TouchableOpacity, Text, View, ActivityIndicator, TextInput, Image } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { FlatList, RefreshControl, Alert, StyleSheet, TouchableOpacity, Text, View, ActivityIndicator, TextInput } from 'react-native';
+import { Shadows, Radius, Spacing } from '@/constants/theme';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
 import { API_URL } from '../../../constants/Config';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import ExpertDashboard from '@/components/expert/ExpertDashboard';
+import { Image } from 'expo-image';
 
 interface Query {
   _id: string;
@@ -18,7 +21,29 @@ interface Query {
   imageUrl?: string;
 }
 
-export default function QueriesList() {
+export default function QueriesScreen() {
+  const { user } = useAuth();
+  const [showQueries, setShowQueries] = useState(false);
+
+  if (user?.role === 'Expert' && !showQueries) {
+    return (
+      <View style={{ flex: 1 }}>
+        <Stack.Screen options={{ title: 'Expert Dashboard' }} />
+        <ExpertDashboard onQueriesPress={() => setShowQueries(true)} />
+        <TouchableOpacity 
+          style={styles.floatingAction}
+          onPress={() => setShowQueries(true)}
+        >
+          <IconSymbol name="chatbubbles.fill" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return <QueriesList onBack={user?.role === 'Expert' ? () => setShowQueries(false) : undefined} />;
+}
+
+function QueriesList({ onBack }: { onBack?: () => void }) {
   const [queries, setQueries] = useState<Query[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -138,8 +163,8 @@ const renderQuery = ({ item }: { item: Query }) => {
             <Image 
               source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${API_URL.replace('/api', '')}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}` }} 
               style={styles.thumbnailImage} 
-              resizeMode="cover"
-              onError={(e) => console.log('Thumbnail Load Error:', e.nativeEvent.error)}
+              contentFit="cover"
+              onError={(e) => console.log('Thumbnail Load Error:', (e as any)?.nativeEvent?.error || (e as any)?.error || 'Unknown error')}
             />
           )}
 
@@ -154,8 +179,8 @@ const renderQuery = ({ item }: { item: Query }) => {
               <Image 
                 source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${API_URL.replace('/api', '')}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}` }} 
                 style={styles.queryImage} 
-                resizeMode="contain"
-                onError={(e) => console.log('Full Image Load Error:', e.nativeEvent.error)}
+                contentFit="contain"
+                onError={(e) => console.log('Full Image Load Error:', (e as any)?.nativeEvent?.error || (e as any)?.error || 'Unknown error')}
               />
             )}
             <Text style={styles.description}>{item.description}</Text>
@@ -284,6 +309,11 @@ return (
     <Stack.Screen 
       options={{ 
         title: 'All Queries',
+        headerLeft: onBack ? () => (
+          <TouchableOpacity onPress={onBack} style={{marginLeft: 16}}>
+            <IconSymbol name="chevron.left" size={24} color="#0A5C36" />
+          </TouchableOpacity>
+        ) : undefined,
         headerRight: () => (
           <TouchableOpacity onPress={() => router.push('/expert-queries/submit')} style={styles.headerButton}>
             <IconSymbol name="plus" size={24} color="#0A5C36" />
@@ -292,15 +322,17 @@ return (
       }} 
     />
     
-    <View style={styles.actionContainer}>
-      <TouchableOpacity 
-        style={styles.createButton} 
-        onPress={() => router.push('/expert-queries/submit')}
-      >
-        <IconSymbol name="plus.circle.fill" size={20} color="white" />
-        <Text style={styles.createButtonText}>Ask an Expert</Text>
-      </TouchableOpacity>
-    </View>
+    {user?.role !== 'Expert' && (
+      <View style={styles.actionContainer}>
+        <TouchableOpacity 
+          style={styles.createButton} 
+          onPress={() => router.push('/expert-queries/submit')}
+        >
+          <IconSymbol name="plus.circle.fill" size={20} color="white" />
+          <Text style={styles.createButtonText}>Ask an Expert</Text>
+        </TouchableOpacity>
+      </View>
+    )}
 
     <FlatList
       data={queries}
@@ -343,11 +375,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    ...Shadows.xs,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -520,11 +548,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 14,
     borderRadius: 8,
-    shadowColor: '#0A5C36',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    ...Shadows.colored('#0A5C36'),
   },
   createButtonText: {
     color: 'white',
@@ -549,5 +573,19 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 8,
     textAlign: 'center',
+  },
+  floatingAction: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#0A5C36',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    ...Shadows.xs,
+    shadowColor: '#000',
   },
 });
