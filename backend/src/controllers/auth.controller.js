@@ -141,3 +141,63 @@ exports.updatePassword = async (req, res, next) => {
         next(error);
     }
 };
+
+// Forgot password
+exports.forgotPassword = async (req, res, next) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'There is no user with that email' });
+        }
+
+        // Get reset token
+        const resetToken = user.getResetPasswordToken();
+
+        await user.save({ validateBeforeSave: false });
+
+        // In a real app, send email here. 
+        // For now, we return the token in the response for development/testing.
+        res.status(200).json({
+            success: true,
+            data: 'Email sent',
+            resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Reset password
+exports.resetPassword = async (req, res, next) => {
+    try {
+        const crypto = require('crypto');
+        // Get hashed token
+        const resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(req.params.resettoken)
+            .digest('hex');
+
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Invalid token' });
+        }
+
+        // Set new password
+        user.password = req.body.password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Password reset successful'
+        });
+    } catch (error) {
+        next(error);
+    }
+};

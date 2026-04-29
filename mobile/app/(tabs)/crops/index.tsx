@@ -188,8 +188,8 @@ export default function CropsScreen() {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
-    <ThemedView style={[styles.container, { backgroundColor: '#0f5132' }]}>
-      <StatusBar style="light" />
+    <ThemedView style={[styles.container, { backgroundColor: C.bg }]}>
+      <StatusBar style={C.statusBar} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -243,7 +243,7 @@ export default function CropsScreen() {
           const active = tab === activeFilter;
           return (
             <TouchableOpacity key={tab}
-              style={[styles.filterTab, { backgroundColor: active ? '#0f5132' : C.card, borderColor: active ? '#0f5132' : C.border }]}
+              style={[styles.filterTab, { backgroundColor: active ? C.primary : C.card, borderColor: active ? C.primary : C.border }]}
               onPress={() => setActiveFilter(tab)}>
               <ThemedText style={[styles.filterText, { color: active ? '#FFF' : C.subtext, fontWeight: active ? '700' : '600' }]}>{tab}</ThemedText>
             </TouchableOpacity>
@@ -312,10 +312,10 @@ export default function CropsScreen() {
           <View style={[styles.sortMenu, { backgroundColor: C.card, borderColor: C.border }]}>
             <ThemedText style={[styles.sortMenuTitle, { color: C.text }]}>Sort By</ThemedText>
             {SORT_OPTIONS.map(opt => (
-              <TouchableOpacity key={opt.value} style={[styles.sortOption, sortBy === opt.value && { backgroundColor: '#E6F4EA' }]}
+              <TouchableOpacity key={opt.value} style={[styles.sortOption, sortBy === opt.value && { backgroundColor: C.surface }]}
                 onPress={() => { setSortBy(opt.value); setShowSortMenu(false); }}>
-                <ThemedText style={{ color: sortBy === opt.value ? '#0F9D58' : C.text, fontWeight: sortBy === opt.value ? '700' : '400' }}>{opt.label}</ThemedText>
-                {sortBy === opt.value && <Ionicons name="checkmark" size={16} color="#0F9D58" />}
+                <ThemedText style={{ color: sortBy === opt.value ? C.primary : C.text, fontWeight: sortBy === opt.value ? '700' : '400' }}>{opt.label}</ThemedText>
+                {sortBy === opt.value && <Ionicons name="checkmark" size={16} color={C.primary} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -429,9 +429,9 @@ export default function CropsScreen() {
           <View style={styles.webCalOverlay}>
             <View style={styles.webCalBox}>
               <View style={styles.modalHeader}>
-                <ThemedText style={[styles.modalTitle, { color: '#0f5132', fontSize: 15 }]}>Select Planted Date</ThemedText>
+                <ThemedText style={[styles.modalTitle, { color: C.primary, fontSize: 15 }]}>Select Planted Date</ThemedText>
                 <TouchableOpacity onPress={() => setWebCalendarModal(false)}>
-                  <Ionicons name="close" size={20} color="#0f5132" />
+                  <Ionicons name="close" size={20} color={C.primary} />
                 </TouchableOpacity>
               </View>
               <input
@@ -442,8 +442,8 @@ export default function CropsScreen() {
                 onChange={(e: any) => setWebTempDate(e.target.value)}
                 style={{
                   width: '100%', padding: '10px 12px', fontSize: 15,
-                  border: '1.5px solid #0f5132', borderRadius: 8,
-                  color: '#111', outline: 'none', cursor: 'pointer',
+                  border: `1.5px solid ${C.primary}`, borderRadius: 8,
+                  color: C.text, backgroundColor: C.bg, outline: 'none', cursor: 'pointer',
                   boxSizing: 'border-box', marginBottom: 12,
                 }}
               />
@@ -476,10 +476,10 @@ export default function CropsScreen() {
               data={SL_DISTRICTS}
               keyExtractor={item => item}
               renderItem={({ item }) => (
-                <TouchableOpacity style={[styles.districtItem, { borderBottomColor: C.border }, form.district === item && { backgroundColor: '#E6F4EA' }]}
+                <TouchableOpacity style={[styles.districtItem, { borderBottomColor: C.border }, form.district === item && { backgroundColor: C.surface }]}
                   onPress={() => { setForm(f => ({ ...f, district: item })); setDistrictModal(false); }}>
-                  <ThemedText style={{ color: form.district === item ? '#0F9D58' : C.text, fontWeight: form.district === item ? '700' : '400' }}>{item}</ThemedText>
-                  {form.district === item && <Ionicons name="checkmark" size={16} color="#0F9D58" />}
+                  <ThemedText style={{ color: form.district === item ? C.primary : C.text, fontWeight: form.district === item ? '700' : '400' }}>{item}</ThemedText>
+                  {form.district === item && <Ionicons name="checkmark" size={16} color={C.primary} />}
                 </TouchableOpacity>
               )}
             />
@@ -487,54 +487,53 @@ export default function CropsScreen() {
         </View>
       </Modal>
 
-      {/* View Crop Modal */}
       <Modal visible={viewModalVisible} animationType="fade" transparent onRequestClose={() => setViewModalVisible(false)}>
-        <View style={[styles.modalOverlay, { justifyContent: 'flex-start', paddingTop: 80 }]}> 
-          <View style={[styles.modalBox, { backgroundColor: '#FFF', height: 380, maxHeight: 380, width: '60%', minWidth: 260, alignSelf: 'center', borderRadius: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 }]}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setViewModalVisible(false)}>
+          <View style={[styles.modalBox, { backgroundColor: C.card, height: 380, maxHeight: 380, width: '85%', alignSelf: 'center', borderRadius: Radius.xl, borderWidth: 1, borderColor: C.border, ...Shadows.lg }]}>
             <View style={styles.modalHeader}>
-              <ThemedText style={[styles.modalTitle, { color: '#0f5132' }]}>Crop Details</ThemedText>
+              <ThemedText style={[styles.modalTitle, { color: C.text }]}>Crop Details</ThemedText>
               <TouchableOpacity onPress={() => setViewModalVisible(false)}>
-                <Ionicons name="close" size={20} color="#0f5132" />
+                <Ionicons name="close" size={24} color={C.muted} />
               </TouchableOpacity>
             </View>
             {selectedCrop && (
-              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: Spacing.sm }}>
-                <View style={styles.detailRow}>
-                  <ThemedText style={[styles.label, { color: '#0f5132', fontSize: 12 }]}>Crop Name:</ThemedText>
-                  <ThemedText style={[styles.value, { color: '#333', fontSize: 12 }]}>{selectedCrop.cropName}</ThemedText>
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: Spacing.sm }}>
+                <View style={[styles.detailRow, { borderBottomColor: C.border }]}>
+                  <ThemedText style={[styles.label, { color: C.muted }]}>Crop Name</ThemedText>
+                  <ThemedText style={[styles.value, { color: C.text }]}>{selectedCrop.cropName}</ThemedText>
+                </View>
+                <View style={[styles.detailRow, { borderBottomColor: C.border }]}>
+                  <ThemedText style={[styles.label, { color: C.muted }]}>Crop Type</ThemedText>
+                  <ThemedText style={[styles.value, { color: C.text }]}>{selectedCrop.cropType || 'N/A'}</ThemedText>
+                </View>
+                <View style={[styles.detailRow, { borderBottomColor: C.border }]}>
+                  <ThemedText style={[styles.label, { color: C.muted }]}>District</ThemedText>
+                  <ThemedText style={[styles.value, { color: C.text }]}>{selectedCrop.district}</ThemedText>
+                </View>
+                <View style={[styles.detailRow, { borderBottomColor: C.border }]}>
+                  <ThemedText style={[styles.label, { color: C.muted }]}>Planted Date</ThemedText>
+                  <ThemedText style={[styles.value, { color: C.text }]}>{selectedCrop.plantedDate}</ThemedText>
+                </View>
+                <View style={[styles.detailRow, { borderBottomColor: C.border }]}>
+                  <ThemedText style={[styles.label, { color: C.muted }]}>Crop Age</ThemedText>
+                  <ThemedText style={[styles.value, { color: C.text }]}>{selectedCrop.cropAge} days</ThemedText>
+                </View>
+                <View style={[styles.detailRow, { borderBottomColor: C.border }]}>
+                  <ThemedText style={[styles.label, { color: C.muted }]}>Growth Stage</ThemedText>
+                  <ThemedText style={[styles.value, { color: C.text }]}>{selectedCrop.growthStage}</ThemedText>
+                </View>
+                <View style={[styles.detailRow, { borderBottomColor: C.border }]}>
+                  <ThemedText style={[styles.label, { color: C.muted }]}>Progress</ThemedText>
+                  <ThemedText style={[styles.value, { color: C.text }]}>{selectedCrop.progressPercent}%</ThemedText>
                 </View>
                 <View style={styles.detailRow}>
-                  <ThemedText style={[styles.label, { color: '#0f5132', fontSize: 12 }]}>Crop Type:</ThemedText>
-                  <ThemedText style={[styles.value, { color: '#333', fontSize: 12 }]}>{selectedCrop.cropType || 'N/A'}</ThemedText>
-                </View>
-                <View style={styles.detailRow}>
-                  <ThemedText style={[styles.label, { color: '#0f5132', fontSize: 12 }]}>District:</ThemedText>
-                  <ThemedText style={[styles.value, { color: '#333', fontSize: 12 }]}>{selectedCrop.district}</ThemedText>
-                </View>
-                <View style={styles.detailRow}>
-                  <ThemedText style={[styles.label, { color: '#0f5132', fontSize: 12 }]}>Planted Date:</ThemedText>
-                  <ThemedText style={[styles.value, { color: '#333', fontSize: 12 }]}>{selectedCrop.plantedDate}</ThemedText>
-                </View>
-                <View style={styles.detailRow}>
-                  <ThemedText style={[styles.label, { color: '#0f5132', fontSize: 12 }]}>Crop Age:</ThemedText>
-                  <ThemedText style={[styles.value, { color: '#333', fontSize: 12 }]}>{selectedCrop.cropAge} days</ThemedText>
-                </View>
-                <View style={styles.detailRow}>
-                  <ThemedText style={[styles.label, { color: '#0f5132', fontSize: 12 }]}>Growth Stage:</ThemedText>
-                  <ThemedText style={[styles.value, { color: '#333', fontSize: 12 }]}>{selectedCrop.growthStage}</ThemedText>
-                </View>
-                <View style={styles.detailRow}>
-                  <ThemedText style={[styles.label, { color: '#0f5132', fontSize: 12 }]}>Progress:</ThemedText>
-                  <ThemedText style={[styles.value, { color: '#333', fontSize: 12 }]}>{selectedCrop.progressPercent}%</ThemedText>
-                </View>
-                <View style={styles.detailRow}>
-                  <ThemedText style={[styles.label, { color: '#0f5132', fontSize: 12 }]}>Harvest Date:</ThemedText>
-                  <ThemedText style={[styles.value, { color: '#333', fontSize: 12 }]}>{selectedCrop.expectedHarvestDate || 'N/A'}</ThemedText>
+                  <ThemedText style={[styles.label, { color: C.muted }]}>Harvest Date</ThemedText>
+                  <ThemedText style={[styles.value, { color: C.text }]}>{selectedCrop.expectedHarvestDate || 'N/A'}</ThemedText>
                 </View>
               </ScrollView>
             )}
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     </ThemedView>
   );
@@ -601,11 +600,11 @@ const styles = StyleSheet.create({
   saveBtn:         { backgroundColor: '#0F9D58', borderRadius: Radius.md, paddingVertical: 14, alignItems: 'center', marginTop: Spacing.sm, marginBottom: Spacing.lg },
   saveBtnText:     { color: '#FFF', fontWeight: '700', fontSize: 15 },
   districtItem:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: 14, borderBottomWidth: 1 },
-  dateConfirmBtn:  { alignSelf: 'flex-end', marginTop: 6, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#0f5132', borderRadius: Radius.md },
+  dateConfirmBtn:  { alignSelf: 'flex-end', marginTop: 6, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#0F9D58', borderRadius: Radius.md },
   dateConfirmText: { color: '#fff', fontWeight: '700', fontSize: 13 },
   webCalOverlay:   { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' },
-  webCalBox:       { backgroundColor: '#fff', borderRadius: 14, padding: 20, width: 280, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 12, elevation: 10 },
-  detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm, paddingVertical: 4 },
-  label: { fontSize: 14, fontWeight: '600', color: '#0f5132' },
-  value: { fontSize: 14, color: '#333' },
+  webCalBox:       { borderRadius: 14, padding: 20, width: 280, ...Shadows.lg },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm, paddingVertical: 8, borderBottomWidth: 1 },
+  label: { fontSize: 13, fontWeight: '600' },
+  value: { fontSize: 13, fontWeight: '700' },
 });

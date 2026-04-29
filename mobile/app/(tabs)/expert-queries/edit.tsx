@@ -187,7 +187,7 @@ export default function MyQueryEdit() {
           source={{ uri: query.imageUrl.startsWith('http') ? query.imageUrl : `${SERVER_BASE}${query.imageUrl.startsWith('/') ? '' : '/'}${query.imageUrl}` }} 
           style={styles.image} 
           resizeMode="contain"
-          onError={(e) => console.log('Edit Image Load Error:', e.nativeEvent.error)}
+          onError={(e) => console.log('Edit Image Load Error:', (e as any).nativeEvent?.error || 'Unknown error')}
         />
       )}
 

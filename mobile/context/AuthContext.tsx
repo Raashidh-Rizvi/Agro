@@ -11,6 +11,8 @@ interface AuthContextType {
     register: (userData: any) => Promise<void>;
     updateProfile: (userData: any) => Promise<void>;
     updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+    forgotPassword: (email: string) => Promise<string | undefined>;
+    resetPassword: (token: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
 }
 
@@ -114,8 +116,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         delete axios.defaults.headers.common['Authorization'];
     };
 
+    const forgotPassword = async (email: string) => {
+        try {
+            const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+            // In development, the backend returns the token
+            return response.data.resetToken;
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Failed to send reset email';
+        }
+    };
+
+    const resetPassword = async (token: string, password: string) => {
+        try {
+            await axios.put(`${API_URL}/auth/reset-password/${token}`, { password });
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Failed to reset password';
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, login, register, updateProfile, updatePassword, logout }}>
+        <AuthContext.Provider value={{ user, token, isLoading, login, register, updateProfile, updatePassword, forgotPassword, resetPassword, logout }}>
             {children}
         </AuthContext.Provider>
     );

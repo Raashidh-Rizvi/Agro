@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Alert, ScrollView, Image, TextInput, TouchableOpacity, Text, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Alert, ScrollView, TextInput, TouchableOpacity, Text, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { Shadows } from '@/constants/theme';
 import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
 import { API_URL } from '../../../constants/Config';
@@ -253,11 +255,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    ...Shadows.xs,
   },
   field: {
     marginBottom: 20,
@@ -346,11 +344,8 @@ const styles = StyleSheet.create({
     right: -10,
     backgroundColor: 'white',
     borderRadius: 14,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
     shadowRadius: 2,
+    ...Shadows.xs,
   },
   footer: {
     padding: 16,

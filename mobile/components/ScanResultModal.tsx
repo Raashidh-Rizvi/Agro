@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, StyleSheet, View, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { Modal, StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
