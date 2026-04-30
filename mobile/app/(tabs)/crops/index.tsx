@@ -8,13 +8,12 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import axios from 'axios';
+import api from '@/services/api';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
-import { API_URL } from '@/constants/Config';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const FILTER_TABS = ['All', 'Growing', 'At Risk', 'Harvest'] as const;
@@ -80,10 +79,6 @@ export default function CropsScreen() {
 
   const today = new Date().toISOString().split('T')[0];
 
-  const authHeader = useCallback(
-    () => ({ headers: { Authorization: `Bearer ${token}` } }),
-    [token]
-  );
 
   // ─── Fetch ──────────────────────────────────────────────────────────────────
   const fetchCrops = useCallback(async () => {
@@ -93,7 +88,7 @@ export default function CropsScreen() {
       const params: any = { sortBy };
       if (activeFilter !== 'All') params.growthStage = activeFilter;
       if (search.trim()) params.search = search.trim();
-      const res = await axios.get(`${API_URL}/crops`, { params, ...authHeader() });
+      const res = await api.get('/crops', { params });
       setCrops(res.data.data);
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.message || 'Failed to fetch crops');
@@ -157,9 +152,9 @@ export default function CropsScreen() {
         landSize:     Number(form.landSize),
       };
       if (editTarget) {
-        await axios.put(`${API_URL}/crops/${editTarget._id}`, payload, authHeader());
+        await api.put(`/crops/${editTarget._id}`, payload);
       } else {
-        await axios.post(`${API_URL}/crops`, payload, authHeader());
+        await api.post('/crops', payload);
       }
       setModalVisible(false);
       fetchCrops();
@@ -176,7 +171,7 @@ export default function CropsScreen() {
       {
         text: 'Delete', style: 'destructive', onPress: async () => {
           try {
-            await axios.delete(`${API_URL}/crops/${id}`, authHeader());
+            await api.delete(`/crops/${id}`);
             fetchCrops();
           } catch (e: any) {
             Alert.alert('Error', e.response?.data?.message || 'Failed to delete');

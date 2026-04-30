@@ -16,12 +16,11 @@ app.use('/uploads', express.static('public/uploads'));
 
 // Request logger
 app.use((req, res, next) => {
-    if (req.url.startsWith('/api/expert-query')) {
-        console.log(`--- [DEBUG] Query Request ---`);
-        console.log(`Method: ${req.method}`);
-        console.log(`Content-Type: ${req.headers['content-type']}`);
-    }
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`);
+    });
     next();
 });
 

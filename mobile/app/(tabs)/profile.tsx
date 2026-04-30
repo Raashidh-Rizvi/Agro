@@ -8,8 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
 import { useAppColors, useAppTheme } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
-import axios from 'axios';
-import { API_URL } from '@/constants/Config';
+import api from '../../services/api';
 
 const SETTINGS = [
   {
@@ -69,9 +68,7 @@ export default function ProfileScreen() {
   const fetchStats = async () => {
     if (!token) return;
     try {
-      const response = await axios.get(`${API_URL}/stats/summary`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/stats/summary');
       if (response.data.success) {
         setStats(response.data.data);
       }

@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import axios from 'axios';
+import api from '@/services/api';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { Spacing, Radius } from '@/constants/theme';
-import { API_URL } from '@/constants/Config';
 
 export default function ViewCropScreen() {
   const C = useAppColors();
@@ -19,13 +18,12 @@ export default function ViewCropScreen() {
   const [crop, setCrop] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const authHeader = () => ({ headers: { Authorization: `Bearer ${token}` } });
 
   useEffect(() => {
     const fetchCrop = async () => {
       if (!id || !token) return;
       try {
-        const res = await axios.get(`${API_URL}/crops/${id}`, authHeader());
+        const res = await api.get(`/crops/${id}`);
         setCrop(res.data.data);
       } catch (err: any) {
         Alert.alert('Error', err.response?.data?.message || 'Failed to fetch crop');

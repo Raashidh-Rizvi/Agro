@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
-import axios from 'axios';
-import { API_URL } from '../constants/Config';
+import api from './api';
 
 export interface DiagnosisResult {
     id: string;
@@ -44,7 +43,7 @@ export const DiagnosisService = {
             });
         }
 
-        const response = await axios.post(`${API_URL}/diagnosis/predict`, formData, {
+        const response = await api.post('/diagnosis/predict', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -61,7 +60,7 @@ export const DiagnosisService = {
      * Fetch diagnosis history for the current user
      */
     getHistory: async (): Promise<DiagnosisResult[]> => {
-        const response = await axios.get(`${API_URL}/diagnosis/history`);
+        const response = await api.get('/diagnosis/history');
         if (response.data.success) {
             return response.data.data;
         } else {

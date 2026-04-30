@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { FlatList, RefreshControl, Alert, StyleSheet, TouchableOpacity, Text, View, ActivityIndicator, TextInput } from 'react-native';
+import { FlatList, RefreshControl, Alert, StyleSheet, TouchableOpacity, Text, View, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
@@ -304,54 +304,59 @@ const renderQuery = ({ item }: { item: Query }) => {
     );
   }
 
-return (
-  <View style={styles.container}>
-    <Stack.Screen 
-      options={{ 
-        title: 'All Queries',
-        headerLeft: onBack ? () => (
-          <TouchableOpacity onPress={onBack} style={{marginLeft: 16}}>
-            <IconSymbol name="chevron.left" size={24} color="#0A5C36" />
-          </TouchableOpacity>
-        ) : undefined,
-        headerRight: () => (
-          <TouchableOpacity onPress={() => router.push('/expert-queries/submit')} style={styles.headerButton}>
-            <IconSymbol name="plus" size={24} color="#0A5C36" />
-          </TouchableOpacity>
-        )
-      }} 
-    />
-    
-    {user?.role !== 'Expert' && (
-      <View style={styles.actionContainer}>
-        <TouchableOpacity 
-          style={styles.createButton} 
-          onPress={() => router.push('/expert-queries/submit')}
-        >
-          <IconSymbol name="plus.circle.fill" size={20} color="white" />
-          <Text style={styles.createButtonText}>Ask an Expert</Text>
-        </TouchableOpacity>
-      </View>
-    )}
+  return (
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={styles.container}>
+        <Stack.Screen 
+          options={{ 
+            title: 'All Queries',
+            headerLeft: onBack ? () => (
+              <TouchableOpacity onPress={onBack} style={{marginLeft: 16}}>
+                <IconSymbol name="chevron.left" size={24} color="#0A5C36" />
+              </TouchableOpacity>
+            ) : undefined,
+            headerRight: () => (
+              <TouchableOpacity onPress={() => router.push('/expert-queries/submit')} style={styles.headerButton}>
+                <IconSymbol name="plus" size={24} color="#0A5C36" />
+              </TouchableOpacity>
+            )
+          }} 
+        />
+        
+        {user?.role !== 'Expert' && (
+          <View style={styles.actionContainer}>
+            <TouchableOpacity 
+              style={styles.createButton} 
+              onPress={() => router.push('/expert-queries/submit')}
+            >
+              <IconSymbol name="plus.circle.fill" size={20} color="white" />
+              <Text style={styles.createButtonText}>Ask an Expert</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-    <FlatList
-      data={queries}
-      renderItem={renderQuery}
-      keyExtractor={(item) => item._id}
-      contentContainerStyle={styles.listContainer}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0A5C36" />
-      }
-      ListEmptyComponent={
-        <View style={styles.emptyContainer}>
-          <IconSymbol name="doc.text.magnifyingglass" size={48} color="#999" />
-          <Text style={styles.emptyText}>No queries found.</Text>
-          <Text style={styles.emptySubtext}>Submit your first query to get expert advice!</Text>
-        </View>
-      }
-    />
-  </View>
-);
+        <FlatList
+          data={queries}
+          renderItem={renderQuery}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0A5C36" />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <IconSymbol name="doc.text.magnifyingglass" size={48} color="#999" />
+              <Text style={styles.emptyText}>No queries found.</Text>
+              <Text style={styles.emptySubtext}>Submit your first query to get expert advice!</Text>
+            </View>
+          }
+        />
+      </View>
+    </KeyboardAvoidingView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -586,6 +591,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
     ...Shadows.xs,
-    shadowColor: '#000',
   },
 });

@@ -405,7 +405,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md, paddingVertical: 10,
     borderRadius: Radius.lg, marginBottom: Spacing.md, gap: 8, borderWidth: 1, ...Shadows.xs,
   },
-  searchInput: { flex: 1, fontSize: 14 },
+  searchInput: { 
+    flex: 1, 
+    fontSize: 15, 
+    paddingVertical: 12,
+    minHeight: 48,
+  },
   searchDivider: { width: 1, height: 18, marginHorizontal: 4 },
   categoriesRow: { marginBottom: Spacing.md },
   categoriesContent: { paddingHorizontal: Spacing.lg, gap: 8 },

@@ -27,14 +27,6 @@ export default function TabLayout() {
             backgroundColor:  C.tabBar,
             borderTopColor:   C.tabBorder,
             borderTopWidth:   1,
-            shadowColor:      '#000',
-            shadowOffset:     { width: 0, height: -2 },
-            shadowOpacity:    mode === 'light' ? 0.06 : 0,
-            shadowRadius:     8,
-            elevation:        8,
-            height:           Platform.OS === 'ios' ? 88 : 70,
-            paddingBottom:    Platform.OS === 'ios' ? insets.bottom : 12,
-            paddingTop:       10,
             ...Platform.select({
               web: { 
                 boxShadow: mode === 'light' ? '0px -2px 8px rgba(0,0,0,0.06)' : 'none',
@@ -42,8 +34,17 @@ export default function TabLayout() {
                 paddingBottom: 0,
                 paddingTop: 0,
               },
-              default: {}
-            })
+              default: {
+                shadowColor:      '#000',
+                shadowOffset:     { width: 0, height: -2 },
+                shadowOpacity:    mode === 'light' ? 0.06 : 0,
+                shadowRadius:     8,
+                elevation:        8,
+              }
+            }),
+            height:           Platform.OS === 'ios' ? 88 : 70,
+            paddingBottom:    Platform.OS === 'ios' ? insets.bottom : 12,
+            paddingTop:       10,
           },
           tabBarActiveTintColor:   C.primary,
           tabBarInactiveTintColor: C.tabInactive,

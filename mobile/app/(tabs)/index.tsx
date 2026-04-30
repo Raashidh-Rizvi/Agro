@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
-import axios from 'axios';
+import api from '../../services/api';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -50,9 +50,11 @@ export default function FarmerDashboard() {
   const [isScansLoading, setIsScansLoading] = useState(false);
 
   useEffect(() => {
-    fetchRealAlerts();
-    fetchRecentScans();
-  }, []);
+    if (!isLoading && user) {
+      fetchRealAlerts();
+      fetchRecentScans();
+    }
+  }, [isLoading, !!user]);
 
   const fetchRecentScans = async () => {
     setIsScansLoading(true);
@@ -69,7 +71,7 @@ export default function FarmerDashboard() {
   const fetchRealAlerts = async () => {
     setIsAlertsLoading(true);
     try {
-      const resp = await axios.get(`${API_URL}/alerts`);
+      const resp = await api.get('/alerts');
       // Take only top 3 most recent
       const fetched = (resp.data.alerts || []).slice(0, 3);
       setAlerts(fetched);
@@ -181,8 +183,7 @@ export default function FarmerDashboard() {
           activeOpacity={0.9}
         >
           <View 
-            pointerEvents={Platform.OS === 'web' ? undefined : 'none'}
-            style={[styles.heroOverlay, { backgroundColor: C.heroOverlay }, Platform.OS === 'web' ? { pointerEvents: 'none' } : {}]} 
+            style={[styles.heroOverlay, { backgroundColor: C.heroOverlay, pointerEvents: 'none' }]} 
           />
           <View style={styles.heroLeft}>
             <View style={styles.aiBadge}>
@@ -195,8 +196,7 @@ export default function FarmerDashboard() {
             </ThemedText>
           </View>
           <View 
-            pointerEvents={Platform.OS === 'web' ? undefined : 'none'} 
-            style={[styles.heroIcon, Platform.OS === 'web' ? { pointerEvents: 'none' } : {}]}
+            style={[styles.heroIcon, { pointerEvents: 'none' }]}
           >
             <MaterialCommunityIcons name="camera-plus" size={46} color="#FFFFFF" />
           </View>

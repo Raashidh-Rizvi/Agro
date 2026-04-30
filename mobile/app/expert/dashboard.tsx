@@ -6,9 +6,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors } from '@/context/AppThemeContext';
-import { API_URL } from '@/constants/Config';
 import { Radius, Spacing, Shadows } from '@/constants/theme';
-import axios from 'axios';
+import api from '@/services/api';
 
 export default function ExpertDashboardScreen() {
     const { user, token } = useAuth();
@@ -26,9 +25,7 @@ export default function ExpertDashboardScreen() {
     const fetchStats = async () => {
         if (!token) return;
         try {
-            const response = await axios.get(`${API_URL}/stats/summary`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('/stats/summary');
             if (response.data.success) {
                 const data = response.data.data;
                 setStats({

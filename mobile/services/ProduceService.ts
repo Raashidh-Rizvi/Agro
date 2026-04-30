@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { API_URL } from '../constants/Config';
+import api from './api';
 import { Platform } from 'react-native';
 
 export interface ProduceListing {
@@ -26,7 +25,7 @@ export const ProduceService = {
         if (category && category !== 'All') params.category = category;
         if (search) params.search = search;
 
-        const response = await axios.get(`${API_URL}/produce`, { params });
+        const response = await api.get('/produce', { params });
         if (response.data.success) {
             return response.data.data;
         } else {
@@ -38,7 +37,7 @@ export const ProduceService = {
      * Get produce by ID
      */
     getById: async (id: string): Promise<ProduceListing> => {
-        const response = await axios.get(`${API_URL}/produce/${id}`);
+        const response = await api.get(`/produce/${id}`);
         if (response.data.success) {
             return response.data.data;
         } else {
@@ -50,7 +49,7 @@ export const ProduceService = {
      * Get current user's listings
      */
     getMyListings: async (): Promise<ProduceListing[]> => {
-        const response = await axios.get(`${API_URL}/produce/my/listings`);
+        const response = await api.get('/produce/my/listings');
         if (response.data.success) {
             return response.data.data;
         } else {
@@ -87,7 +86,7 @@ export const ProduceService = {
             }
         }
 
-        const response = await axios.post(`${API_URL}/produce`, formData, {
+        const response = await api.post('/produce', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -129,7 +128,7 @@ export const ProduceService = {
             }
         }
 
-        const response = await axios.put(`${API_URL}/produce/${id}`, formData, {
+        const response = await api.put(`/produce/${id}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -146,7 +145,7 @@ export const ProduceService = {
      * Delete a listing
      */
     delete: async (id: string): Promise<void> => {
-        const response = await axios.delete(`${API_URL}/produce/${id}`);
+        const response = await api.delete(`/produce/${id}`);
         if (!response.data.success) {
             throw new Error(response.data.message || 'Failed to delete listing');
         }

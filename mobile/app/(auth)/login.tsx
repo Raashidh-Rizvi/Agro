@@ -43,6 +43,9 @@ export default function LoginScreen() {
   const { login, isLoading }              = useAuth();
   const router                            = useRouter();
 
+  const emailRef = React.useRef<TextInput>(null);
+  const passRef  = React.useRef<TextInput>(null);
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Missing Fields', 'Please enter your email and password.');
@@ -60,7 +63,7 @@ export default function LoginScreen() {
     <ThemeOverrideProvider scheme="light">
       <KeyboardAvoidingView
         style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           contentContainerStyle={styles.container}
@@ -91,7 +94,11 @@ export default function LoginScreen() {
             {/* Email */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email Address</Text>
-              <View style={[styles.inputWrapper, emailFocused && styles.inputFocused]}>
+              <TouchableOpacity 
+                activeOpacity={1}
+                onPress={() => emailRef.current?.focus()}
+                style={[styles.inputWrapper, emailFocused && styles.inputFocused]}
+              >
                 <Ionicons
                   name="mail-outline"
                   size={18}
@@ -99,6 +106,7 @@ export default function LoginScreen() {
                   style={styles.inputIcon}
                 />
                 <TextInput
+                  ref={emailRef}
                   style={styles.input}
                   placeholder="you@example.com"
                   placeholderTextColor={L.muted}
@@ -110,13 +118,17 @@ export default function LoginScreen() {
                   onFocus={() => setEmailFocused(true)}
                   onBlur={() => setEmailFocused(false)}
                 />
-              </View>
+              </TouchableOpacity>
             </View>
 
             {/* Password */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
-              <View style={[styles.inputWrapper, passFocused && styles.inputFocused]}>
+              <TouchableOpacity 
+                activeOpacity={1}
+                onPress={() => passRef.current?.focus()}
+                style={[styles.inputWrapper, passFocused && styles.inputFocused]}
+              >
                 <Ionicons
                   name="lock-closed-outline"
                   size={18}
@@ -124,6 +136,7 @@ export default function LoginScreen() {
                   style={styles.inputIcon}
                 />
                 <TextInput
+                  ref={passRef}
                   style={[styles.input, { paddingRight: 48 }]}
                   placeholder="Enter your password"
                   placeholderTextColor={L.muted}
@@ -146,7 +159,7 @@ export default function LoginScreen() {
                     color={L.muted}
                   />
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity 
@@ -251,7 +264,14 @@ const styles = StyleSheet.create({
   },
   inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF', ...Shadows.xs },
   inputIcon: { marginLeft: 16, marginRight: 4 },
-  input: { flex: 1, paddingVertical: 15, paddingHorizontal: 10, fontSize: 15, color: L.text },
+  input: { 
+    flex: 1, 
+    paddingVertical: 12, 
+    paddingHorizontal: 10, 
+    fontSize: 16, 
+    color: L.text,
+    minHeight: 50,
+  },
   eyeIcon: { position: 'absolute', right: 14, padding: 4 },
 
   forgotWrapper: { alignSelf: 'flex-end', marginBottom: Spacing.xl, marginTop: 4 },

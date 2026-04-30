@@ -7,8 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Radius, Spacing, Shadows } from '@/constants/theme';
-import axios from 'axios';
-import { API_URL } from '../../constants/Config';
+import api from '../../services/api';
 
 interface User {
     _id: string;
@@ -29,9 +28,7 @@ export default function AdminUsersScreen() {
 
     const fetchUsers = async () => {
         try {
-            const response = await axios.get(`${API_URL}/users`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('/users');
             setUsers(response.data.data);
         } catch (error: any) {
             Alert.alert('Error', error.response?.data?.message || 'Failed to fetch users');
@@ -61,9 +58,7 @@ export default function AdminUsersScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await axios.delete(`${API_URL}/users/${userId}`, {
-                                headers: { Authorization: `Bearer ${token}` }
-                            });
+                            await api.delete(`/users/${userId}`);
                             setUsers(users.filter(u => u._id !== userId));
                             Alert.alert('Success', 'User deleted successfully');
                         } catch (error: any) {

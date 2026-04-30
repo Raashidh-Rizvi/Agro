@@ -6,9 +6,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors } from '@/context/AppThemeContext';
-import { API_URL } from '@/constants/Config';
 import { Radius, Spacing, Shadows } from '@/constants/theme';
-import axios from 'axios';
+import api from '@/services/api';
 
 interface ExpertDashboardProps {
     onQueriesPress?: () => void;
@@ -30,14 +29,12 @@ export default function ExpertDashboard({ onQueriesPress }: ExpertDashboardProps
     const fetchStats = async () => {
         if (!token) return;
         try {
-            const queryRes = await axios.get(`${API_URL}/expert-query`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const queryRes = await api.get('/expert-query');
             const allQueries = queryRes.data.data || [];
             const pending = allQueries.filter((q: any) => q.status === 'pending').length;
             const answeredByMe = allQueries.filter((q: any) => q.status === 'answered').length; 
 
-            const alertRes = await axios.get(`${API_URL}/alerts`);
+            const alertRes = await api.get('/alerts');
             const allAlerts = alertRes.data.alerts || [];
             
             setStats({
