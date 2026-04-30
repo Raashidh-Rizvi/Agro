@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.env.*
+!.env.example
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Models (if they are large/generated)
+# models/*.h5
+# models/*.joblib
+
+# OS
+.DS_Store
+Thumbs.db
