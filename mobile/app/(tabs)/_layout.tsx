@@ -28,23 +28,23 @@ export default function TabLayout() {
             borderTopColor:   C.tabBorder,
             borderTopWidth:   1,
             ...Platform.select({
-              web: { 
+              web: {
                 boxShadow: mode === 'light' ? '0px -2px 8px rgba(0,0,0,0.06)' : 'none',
                 height: 64,
                 paddingBottom: 0,
                 paddingTop: 0,
               },
               default: {
-                shadowColor:      '#000',
-                shadowOffset:     { width: 0, height: -2 },
-                shadowOpacity:    mode === 'light' ? 0.06 : 0,
-                shadowRadius:     8,
-                elevation:        8,
+                shadowColor:   '#000',
+                shadowOffset:  { width: 0, height: -2 },
+                shadowOpacity: mode === 'light' ? 0.06 : 0,
+                shadowRadius:  8,
+                elevation:     8,
               }
             }),
-            height:           Platform.OS === 'ios' ? 88 : 70,
-            paddingBottom:    Platform.OS === 'ios' ? insets.bottom : 12,
-            paddingTop:       10,
+            height:        Platform.OS === 'web' ? 64 : 60 + insets.bottom,
+            paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+            paddingTop:    8,
           },
           tabBarActiveTintColor:   C.primary,
           tabBarInactiveTintColor: C.tabInactive,

@@ -344,7 +344,6 @@ const styles = StyleSheet.create({
     right: -10,
     backgroundColor: 'white',
     borderRadius: 14,
-    shadowRadius: 2,
     ...Shadows.xs,
   },
   footer: {

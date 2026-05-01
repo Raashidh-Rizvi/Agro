@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, StyleSheet, TouchableOpacity,
   ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform,
@@ -45,6 +45,10 @@ export default function RegisterScreen() {
   const { register, isLoading }         = useAuth();
   const router                          = useRouter();
 
+  const nameRef  = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const passRef  = useRef<TextInput>(null);
+
   const handleRegister = async () => {
     if (!name || !email || !password) {
       Alert.alert('Missing Fields', 'Please fill in all fields to continue.');
@@ -62,11 +66,13 @@ export default function RegisterScreen() {
     <ThemeOverrideProvider scheme="light">
       <KeyboardAvoidingView
         style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="on-drag"
+          nestedScrollEnabled={true}
           showsVerticalScrollIndicator={false}
         >
           {/* ── Green Header ─────────────────────────── */}
@@ -91,44 +97,48 @@ export default function RegisterScreen() {
             {/* Full Name */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Full Name</Text>
-              <View style={[styles.inputWrapper, nameFocused && styles.inputFocused]}>
+              <TouchableOpacity activeOpacity={1} style={[styles.inputWrapper, nameFocused && styles.inputFocused]} onPress={() => nameRef.current?.focus()}>
                 <Ionicons name="person-outline" size={18}
                   color={nameFocused ? L.primary : L.muted} style={styles.inputIcon} />
                 <TextInput
+                  ref={nameRef}
                   style={styles.input} placeholder="e.g. Kamal Perera"
                   placeholderTextColor={L.muted} value={name} onChangeText={setName}
-                  returnKeyType="next"
+                  returnKeyType="next" onSubmitEditing={() => emailRef.current?.focus()}
                   onFocus={() => setNameFocused(true)} onBlur={() => setNameFocused(false)}
                 />
-              </View>
+              </TouchableOpacity>
             </View>
 
             {/* Email */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email Address</Text>
-              <View style={[styles.inputWrapper, emailFocused && styles.inputFocused]}>
+              <TouchableOpacity activeOpacity={1} style={[styles.inputWrapper, emailFocused && styles.inputFocused]} onPress={() => emailRef.current?.focus()}>
                 <Ionicons name="mail-outline" size={18}
                   color={emailFocused ? L.primary : L.muted} style={styles.inputIcon} />
                 <TextInput
+                  ref={emailRef}
                   style={styles.input} placeholder="you@example.com"
                   placeholderTextColor={L.muted} value={email} onChangeText={setEmail}
                   autoCapitalize="none" keyboardType="email-address" returnKeyType="next"
+                  onSubmitEditing={() => passRef.current?.focus()}
                   onFocus={() => setEmailFocused(true)} onBlur={() => setEmailFocused(false)}
                 />
-              </View>
+              </TouchableOpacity>
             </View>
 
             {/* Password */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
-              <View style={[styles.inputWrapper, passFocused && styles.inputFocused]}>
+              <TouchableOpacity activeOpacity={1} style={[styles.inputWrapper, passFocused && styles.inputFocused]} onPress={() => passRef.current?.focus()}>
                 <Ionicons name="lock-closed-outline" size={18}
                   color={passFocused ? L.primary : L.muted} style={styles.inputIcon} />
                 <TextInput
+                  ref={passRef}
                   style={[styles.input, { paddingRight: 48 }]}
                   placeholder="Choose a strong password" placeholderTextColor={L.muted}
                   value={password} onChangeText={setPassword} secureTextEntry={!showPassword}
-                  returnKeyType="done"
+                  returnKeyType="done" onSubmitEditing={handleRegister}
                   onFocus={() => setPassFocused(true)} onBlur={() => setPassFocused(false)}
                 />
                 <TouchableOpacity style={styles.eyeIcon}
@@ -136,7 +146,7 @@ export default function RegisterScreen() {
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={L.muted} />
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             </View>
 
             {/* Role Selector */}

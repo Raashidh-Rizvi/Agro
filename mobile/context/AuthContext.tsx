@@ -6,6 +6,7 @@ interface AuthContextType {
     user: any | null;
     token: string | null;
     isLoading: boolean;
+    isInitializing: boolean;
     login: (email: string, password: string) => Promise<void>;
     register: (userData: any) => Promise<void>;
     updateProfile: (userData: any) => Promise<void>;
@@ -18,9 +19,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<any | null>(null);
-    const [token, setToken] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [user, setUser]       = useState<any | null>(null);
+    const [token, setToken]     = useState<string | null>(null);
+    const [isLoading, setIsLoading]   = useState(false);
+    const [isInitializing, setIsInitializing] = useState(true);
 
     useEffect(() => {
         loadStoredAuth();
@@ -29,8 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loadStoredAuth = async () => {
         try {
             const storedToken = await storage.getItemAsync('userToken');
-            const storedUser = await storage.getItemAsync('userData');
-
+            const storedUser  = await storage.getItemAsync('userData');
             if (storedToken && storedUser) {
                 setToken(storedToken);
                 setUser(JSON.parse(storedUser));
@@ -38,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (e) {
             console.error('Failed to load auth state', e);
         } finally {
-            setIsLoading(false);
+            setIsInitializing(false);
         }
     };
 
@@ -130,7 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, login, register, updateProfile, updatePassword, forgotPassword, resetPassword, logout }}>
+        <AuthContext.Provider value={{ user, token, isLoading, isInitializing, login, register, updateProfile, updatePassword, forgotPassword, resetPassword, logout }}>
             {children}
         </AuthContext.Provider>
     );
