@@ -38,7 +38,7 @@ const AgriDarkTheme = {
 
 // ─── Auth Guard ───────────────────────────────────────────────────────────────
 function RootLayoutNav() {
-  const { user, isLoading } = useAuth();
+  const { user, isInitializing } = useAuth();
   const segments = useSegments();
   const router   = useRouter();
 
@@ -46,13 +46,13 @@ function RootLayoutNav() {
   const inTabs      = segments[0] === '(tabs)';
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isInitializing) return;
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (user && inAuthGroup) {
       router.replace('/(tabs)');
     }
-  }, [user, isLoading, segments, router, inAuthGroup]);
+  }, [user, isInitializing, segments, router, inAuthGroup]);
 
   return (
     <>

@@ -98,6 +98,8 @@ export default function RegisterScreen() {
                   style={styles.input} placeholder="e.g. Kamal Perera"
                   placeholderTextColor={L.muted} value={name} onChangeText={setName}
                   returnKeyType="next"
+                  onSubmitEditing={() => (document as any)?.activeElement?.blur?.()}
+                  autoCapitalize="words"
                   onFocus={() => setNameFocused(true)} onBlur={() => setNameFocused(false)}
                 />
               </View>

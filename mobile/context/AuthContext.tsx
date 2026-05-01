@@ -5,7 +5,8 @@ import api from '../services/api';
 interface AuthContextType {
     user: any | null;
     token: string | null;
-    isLoading: boolean;
+    isLoading: boolean;      // true only during active register/login/update API calls
+    isInitializing: boolean; // true only while loading stored credentials on startup
     login: (email: string, password: string) => Promise<void>;
     register: (userData: any) => Promise<void>;
     updateProfile: (userData: any) => Promise<void>;
@@ -20,7 +21,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<any | null>(null);
     const [token, setToken] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isInitializing, setIsInitializing] = useState(true);
 
     useEffect(() => {
         loadStoredAuth();
@@ -38,14 +40,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (e) {
             console.error('Failed to load auth state', e);
         } finally {
-            setIsLoading(false);
+            setIsInitializing(false);
         }
     };
 
     const login = async (email: string, password: string) => {
         setIsLoading(true);
         try {
-            const response = await api.post('/auth/login', { email, password });
+            const response = await api.post('/auth/login', { email: email.trim().toLowerCase(), password });
             const { token, user } = response.data;
 
             await storage.setItemAsync('userToken', token);
@@ -63,7 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const register = async (userData: any) => {
         setIsLoading(true);
         try {
-            const response = await api.post('/auth/register', userData);
+            const payload = { ...userData };
+            if (payload.email) payload.email = payload.email.trim().toLowerCase();
+            const response = await api.post('/auth/register', payload);
             const { token, user } = response.data;
 
             await storage.setItemAsync('userToken', token);
@@ -130,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, login, register, updateProfile, updatePassword, forgotPassword, resetPassword, logout }}>
+        <AuthContext.Provider value={{ user, token, isLoading, isInitializing, login, register, updateProfile, updatePassword, forgotPassword, resetPassword, logout }}>
             {children}
         </AuthContext.Provider>
     );

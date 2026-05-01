@@ -107,7 +107,7 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']); // Bypass ISP/University SRV blocks
+dns.setServers(['1.1.1.1', '1.0.0.1']); // Bypass ISP/University SRV blocks (using Cloudflare for faster response)
 
 mongoose.connect(MONGO_URI)
     .then(() => {

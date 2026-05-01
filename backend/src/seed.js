@@ -12,6 +12,10 @@ const ExpertQuery = require('./models/ExpertQuery');
 
 dotenv.config();
 
+// Configure DNS for MongoDB connection
+const dns = require('dns');
+dns.setServers(['1.1.1.1', '1.0.0.1']); // Cloudflare DNS
+
 const seedData = async () => {
     try {
         console.log('Connecting to MongoDB...');
@@ -28,7 +32,10 @@ const seedData = async () => {
 
         console.log('Creating sample users...');
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash('password123', salt);
+        const defaultPassword = 'password';
+        const hashedPassword = await bcrypt.hash(defaultPassword, salt);
+
+        console.log('Default seeded password:', defaultPassword);
 
         const users = await User.insertMany([
             {

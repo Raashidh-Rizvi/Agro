@@ -94,11 +94,7 @@ export default function LoginScreen() {
             {/* Email */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email Address</Text>
-              <TouchableOpacity 
-                activeOpacity={1}
-                onPress={() => emailRef.current?.focus()}
-                style={[styles.inputWrapper, emailFocused && styles.inputFocused]}
-              >
+              <View style={[styles.inputWrapper, emailFocused && styles.inputFocused]}>
                 <Ionicons
                   name="mail-outline"
                   size={18}
@@ -115,20 +111,17 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   returnKeyType="next"
+                  onSubmitEditing={() => passRef.current?.focus()}
                   onFocus={() => setEmailFocused(true)}
                   onBlur={() => setEmailFocused(false)}
                 />
-              </TouchableOpacity>
+              </View>
             </View>
 
             {/* Password */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
-              <TouchableOpacity 
-                activeOpacity={1}
-                onPress={() => passRef.current?.focus()}
-                style={[styles.inputWrapper, passFocused && styles.inputFocused]}
-              >
+              <View style={[styles.inputWrapper, passFocused && styles.inputFocused]}>
                 <Ionicons
                   name="lock-closed-outline"
                   size={18}
@@ -159,7 +152,7 @@ export default function LoginScreen() {
                     color={L.muted}
                   />
                 </TouchableOpacity>
-              </TouchableOpacity>
+              </View>
             </View>
 
             <TouchableOpacity 
