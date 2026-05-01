@@ -1,17 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "public": true,
-  "cleanUrls": true,
   "git": {
     "deploymentEnabled": {
       "Dinithi": false,
       "Dinithi-clean-pr": false
     }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  }
 }
