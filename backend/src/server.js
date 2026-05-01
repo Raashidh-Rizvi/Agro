@@ -11,20 +11,40 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
+app.use('/uploads', express.static('public/uploads'));
 
 // Request logger
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`);
+    });
     next();
 });
 
 // Routes
 const authRoutes = require('./routes/auth.routes');
+const expertQueryRoutes = require('./routes/expertQuery.routes');
+const cropRoutes = require('./routes/crop.routes');
+const diagnosisRoutes = require('./routes/diagnosis.routes');
 const alertRoutes = require('./routes/alert.routes');
+const produceRoutes = require('./routes/produce.routes');
+const userRoutes = require('./routes/user.routes');
+const statsRoutes = require('./routes/stats.routes');
+
 
 // Use Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/expert-query', expertQueryRoutes);
+app.use('/api/crops', cropRoutes);
+app.use('/api/diagnosis', diagnosisRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/produce', produceRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/stats', statsRoutes);
+
 
 // Basic Test Route
 app.get('/', (req, res) => {
@@ -85,6 +105,9 @@ app.use((err, req, res, next) => {
 // Configure MongoDB connection
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
+
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']); // Bypass ISP/University SRV blocks
 
 mongoose.connect(MONGO_URI)
     .then(() => {

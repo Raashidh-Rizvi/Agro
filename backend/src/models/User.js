@@ -25,10 +25,27 @@ const userSchema = new mongoose.Schema({
         enum: ['Farmer', 'Expert', 'Admin'],
         default: 'Farmer'
     },
+    farmName: {
+        type: String,
+        trim: true
+    },
+    location: {
+        type: String,
+        trim: true
+    },
+    farmSize: {
+        type: Number
+    },
+    farmType: {
+        type: String,
+        trim: true
+    },
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date
 });
 
 // Encrypt password before saving
@@ -43,6 +60,24 @@ userSchema.pre('save', async function(next) {
 // Compare user password
 userSchema.methods.matchPassword = async function(enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Generate and hash password token
+userSchema.methods.getResetPasswordToken = function() {
+    const crypto = require('crypto');
+    // Generate token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // Hash token and set to resetPasswordToken field
+    this.resetPasswordToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+
+    // Set expire (10 minutes)
+    this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+    return resetToken;
 };
 
 module.exports = mongoose.model('User', userSchema);

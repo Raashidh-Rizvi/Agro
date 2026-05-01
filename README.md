@@ -1,6 +1,6 @@
 # Agro
 
-Agro is a full-stack mobile application for smart farming in Sri Lanka. The repository name is **Agro**, while parts of the mobile UI still use the product label **AgriSense Lanka**. This README reflects the current state of the `Dinithi` branch after cleanup.
+Agro is a full-stack mobile application for smart farming in Sri Lanka. The repository name is **Agro**, while parts of the mobile UI still use the product label **AgriSense Lanka**. This README reflects the current state of the `Dinithi` branch after cleanup and teammate sync.
 
 ## Overview
 
@@ -32,15 +32,29 @@ The app is intended to bring several farming workflows into one mobile-first pla
   - mobile alert management screen
   - dashboard recent-alert feed
   - focused backend tests
+ - local validation completed for this branch
+   - backend alert tests pass
+   - backend source files pass syntax checks
+   - mobile TypeScript passes
+   - mobile web export succeeds
 
-### Present but not yet complete
+### Synced into this branch from teammate work
 
-- full user CRUD
-- crop management CRUD
-- diagnosis CRUD and AI flow
-- produce listing CRUD
-- expert query CRUD
-- market price CRUD
+- crop management routes, screens, and models
+- diagnosis routes, screens, and ML service files
+- produce listing routes and services
+- expert query routes and screens
+- user management routes and admin/profile screens
+- stats route and dashboard/profile integrations
+
+### Still needs deeper module-by-module QA
+
+- full user CRUD verification
+- crop management workflow verification
+- diagnosis CRUD and AI flow verification
+- produce listing CRUD verification
+- expert query CRUD verification
+- market price CRUD implementation
 
 For the clearest evaluation path, review the advisory alert module first.
 
@@ -108,6 +122,19 @@ Alert filters:
 - `season`
 - `search`
 - `limit`
+
+### Additional synced route groups
+
+```text
+/api/crops
+/api/diagnosis
+/api/expert-query
+/api/produce
+/api/stats
+/api/users
+```
+
+These route groups are now present on the `Dinithi` branch after teammate sync. The advisory alert module remains the most fully verified path in this branch.
 
 ## Project Structure
 
@@ -193,6 +220,7 @@ Before starting the mobile app, set `API_URL` in `mobile/constants/Config.ts` to
 - `docs/advisory-alert-management.md` gives the cleanest module-level breakdown
 - `docs/progress.md` summarizes what is complete vs still pending
 - `backend/test/alert.module.test.js` contains focused verification for the strongest implemented module
+- the `Dinithi` branch now includes synced teammate modules from the shared branch, while Advisory Alert remains the cleanest end-to-end demo
 
 ## Repository
 

@@ -45,7 +45,7 @@ interface ColorPalette {
   bg: string; card: string; surface: string; border: string; divider: string;
   text: string; subtext: string; muted: string;
   primary: string; primaryDim: string; accent: string;
-  danger: string; warning: string; info: string;
+  danger: string; dangerDim: string; warning: string; info: string; success: string;
   tabBar: string; tabBorder: string; tabInactive: string;
   heroOverlay: string;
   statusBar: StatusBarStyle;
@@ -65,8 +65,10 @@ export const DARK_COLORS: ColorPalette = {
   primaryDim: 'rgba(15,157,88,0.15)',
   accent:     '#34C759',
   danger:     '#EF4444',
+  dangerDim:  'rgba(239,68,68,0.16)',
   warning:    '#F59E0B',
   info:       '#3B82F6',
+  success:    '#34C759',
   tabBar:     '#141F18',
   tabBorder:  '#243020',
   tabInactive:'#4A6358',
@@ -88,8 +90,10 @@ export const LIGHT_COLORS: ColorPalette = {
   primaryDim: '#E6F4EA',
   accent:     '#34C759',
   danger:     '#EF4444',
+  dangerDim:  '#FDECEC',
   warning:    '#F59E0B',
   info:       '#3B82F6',
+  success:    '#34C759',
   tabBar:     '#FFFFFF',
   tabBorder:  '#E2EDE8',
   tabInactive:'#9DB8AD',

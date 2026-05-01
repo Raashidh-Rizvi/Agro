@@ -1,39 +1,147 @@
-import React, { useState } from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, View, TextInput } from 'react-native';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, FlatList, TouchableOpacity, View, TextInput, ActivityIndicator, RefreshControl, Alert, Modal, ScrollView, Platform } from 'react-native';
+import { Image } from 'expo-image';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import * as ImagePicker from 'expo-image-picker';
+
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
-import { Shadows, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing, Shadows } from '@/constants/theme';
+import { ProduceService, ProduceListing } from '@/services/ProduceService';
+import { BASE_URL } from '@/constants/Config';
+import { useAuth } from '@/context/AuthContext';
 
-const CATEGORIES = ['All', 'Fertilizers', 'Seeds', 'Tools', 'Pesticides'] as const;
-type Category = typeof CATEGORIES[number];
+const CATEGORIES = ['All', 'Seeds', 'Fertilizers', 'Tools', 'Pesticides', 'Other'];
+const FORM_CATEGORIES = ['Seeds', 'Fertilizers', 'Tools', 'Pesticides', 'Other'];
+type Category = (typeof CATEGORIES)[number];
 
-const PRODUCTS = [
-  { id: '1', name: 'Organic Fertilizer',    price: 'Rs. 2,500', seller: 'Green Agro',  rating: 4.8, category: 'Fertilizers' as Category, icon: 'leaf'              as const, badge: 'Best Seller' },
-  { id: '2', name: 'Paddy Seeds (Premium)', price: 'Rs. 1,800', seller: 'Lanka Seeds', rating: 4.5, category: 'Seeds'       as Category, icon: 'seed-outline'       as const, badge: 'AI Pick'     },
-  { id: '3', name: 'Sprayer Pump',           price: 'Rs. 5,200', seller: 'AgriTools',  rating: 4.2, category: 'Tools'       as Category, icon: 'spray'              as const, badge: null          },
-  { id: '4', name: 'Natural Pesticide',      price: 'Rs. 1,200', seller: 'BioFarm',    rating: 4.7, category: 'Pesticides'  as Category, icon: 'shield-bug-outline' as const, badge: 'Eco-Safe'    },
-  { id: '5', name: 'Drip Irrigation Kit',    price: 'Rs. 8,900', seller: 'WaterWise',  rating: 4.9, category: 'Tools'       as Category, icon: 'water-pump'         as const, badge: 'AI Pick'     },
-  { id: '6', name: 'Compost Fertilizer',     price: 'Rs. 950',   seller: 'EcoFarm',    rating: 4.3, category: 'Fertilizers' as Category, icon: 'recycle'            as const, badge: null          },
-];
+const EMPTY_FORM = {
+  name: '',
+  description: '',
+  price: '',
+  category: 'Seeds',
+  imageUri: '',
+};
 
 export default function MarketplaceScreen() {
-  const [activeCategory, setActiveCategory] = useState<Category>('All');
-  const [search, setSearch] = useState('');
   const C = useAppColors();
+  const { user } = useAuth();
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<Category>('All');
+  const [products, setProducts] = useState<ProduceListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const filtered = PRODUCTS.filter((p) => {
-    const matchCategory = activeCategory === 'All' || p.category === activeCategory;
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    return matchCategory && matchSearch;
-  });
+  // Modal State
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
 
-  const renderProduct = ({ item }: { item: typeof PRODUCTS[0] }) => (
-    <TouchableOpacity style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]} activeOpacity={0.85}>
-      <View style={[styles.imageArea, { backgroundColor: C.primaryDim }]}>
-        <MaterialCommunityIcons name={item.icon} size={44} color={C.primary} />
+  const fetchProducts = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    try {
+      const data = await ProduceService.getAll(activeCategory, search);
+      setProducts(data);
+    } catch (error: any) {
+      console.error('Fetch products error:', error);
+      Alert.alert('Error', error.message || 'Could not load products');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [activeCategory, search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProducts();
+    }, 500); // Debounce search
+    return () => clearTimeout(timer);
+  }, [fetchProducts]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchProducts(false);
+  };
+
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setForm({ ...form, imageUri: result.assets[0].uri });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!form.name || !form.description || !form.price || !form.category) {
+      Alert.alert('Validation', 'Please fill in all required fields');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (editingId) {
+        await ProduceService.update(editingId, {
+          name: form.name,
+          description: form.description,
+          price: parseFloat(form.price),
+          category: form.category,
+        }, form.imageUri.startsWith('http') ? undefined : form.imageUri);
+        Alert.alert('Success', 'Listing updated successfully');
+      } else {
+        await ProduceService.create({
+          name: form.name,
+          description: form.description,
+          price: parseFloat(form.price),
+          category: form.category,
+        }, form.imageUri);
+        Alert.alert('Success', 'Listing created successfully');
+      }
+      setModalVisible(false);
+      fetchProducts(false);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to save listing');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEdit = (item: ProduceListing) => {
+    setEditingId(item._id);
+    setForm({
+      name: item.name,
+      description: item.description,
+      price: item.price.toString(),
+      category: item.category,
+      imageUri: item.imageUrl ? (item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}`) : '',
+    });
+    setModalVisible(true);
+  };
+
+  const openAdd = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setModalVisible(true);
+  };
+
+  const renderProduct = ({ item }: { item: ProduceListing }) => (
+    <TouchableOpacity style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]} activeOpacity={0.9}>
+      <View style={[styles.imageArea, { backgroundColor: C.surface }]}>
+        {item.imageUrl ? (
+          <Image 
+            source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}` }} 
+            style={styles.productImage} 
+          />
+        ) : (
+          <Ionicons name="image-outline" size={32} color={C.muted} />
+        )}
         {item.badge && (
           <View style={[styles.cardBadge, { backgroundColor: C.card, borderColor: C.border },
             item.badge === 'AI Pick' && styles.cardBadgeAI]}>
@@ -46,18 +154,48 @@ export default function MarketplaceScreen() {
       </View>
       <View style={styles.cardContent}>
         <ThemedText style={[styles.productName, { color: C.text }]} numberOfLines={2}>{item.name}</ThemedText>
-        <ThemedText style={[styles.sellerName, { color: C.muted }]}>by {item.seller}</ThemedText>
+        <ThemedText style={[styles.sellerName, { color: C.muted }]}>by {item.sellerName}</ThemedText>
         <View style={styles.priceRow}>
-          <ThemedText style={[styles.price, { color: C.primary }]}>{item.price}</ThemedText>
+          <ThemedText style={[styles.price, { color: C.primary }]}>Rs. {item.price.toLocaleString()}</ThemedText>
           <View style={[styles.ratingPill, { backgroundColor: C.surface }]}>
             <Ionicons name="star" size={11} color="#F59E0B" />
             <ThemedText style={[styles.ratingText, { color: C.subtext }]}>{item.rating}</ThemedText>
           </View>
         </View>
-        <TouchableOpacity style={[styles.addBtn, { backgroundColor: C.primary }]} activeOpacity={0.8}>
-          <Ionicons name="add" size={15} color="#FFFFFF" />
-          <ThemedText style={styles.addBtnText}>Add to Cart</ThemedText>
-        </TouchableOpacity>
+        
+        {item.userId === user?.id || item.userId === user?._id ? (
+          <View style={styles.ownerActions}>
+            <TouchableOpacity 
+              style={[styles.editBtn, { borderColor: C.border }]}
+              onPress={() => openEdit(item)}
+            >
+              <Ionicons name="create-outline" size={14} color={C.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.deleteBtn, { borderColor: C.border }]}
+              onPress={() => {
+                Alert.alert('Delete', 'Are you sure?', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Delete', style: 'destructive', onPress: async () => {
+                    try {
+                      await ProduceService.delete(item._id);
+                      fetchProducts(false);
+                    } catch (e: any) {
+                      Alert.alert('Error', e.message);
+                    }
+                  }}
+                ]);
+              }}
+            >
+              <Ionicons name="trash-outline" size={14} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={[styles.addBtn, { backgroundColor: C.primary }]} activeOpacity={0.8}>
+            <Ionicons name="add" size={15} color="#FFFFFF" />
+            <ThemedText style={styles.addBtnText}>Add to Cart</ThemedText>
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -70,15 +208,17 @@ export default function MarketplaceScreen() {
       <View style={styles.header}>
         <View>
           <ThemedText style={[styles.headerTitle, { color: C.text }]}>Marketplace</ThemedText>
-          <ThemedText style={[styles.headerSubtitle, { color: C.muted }]}>{filtered.length} products available</ThemedText>
+          <ThemedText style={[styles.headerSubtitle, { color: C.muted }]}>{products.length} products available</ThemedText>
         </View>
         <View style={styles.headerActions}>
-          {/* Sell button */}
-          <TouchableOpacity style={[styles.sellBtn, Shadows.colored(C.primary)]} activeOpacity={0.85}>
+          <TouchableOpacity 
+            style={[styles.sellBtn, Shadows.colored(C.primary)]} 
+            activeOpacity={0.85}
+            onPress={openAdd}
+          >
             <Ionicons name="add-circle-outline" size={16} color="#FFFFFF" />
             <ThemedText style={styles.sellBtnText}>Sell</ThemedText>
           </TouchableOpacity>
-          {/* Cart */}
           <TouchableOpacity style={[styles.cartBtn, { backgroundColor: C.card, borderColor: C.border }]}>
             <Ionicons name="cart-outline" size={22} color={C.primary} />
             <View style={styles.cartBadge}>
@@ -106,39 +246,139 @@ export default function MarketplaceScreen() {
       </View>
 
       {/* Category Pills */}
-      <FlatList
-        data={CATEGORIES as unknown as Category[]}
-        keyExtractor={(item) => item}
-        horizontal showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoriesContent}
-        style={styles.categoriesRow}
-        renderItem={({ item }) => {
-          const active = item === activeCategory;
-          return (
-            <TouchableOpacity
-              style={[styles.pill, { backgroundColor: active ? C.primary : C.card, borderColor: active ? C.primary : C.border }]}
-              onPress={() => setActiveCategory(item)} activeOpacity={0.8}
-            >
-              <ThemedText style={[styles.pillText, { color: active ? '#FFFFFF' : C.subtext, fontWeight: active ? '700' : '600' }]}>
-                {item}
-              </ThemedText>
-            </TouchableOpacity>
-          );
-        }}
-      />
+      <View style={styles.categoriesRow}>
+        <FlatList
+          data={CATEGORIES as unknown as Category[]}
+          keyExtractor={(item) => item}
+          horizontal showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesContent}
+          renderItem={({ item }) => {
+            const active = item === activeCategory;
+            return (
+              <TouchableOpacity
+                style={[styles.pill, { backgroundColor: active ? C.primary : C.card, borderColor: active ? C.primary : C.border }]}
+                onPress={() => setActiveCategory(item)} activeOpacity={0.8}
+              >
+                <ThemedText style={[styles.pillText, { color: active ? '#FFFFFF' : C.subtext, fontWeight: active ? '700' : '600' }]}>
+                  {item}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </View>
 
       {/* Product Grid */}
-      <FlatList
-        data={filtered} renderItem={renderProduct} keyExtractor={(item) => item.id}
-        numColumns={2} contentContainerStyle={styles.listContent}
-        columnWrapperStyle={styles.columnWrapper} showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="magnify-close" size={48} color={C.muted} />
-            <ThemedText style={[styles.emptyText, { color: C.muted }]}>No products found</ThemedText>
+      {loading && !refreshing ? (
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color={C.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={products} renderItem={renderProduct} keyExtractor={(item) => item._id}
+          numColumns={2} contentContainerStyle={styles.listContent}
+          columnWrapperStyle={styles.columnWrapper} showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[C.primary]} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="magnify-close" size={48} color={C.muted} />
+              <ThemedText style={[styles.emptyText, { color: C.muted }]}>No products found</ThemedText>
+            </View>
+          }
+        />
+      )}
+
+      {/* Create / Edit Modal */}
+      <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalBox, { backgroundColor: C.card }]}>
+            <View style={styles.modalHeader}>
+              <ThemedText style={[styles.modalTitle, { color: C.text }]}>{editingId ? 'Edit Listing' : 'Sell Produce'}</ThemedText>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Ionicons name="close" size={24} color={C.muted} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <TouchableOpacity style={[styles.imagePicker, { backgroundColor: C.surface, borderColor: C.border }]} onPress={handlePickImage}>
+                {form.imageUri ? (
+                  <Image source={{ uri: form.imageUri }} style={styles.pickerImage} />
+                ) : (
+                  <View style={styles.pickerPlaceholder}>
+                    <Ionicons name="camera-outline" size={32} color={C.primary} />
+                    <ThemedText style={{ color: C.muted, marginTop: 8 }}>Add Product Image</ThemedText>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={styles.inputLabel}>Product Name *</ThemedText>
+                <TextInput 
+                  style={[styles.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
+                  value={form.name}
+                  onChangeText={v => setForm({...form, name: v})}
+                  placeholder="e.g. Organic Tomato"
+                  placeholderTextColor={C.muted}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={styles.inputLabel}>Category *</ThemedText>
+                <View style={styles.formCategories}>
+                  {FORM_CATEGORIES.map(cat => (
+                    <TouchableOpacity 
+                      key={cat}
+                      style={[styles.catPill, { backgroundColor: form.category === cat ? C.primary : C.surface, borderColor: C.border }]}
+                      onPress={() => setForm({...form, category: cat})}
+                    >
+                      <ThemedText style={{ color: form.category === cat ? '#FFF' : C.subtext, fontSize: 12 }}>{cat}</ThemedText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={styles.inputLabel}>Price (Rs.) *</ThemedText>
+                <TextInput 
+                  style={[styles.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
+                  value={form.price}
+                  onChangeText={v => setForm({...form, price: v})}
+                  placeholder="e.g. 500"
+                  placeholderTextColor={C.muted}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={styles.inputLabel}>Description *</ThemedText>
+                <TextInput 
+                  style={[styles.input, styles.textArea, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
+                  value={form.description}
+                  onChangeText={v => setForm({...form, description: v})}
+                  placeholder="Tell buyers about your produce..."
+                  placeholderTextColor={C.muted}
+                  multiline
+                  numberOfLines={4}
+                />
+              </View>
+
+              <TouchableOpacity 
+                style={[styles.saveBtn, { backgroundColor: C.primary, opacity: saving ? 0.7 : 1 }]} 
+                onPress={handleSave}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <ThemedText style={styles.saveBtnText}>{editingId ? 'Update Listing' : 'Post Listing'}</ThemedText>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        }
-      />
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -165,8 +405,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md, paddingVertical: 10,
     borderRadius: Radius.lg, marginBottom: Spacing.md, gap: 8, borderWidth: 1, ...Shadows.xs,
   },
-  searchInput: { flex: 1, fontSize: 14 },
-  searchDivider: { width: 1, height: 18 },
+  searchInput: { 
+    flex: 1, 
+    fontSize: 15, 
+    paddingVertical: 12,
+    minHeight: 48,
+  },
+  searchDivider: { width: 1, height: 18, marginHorizontal: 4 },
   categoriesRow: { marginBottom: Spacing.md },
   categoriesContent: { paddingHorizontal: Spacing.lg, gap: 8 },
   pill: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: Radius.pill, borderWidth: 1 },
@@ -179,10 +424,11 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 8, left: 8, flexDirection: 'row', alignItems: 'center', gap: 3,
     paddingHorizontal: 7, paddingVertical: 3, borderRadius: Radius.pill, borderWidth: 1,
   },
-  cardBadgeAI: { backgroundColor: '#A8E063', borderColor: '#A8E063' },
+  cardBadgeAI: { backgroundColor: '#E6F4EA', borderColor: '#0F9D58' },
   badgeText: { fontSize: 9, fontWeight: '700', letterSpacing: 0.2, color: '#4A6358' },
   badgeTextAI: { color: '#0B6B3A' },
   cardContent: { padding: 12 },
+  productImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   productName: { fontWeight: '700', fontSize: 13, marginBottom: 2, lineHeight: 17 },
   sellerName: { fontSize: 11, marginBottom: 8 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
@@ -191,6 +437,25 @@ const styles = StyleSheet.create({
   ratingText: { fontSize: 10, fontWeight: '700' },
   addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8, borderRadius: Radius.md },
   addBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 11 },
+  ownerActions: { flexDirection: 'row', gap: 8 },
+  editBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 6, borderRadius: Radius.md, borderWidth: 1 },
+  deleteBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 6, borderRadius: Radius.md, borderWidth: 1 },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyState: { alignItems: 'center', paddingTop: 60 },
   emptyText: { fontSize: 15, marginTop: 12, fontWeight: '600' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalBox: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: Spacing.lg, height: '90%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.xl },
+  modalTitle: { fontSize: 22, fontWeight: '800' },
+  imagePicker: { width: '100%', height: 180, borderRadius: Radius.xl, borderStyle: 'dashed', borderWidth: 2, marginBottom: Spacing.xl, overflow: 'hidden' },
+  pickerPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  pickerImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  inputGroup: { marginBottom: Spacing.lg },
+  inputLabel: { fontSize: 13, fontWeight: '700', color: '#6B7280', marginBottom: 8 },
+  input: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: Radius.lg, borderWidth: 1, fontSize: 15 },
+  textArea: { minHeight: 100, textAlignVertical: 'top' },
+  formCategories: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  catPill: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: Radius.pill, borderWidth: 1 },
+  saveBtn: { borderRadius: Radius.lg, paddingVertical: 16, alignItems: 'center', marginTop: Spacing.md, marginBottom: Spacing.xl, ...Shadows.md },
+  saveBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 16 },
 });

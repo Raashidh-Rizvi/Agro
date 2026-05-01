@@ -9,7 +9,7 @@ import { Link, useRouter } from 'expo-router';
 import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import { ThemeOverrideProvider } from '@/context/ThemeOverrideContext';
 
-// ─── Light Auth Palette ───────────────────────────────────────────────────────
+// ─── Light Auth Palette ────────────────────────────────────────────────────────
 const L = {
   bg:          '#F4F9F6',
   card:        '#FFFFFF',
@@ -62,14 +62,14 @@ export default function RegisterScreen() {
     <ThemeOverrideProvider scheme="light">
       <KeyboardAvoidingView
         style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Green Header ───────────────────────── */}
+          {/* ── Green Header ─────────────────────────── */}
           <View style={styles.headerPanel}>
             <View style={styles.bubble1} />
             <View style={styles.bubble2} />
@@ -254,7 +254,14 @@ const styles = StyleSheet.create({
   },
   inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF', ...Shadows.xs },
   inputIcon: { marginLeft: 16, marginRight: 4 },
-  input: { flex: 1, paddingVertical: 15, paddingHorizontal: 10, fontSize: 15, color: L.text },
+  input: { 
+    flex: 1, 
+    paddingVertical: 12, 
+    paddingHorizontal: 10, 
+    fontSize: 16, 
+    color: L.text,
+    minHeight: 50,
+  },
   eyeIcon: { position: 'absolute', right: 14, padding: 4 },
 
   roleSection: { marginBottom: Spacing.xl, marginTop: Spacing.xs },

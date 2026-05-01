@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storage } from '../utils/storage';
-import axios from 'axios';
-import { API_URL } from '../constants/Config';
+import api from '../services/api';
 
 interface AuthContextType {
     user: any | null;
@@ -9,6 +8,10 @@ interface AuthContextType {
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;
     register: (userData: any) => Promise<void>;
+    updateProfile: (userData: any) => Promise<void>;
+    updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+    forgotPassword: (email: string) => Promise<string | undefined>;
+    resetPassword: (token: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
 }
 
@@ -31,7 +34,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (storedToken && storedUser) {
                 setToken(storedToken);
                 setUser(JSON.parse(storedUser));
-                axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
             }
         } catch (e) {
             console.error('Failed to load auth state', e);
@@ -43,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async (email: string, password: string) => {
         setIsLoading(true);
         try {
-            const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+            const response = await api.post('/auth/login', { email, password });
             const { token, user } = response.data;
 
             await storage.setItemAsync('userToken', token);
@@ -51,7 +53,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             setToken(token);
             setUser(user);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         } catch (error: any) {
             throw error.response?.data?.message || 'Login failed';
         } finally {
@@ -62,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const register = async (userData: any) => {
         setIsLoading(true);
         try {
-            const response = await axios.post(`${API_URL}/auth/register`, userData);
+            const response = await api.post('/auth/register', userData);
             const { token, user } = response.data;
 
             await storage.setItemAsync('userToken', token);
@@ -70,9 +71,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             setToken(token);
             setUser(user);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         } catch (error: any) {
             throw error.response?.data?.message || 'Registration failed';
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const updateProfile = async (userData: any) => {
+        setIsLoading(true);
+        try {
+            const response = await api.put('/auth/update-details', userData);
+            const updatedUser = response.data.data;
+
+            await storage.setItemAsync('userData', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Update failed';
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const updatePassword = async (currentPassword: string, newPassword: string) => {
+        setIsLoading(true);
+        try {
+            await api.put('/auth/update-password', { currentPassword, newPassword });
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Password update failed';
         } finally {
             setIsLoading(false);
         }
@@ -83,11 +109,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await storage.deleteItemAsync('userData');
         setToken(null);
         setUser(null);
-        delete axios.defaults.headers.common['Authorization'];
+    };
+
+    const forgotPassword = async (email: string) => {
+        try {
+            const response = await api.post('/auth/forgot-password', { email });
+            // In development, the backend returns the token
+            return response.data.resetToken;
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Failed to send reset email';
+        }
+    };
+
+    const resetPassword = async (token: string, password: string) => {
+        try {
+            await api.put(`/auth/reset-password/${token}`, { password });
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Failed to reset password';
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, token, isLoading, login, register, updateProfile, updatePassword, forgotPassword, resetPassword, logout }}>
             {children}
         </AuthContext.Provider>
     );

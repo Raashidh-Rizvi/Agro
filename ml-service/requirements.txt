@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+onnxruntime
+pillow
+joblib
+numpy
+python-multipart
+python-dotenv

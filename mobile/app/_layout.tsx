@@ -4,9 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '../context/AuthContext';
-import { AppThemeProvider } from '../context/AppThemeContext';
+import { AppThemeProvider, useAppTheme } from '../context/AppThemeContext';
 
 
 // ─── Navigation Themes ────────────────────────────────────────────────────────
@@ -56,7 +55,7 @@ function RootLayoutNav() {
 
   return (
     <>
-      <StatusBar style={inTabs ? 'auto' : 'dark'} />
+      <StatusBar style={inTabs ? 'auto' : 'light'} />
       <Stack>
         <Stack.Screen name="(auth)/login"    options={{ headerShown: false }} />
         <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
@@ -68,15 +67,22 @@ function RootLayoutNav() {
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <AppThemeProvider>
       <AuthProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? AgriDarkTheme : AgriLightTheme}>
-          <RootLayoutNav />
-        </ThemeProvider>
+        <RootLayoutInner />
       </AuthProvider>
     </AppThemeProvider>
+  );
+}
+
+function RootLayoutInner() {
+  const { mode } = useAppTheme();
+  const theme = mode === 'dark' ? AgriDarkTheme : AgriLightTheme;
+
+  return (
+    <ThemeProvider value={theme}>
+      <RootLayoutNav />
+    </ThemeProvider>
   );
 }

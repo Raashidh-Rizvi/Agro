@@ -1,6 +1,6 @@
 # Agro Progress Tracker
 
-This document reflects the current state of the branch in a simple, evaluator-friendly way.
+This document reflects the current state of the `Dinithi` branch after cleanup and teammate sync.
 
 ## Completed
 
@@ -23,21 +23,25 @@ This document reflects the current state of the branch in a simple, evaluator-fr
 - Mobile alert management screen connected to backend
 - Dashboard recent alerts now read live alert data
 - Backend tests added for the alert module
+- Mobile TypeScript, lint, and web export checks pass for the synced branch
 
-## Partially Implemented
+## Synced Into This Branch
 
-### User Management
+- User management routes and admin/profile screens
+- Crop management routes and screens
+- Diagnosis routes, screens, and ML service files
+- Produce listing routes and services
+- Expert query routes and screens
+- Stats route and dashboard/profile integrations
 
-- Current logged-in user profile is available
-- Full user CRUD is not complete yet
+## Still Needs Deeper QA
 
-## Planned / Not Yet Complete
-
-- Crop management CRUD
-- Diagnosis CRUD and AI upload flow
-- Produce listing CRUD
-- Expert query CRUD
-- Market price CRUD
+- Full user CRUD verification
+- Crop workflow verification
+- Diagnosis CRUD and AI upload verification
+- Produce listing CRUD verification
+- Expert query CRUD verification
+- Market price CRUD implementation
 
 ## Current Strongest Demo Path
 
@@ -58,3 +62,4 @@ If an evaluator wants the clearest implemented module, direct them to:
 - `docs/advisory-alert-management.md`
 - `backend/src/controllers/alert.controller.js`
 - `mobile/features/alerts/AlertsScreen.tsx`
+- Note that additional teammate modules are now present on this branch, but Advisory Alert remains the most fully verified path
