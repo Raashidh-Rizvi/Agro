@@ -112,7 +112,7 @@ export default function ExpertDashboard({ onQueriesPress }: ExpertDashboardProps
                         <TouchableOpacity 
                             key={action.id} 
                             style={[styles.actionCard, { backgroundColor: C.card, borderColor: C.border }]}
-                            onPress={() => action.route ? router.push(action.route as any) : action.action()}
+                            onPress={() => action.route ? router.push(action.route as any) : action.action?.()}
                         >
                             <View style={[styles.iconWrap, { backgroundColor: action.color + '15' }]}>
                                 <Ionicons name={action.icon as any} size={24} color={action.color} />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -12,7 +12,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import api from '@/services/api';
+import { useFocusEffect } from '@react-navigation/native';
+import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { ThemedText } from '@/components/themed-text';
@@ -21,26 +22,16 @@ import { useAppColors } from '@/context/AppThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { API_URL } from '@/constants/Config';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
+import {
+  ALERT_FIELD_LIMITS,
+  ALERT_META,
+  type AlertType,
+  type AdvisoryAlert,
+  formatAlertDate,
+  getAlertErrorMessage,
+} from './alertSupport';
 
-type AlertType = 'weather' | 'fertilizer' | 'pest' | 'irrigation' | 'general';
 type Filter = 'All' | AlertType;
-
-export type AdvisoryAlert = {
-  _id: string;
-  title: string;
-  cropType: string;
-  district: string;
-  season: string;
-  message: string;
-  alertType: AlertType;
-  createdAt: string;
-  updatedAt?: string;
-  createdBy?: {
-    _id: string;
-    name: string;
-    role: string;
-  };
-};
 
 type AlertFormState = {
   title: string;
@@ -53,14 +44,6 @@ type AlertFormState = {
 
 const FILTER_TABS: Filter[] = ['All', 'weather', 'pest', 'irrigation', 'fertilizer', 'general'];
 
-export const ALERT_META: Record<AlertType, { color: string; bg: string; icon: keyof typeof Ionicons.glyphMap; label: string }> = {
-  weather:    { color: '#F59E0B', bg: '#FEF3C7', icon: 'rainy-outline',         label: 'Weather' },
-  fertilizer: { color: '#3B82F6', bg: '#EFF6FF', icon: 'flask-outline',         label: 'Fertilizer' },
-  pest:       { color: '#EF4444', bg: '#FEE2E2', icon: 'bug-outline',           label: 'Pest' },
-  irrigation: { color: '#0F9D58', bg: '#E6F4EA', icon: 'water-outline',         label: 'Irrigation' },
-  general:    { color: '#6B7280', bg: '#F3F4F6', icon: 'notifications-outline', label: 'General' },
-};
-
 const EMPTY_FORM: AlertFormState = {
   title: '',
   cropType: '',
@@ -68,27 +51,6 @@ const EMPTY_FORM: AlertFormState = {
   season: '',
   message: '',
   alertType: 'weather',
-};
-
-const getAlertErrorMessage = (error: unknown) => {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.message || error.message || 'Request failed';
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return 'Something went wrong';
-};
-
-const formatDate = (value?: string) => {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
 };
 
 const getSummaryCount = (alerts: AdvisoryAlert[], type: AlertType) =>
@@ -109,7 +71,7 @@ export default function AlertsScreen() {
   const [editingAlertId, setEditingAlertId] = useState<string | null>(null);
   const [form, setForm] = useState<AlertFormState>(EMPTY_FORM);
 
-  const fetchAlerts = async (refresh = false) => {
+  const fetchAlerts = useCallback(async (refresh = false) => {
     if (refresh) {
       setIsRefreshing(true);
     } else {
@@ -118,7 +80,7 @@ export default function AlertsScreen() {
 
     try {
       setError(null);
-      const response = await api.get('/alerts');
+      const response = await axios.get(`${API_URL}/alerts`);
       setAlerts(response.data.alerts || []);
     } catch (fetchError) {
       setError(getAlertErrorMessage(fetchError));
@@ -126,11 +88,13 @@ export default function AlertsScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    fetchAlerts();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchAlerts();
+    }, [fetchAlerts])
+  );
 
   const resetForm = () => {
     setEditingAlertId(null);
@@ -169,6 +133,22 @@ export default function AlertsScreen() {
       Alert.alert('Missing Fields', 'Please fill in all alert details.');
       return false;
     }
+
+    const lengthChecks: [keyof typeof ALERT_FIELD_LIMITS, string, string][] = [
+      ['title', form.title, 'Title'],
+      ['cropType', form.cropType, 'Crop Type'],
+      ['district', form.district, 'District'],
+      ['season', form.season, 'Season'],
+      ['message', form.message, 'Message'],
+    ];
+
+    const invalidField = lengthChecks.find(([field, value]) => value.trim().length > ALERT_FIELD_LIMITS[field]);
+    if (invalidField) {
+      const [field, , label] = invalidField;
+      Alert.alert('Too Long', `${label} must be ${ALERT_FIELD_LIMITS[field]} characters or fewer.`);
+      return false;
+    }
+
     return true;
   };
 
@@ -188,11 +168,11 @@ export default function AlertsScreen() {
       };
 
       if (editingAlertId) {
-        const response = await api.put(`/alerts/${editingAlertId}`, payload);
+        const response = await axios.put(`${API_URL}/alerts/${editingAlertId}`, payload);
         const updatedAlert: AdvisoryAlert = response.data.alert;
         setAlerts((prev) => prev.map((alert) => (alert._id === updatedAlert._id ? updatedAlert : alert)));
       } else {
-        const response = await api.post('/alerts', payload);
+        const response = await axios.post(`${API_URL}/alerts`, payload);
         const newAlert: AdvisoryAlert = response.data.alert;
         setAlerts((prev) => [newAlert, ...prev]);
       }
@@ -207,7 +187,7 @@ export default function AlertsScreen() {
 
   const deleteAlert = async (alertId: string) => {
     try {
-      await api.delete(`/alerts/${alertId}`);
+      await axios.delete(`${API_URL}/alerts/${alertId}`);
       setAlerts((prev) => prev.filter((alert) => alert._id !== alertId));
     } catch (deleteError) {
       Alert.alert('Delete Failed', getAlertErrorMessage(deleteError));
@@ -239,6 +219,18 @@ export default function AlertsScreen() {
     activeFilter === 'All'
       ? alerts
       : alerts.filter((alert) => alert.alertType === activeFilter);
+
+  const emptyStateMessage = useMemo(() => {
+    if (activeFilter !== 'All') {
+      return `There are no ${activeFilter} alerts right now.`;
+    }
+
+    if (canManageAlerts) {
+      return 'Create the first advisory alert to get this module moving.';
+    }
+
+    return 'No advisory alerts have been posted by experts yet.';
+  }, [activeFilter, canManageAlerts]);
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: C.bg }]}>
@@ -277,7 +269,7 @@ export default function AlertsScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => fetchAlerts(true)} />}>
 
-        <View style={styles.summaryRow}>
+          <View style={styles.summaryRow}>
           {(Object.keys(ALERT_META) as AlertType[]).map((type) => {
             const meta = ALERT_META[type];
             return (
@@ -322,6 +314,15 @@ export default function AlertsScreen() {
           })}
         </ScrollView>
 
+        {!canManageAlerts && (
+          <View style={[styles.infoBanner, { backgroundColor: C.card, borderColor: C.border }]}>
+            <Ionicons name="information-circle-outline" size={18} color={C.primary} />
+            <ThemedText style={[styles.infoBannerText, { color: C.subtext }]}>
+              Advisory alerts are published by experts and admins. Farmers can view all live updates here.
+            </ThemedText>
+          </View>
+        )}
+
         {isLoading ? (
           <View style={styles.stateBlock}>
             <ActivityIndicator size="large" color={C.primary} />
@@ -343,13 +344,11 @@ export default function AlertsScreen() {
           <View style={styles.stateBlock}>
             <Ionicons name="notifications-off-outline" size={52} color={C.accent} />
             <ThemedText style={[styles.stateTitle, { color: C.text }]}>No alerts in this view</ThemedText>
-            <ThemedText style={[styles.stateText, { color: C.muted }]}>
-              {activeFilter === 'All'
-                ? 'Create the first advisory alert to get this module moving.'
-                : `There are no ${activeFilter} alerts right now.`}
-            </ThemedText>
-          </View>
-        ) : (
+              <ThemedText style={[styles.stateText, { color: C.muted }]}>
+                {emptyStateMessage}
+              </ThemedText>
+            </View>
+          ) : (
           filteredAlerts.map((alert) => {
             const meta = ALERT_META[alert.alertType];
             const editable = canEditAlert(alert);
@@ -379,12 +378,20 @@ export default function AlertsScreen() {
 
                   <View style={styles.alertFooter}>
                     <ThemedText style={[styles.alertFooterText, { color: C.muted }]}>
-                      {alert.createdBy?.name ? `By ${alert.createdBy.name}` : 'Posted by team member'}
+                      {alert.createdBy?.name
+                        ? `By ${alert.createdBy.name}${alert.createdBy.role ? ` (${alert.createdBy.role})` : ''}`
+                        : 'Posted by team member'}
                     </ThemedText>
                     <ThemedText style={[styles.alertFooterText, { color: C.muted }]}>
-                      {formatDate(alert.createdAt)}
+                      {formatAlertDate(alert.createdAt)}
                     </ThemedText>
                   </View>
+
+                  {alert.updatedAt && alert.updatedAt !== alert.createdAt && (
+                    <ThemedText style={[styles.updatedText, { color: C.muted }]}>
+                      Updated {formatAlertDate(alert.updatedAt)}
+                    </ThemedText>
+                  )}
 
                   {editable && (
                     <View style={styles.manageRow}>
@@ -607,6 +614,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: Radius.pill,
   },
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.md,
+    ...Shadows.xs,
+  },
+  infoBannerText: { flex: 1, fontSize: 12, lineHeight: 17, fontWeight: '500' },
   summaryCount: { fontSize: 13, fontWeight: '800' },
   summaryLabel: { fontSize: 12, fontWeight: '700' },
   filterRow: { marginBottom: Spacing.md },
@@ -650,6 +669,7 @@ const styles = StyleSheet.create({
   alertMessage: { fontSize: 12, lineHeight: 18, marginBottom: 8 },
   alertFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 10 },
   alertFooterText: { fontSize: 10, fontWeight: '600' },
+  updatedText: { fontSize: 10, fontWeight: '500', marginBottom: 10 },
   manageRow: { flexDirection: 'row', gap: 8 },
   manageButton: {
     flexDirection: 'row',

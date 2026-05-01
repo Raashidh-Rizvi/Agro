@@ -2,32 +2,61 @@ const AdvisoryAlert = require('../models/AdvisoryAlert');
 
 const editableFields = ['title', 'cropType', 'district', 'season', 'message', 'alertType'];
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const normalizeText = (value) => (typeof value === 'string' ? value.trim() : value);
+
+const buildAlertPayload = (body = {}) => {
+    const payload = {};
+
+    editableFields.forEach((field) => {
+        if (body[field] !== undefined) {
+            payload[field] = normalizeText(body[field]);
+        }
+    });
+
+    return payload;
+};
+
+const parseLimit = (value) => {
+    const parsed = Number.parseInt(value, 10);
+
+    if (Number.isNaN(parsed) || parsed <= 0) {
+        return null;
+    }
+
+    return Math.min(parsed, 100);
+};
 
 const buildFilters = (query) => {
     const filters = {};
+    const alertType = normalizeText(query.alertType);
+    const cropType = normalizeText(query.cropType);
+    const district = normalizeText(query.district);
+    const season = normalizeText(query.season);
+    const search = normalizeText(query.search);
 
-    if (query.alertType) {
-        filters.alertType = query.alertType;
+    if (alertType) {
+        filters.alertType = alertType;
     }
 
-    if (query.cropType) {
-        filters.cropType = new RegExp(`^${escapeRegex(query.cropType)}$`, 'i');
+    if (cropType) {
+        filters.cropType = new RegExp(`^${escapeRegex(cropType)}$`, 'i');
     }
 
-    if (query.district) {
-        filters.district = new RegExp(`^${escapeRegex(query.district)}$`, 'i');
+    if (district) {
+        filters.district = new RegExp(`^${escapeRegex(district)}$`, 'i');
     }
 
-    if (query.season) {
-        filters.season = new RegExp(`^${escapeRegex(query.season)}$`, 'i');
+    if (season) {
+        filters.season = new RegExp(`^${escapeRegex(season)}$`, 'i');
     }
 
-    if (query.search) {
+    if (search) {
         filters.$or = [
-            { title: { $regex: escapeRegex(query.search), $options: 'i' } },
-            { message: { $regex: escapeRegex(query.search), $options: 'i' } },
-            { cropType: { $regex: escapeRegex(query.search), $options: 'i' } },
-            { district: { $regex: escapeRegex(query.search), $options: 'i' } }
+            { title: { $regex: escapeRegex(search), $options: 'i' } },
+            { message: { $regex: escapeRegex(search), $options: 'i' } },
+            { cropType: { $regex: escapeRegex(search), $options: 'i' } },
+            { district: { $regex: escapeRegex(search), $options: 'i' } },
+            { season: { $regex: escapeRegex(search), $options: 'i' } }
         ];
     }
 
@@ -37,13 +66,17 @@ const buildFilters = (query) => {
 const canModifyAlert = (user, alert) => {
     if (!user || !alert) return false;
     if (user.role === 'Admin') return true;
-    return String(alert.createdBy) === String(user.id);
+    const ownerId = alert.createdBy && typeof alert.createdBy === 'object' && alert.createdBy._id
+        ? alert.createdBy._id
+        : alert.createdBy;
+
+    return String(ownerId) === String(user.id);
 };
 
 exports.createAlert = async (req, res, next) => {
     try {
         const alert = await AdvisoryAlert.create({
-            ...req.body,
+            ...buildAlertPayload(req.body),
             createdBy: req.user.id
         });
 
@@ -60,9 +93,16 @@ exports.createAlert = async (req, res, next) => {
 
 exports.getAlerts = async (req, res, next) => {
     try {
-        const alerts = await AdvisoryAlert.find(buildFilters(req.query))
+        let query = AdvisoryAlert.find(buildFilters(req.query))
             .populate('createdBy', 'name role')
             .sort({ createdAt: -1 });
+
+        const limit = parseLimit(req.query.limit);
+        if (limit) {
+            query = query.limit(limit);
+        }
+
+        const alerts = await query;
 
         res.status(200).json({
             success: true,
@@ -103,12 +143,14 @@ exports.updateAlert = async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Not authorized to update this alert' });
         }
 
-        const updates = {};
-        editableFields.forEach((field) => {
-            if (req.body[field] !== undefined) {
-                updates[field] = req.body[field];
-            }
-        });
+        const updates = buildAlertPayload(req.body);
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No valid alert fields provided for update'
+            });
+        }
 
         const updatedAlert = await AdvisoryAlert.findByIdAndUpdate(req.params.id, updates, {
             new: true,

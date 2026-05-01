@@ -1,12 +1,27 @@
 // Fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
+import { SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
-type IconSymbolName = keyof typeof MAPPING;
+export type IconSymbolName =
+  | 'camera.fill'
+  | 'checkmark.circle.fill'
+  | 'chevron.left'
+  | 'chevron.left.forwardslash.chevron.right'
+  | 'chevron.right'
+  | 'doc.text.magnifyingglass'
+  | 'house.fill'
+  | 'info.circle.fill'
+  | 'paperplane.fill'
+  | 'pencil.circle.fill'
+  | 'plus'
+  | 'plus.circle.fill'
+  | 'questionmark.circle.fill'
+  | 'trash'
+  | 'xmark.circle.fill'
+  | 'bubble.left.and.bubble.right.fill';
 
 /**
  * Add your SF Symbols to Material Icons mappings here.
@@ -18,6 +33,8 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'chevron.left': 'chevron-left',
+  'bubble.left.and.bubble.right.fill': 'forum',
   'plus': 'add',
   'plus.circle.fill': 'add-circle',
   'checkmark.circle.fill': 'check-circle',
@@ -25,9 +42,10 @@ const MAPPING = {
   'info.circle.fill': 'info',
   'xmark.circle.fill': 'cancel',
   'camera.fill': 'photo-camera',
+  'pencil.circle.fill': 'edit',
   'trash': 'delete',
   'questionmark.circle.fill': 'help',
-} as IconMapping;
+} as const satisfies Record<IconSymbolName, ComponentProps<typeof MaterialIcons>['name']>;
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.

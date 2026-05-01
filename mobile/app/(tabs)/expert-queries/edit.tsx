@@ -268,7 +268,7 @@ export default function MyQueryEdit() {
 
         {isAnswered && query.reply && (
           <View style={styles.replyBox}>
-            <Text style={styles.replyLabel}>Expert's Reply:</Text>
+            <Text style={styles.replyLabel}>Expert&apos;s Reply:</Text>
             <Text style={styles.replyText}>{query.reply}</Text>
           </View>
         )}

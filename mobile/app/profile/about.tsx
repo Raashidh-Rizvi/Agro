@@ -37,7 +37,7 @@ export default function AboutScreen() {
                 <View style={styles.content}>
                     <ThemedText style={styles.sectionTitle}>Our Mission</ThemedText>
                     <ThemedText style={[styles.text, { color: C.subtext }]}>
-                        AgriSense Lanka is dedicated to empowering Sri Lankan farmers through cutting-edge technology. Our goal is to bridge the gap between traditional agricultural wisdom and modern AI insights, ensuring food security and economic prosperity for our nation's growers.
+                        AgriSense Lanka is dedicated to empowering Sri Lankan farmers through cutting-edge technology. Our goal is to bridge the gap between traditional agricultural wisdom and modern AI insights, ensuring food security and economic prosperity for our nation&apos;s growers.
                     </ThemedText>
 
                     <ThemedText style={styles.sectionTitle}>Key Features</ThemedText>

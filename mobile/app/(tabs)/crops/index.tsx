@@ -252,7 +252,7 @@ export default function CropsScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
           {crops.length === 0 && (
-            <ThemedText style={[styles.emptyText, { color: C.muted }]}>No crops found. Tap "Add Crop" to get started.</ThemedText>
+            <ThemedText style={[styles.emptyText, { color: C.muted }]}>No crops found. Tap the Add Crop button to get started.</ThemedText>
           )}
           {crops.map((crop) => {
             const meta = STATUS_META[crop.growthStage as GrowthStage] || STATUS_META['Growing'];

@@ -34,7 +34,7 @@ export default function QueriesScreen() {
           style={styles.floatingAction}
           onPress={() => setShowQueries(true)}
         >
-          <IconSymbol name="chatbubbles.fill" size={24} color="white" />
+          <IconSymbol name="bubble.left.and.bubble.right.fill" size={24} color="white" />
         </TouchableOpacity>
       </View>
     );
@@ -188,7 +188,7 @@ const renderQuery = ({ item }: { item: Query }) => {
             
             {isAnswered && item.reply && (
               <View style={styles.replyBox}>
-                <Text style={styles.replyLabel}>Expert's Reply:</Text>
+                <Text style={styles.replyLabel}>Expert&apos;s Reply:</Text>
                 
                 {editingReplyId === item._id ? (
                   <View style={[styles.expertReplyContainer, {marginTop: 8}]}>
@@ -589,7 +589,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A5C36',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5,
     ...Shadows.xs,
   },
 });
