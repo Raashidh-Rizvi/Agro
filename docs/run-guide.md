@@ -1,133 +1,97 @@
-# Project Running Guide - Agro
+# Agro Run Guide
 
-This guide provides step-by-step instructions on how to set up and run the **Agro** smart farming application locally.
+This guide explains how to run the project locally for review or development.
 
----
+## Prerequisites
 
-## 📋 Prerequisites
+- Node.js 18 or newer
+- npm
+- Expo Go or an emulator
+- MongoDB Atlas connection string
 
-Before you begin, ensure you have the following installed on your computer:
+## Backend
 
-- **Node.js** (v18.x or higher)
-- **npm** (comes with Node.js)
-- **Expo Go** application (on your mobile device for testing)
-- **Git** (optional, for cloning the repository)
-- A **MongoDB Atlas** account (or a local MongoDB instance)
+1. Open a terminal in `backend/`
+2. Install packages:
 
----
+```powershell
+npm install
+```
 
-## 🚀 Getting Started
+3. Create `backend/.env` with:
 
-### 1. Backend Setup
+```text
+PORT=5000
+MONGO_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_jwt_secret
+NODE_ENV=development
+```
 
-The backend is built with Node.js, Express, and MongoDB.
+4. Start the backend:
 
-1.  **Navigate to the backend directory:**
+```powershell
+npm run dev
+```
 
-    ```powershell
-    cd backend
+The API should be available at `http://localhost:5000`.
 
-          npm run dev
+## Mobile
 
-    ```
+1. Open a terminal in `mobile/`
+2. Install packages:
 
-2.  **Install dependencies:**
+```powershell
+npm install
+```
 
-    ```powershell
-    npm install
-    ```
+3. Open `mobile/constants/Config.ts` and set `API_URL` to your backend URL, for example:
 
-3.  **Environment Configuration:**
-    - Create a `.env` file in the `backend` folder (if it doesn't exist).
-    - Add the following variables (replacing placeholders with your actual credentials):
-      ```env
-      PORT=5000
-      MONGO_URI=your_mongodb_atlas_connection_string
-      JWT_SECRET=your_super_secret_jwt_key
-      NODE_ENV=development
-      ```
+```ts
+export const API_URL = 'http://192.168.1.10:5000/api';
+```
 
-4.  **Start the Backend Server:**
-    - For development (with auto-reload):
-      ```powershell
-      npm run dev
-      ```
-    - For production/normal start:
-      ```powershell
-      npm start
-      ```
-    - The server should now be running on `http://localhost:5000`.
+4. Start Expo:
 
----
+```powershell
+npx expo start
+```
 
-### 2. Mobile Setup
+5. Run the app with Expo Go or an emulator.
 
-The mobile application is built using React Native and Expo.
+## Useful Checks
 
-1.  **Navigate to the mobile directory:**
+### Backend tests
 
-    ```powershell
-    cd mobile
+```powershell
+cd backend
+npm test
+```
 
-        npx expo start
+### Mobile type check
 
+```powershell
+cd mobile
+npx tsc --noEmit
+```
 
-    ```
+### Mobile lint
 
-2.  **Install dependencies:**
+```powershell
+cd mobile
+npx eslint "features/alerts/AlertsScreen.tsx" "features/alerts/alertSupport.ts" "app/(tabs)/index.tsx"
+```
 
-    ```powershell
-    npm install
-    ```
+## Implemented Module to Review First
 
-3.  **Backend API Configuration:**
-    - Open `mobile/constants/Config.ts`.
-    - Update `API_URL` with your **computer's local IP address**. This is necessary for Expo Go to connect to your local backend.
-    - Example: `export const API_URL = 'http://203.94.92.133:5000/api';`
-    - _Tip: Run `ipconfig` (Windows) or `ifconfig` (macOS/Linux) in your terminal to find your local IP address._
+The clearest end-to-end module in the current branch is:
 
-4.  **Start the Expo Development Server:**
+- `AdvisoryAlert`
+- Backend CRUD in `backend/src/controllers/alert.controller.js`
+- Routes in `backend/src/routes/alert.routes.js`
+- Mobile UI in `mobile/features/alerts/AlertsScreen.tsx`
 
-    ```powershell
-    npx expo start
-    ```
+## Troubleshooting
 
-5.  **Run on Device/Emulator:**
-    - **Physical Device:** Open the Expo Go app and scan the QR code displayed in the terminal.
-    - **iOS Device:** Open the Expo Go app on your iPhone and scan the QR code (iOS Simulator requires macOS).
-    - **Android Emulator:** Press `a` in the terminal (requires Android Studio).
-
----
-
-## 🛠️ Common Troubleshooting
-
-### 1. Backend Connection Issues
-
-- **Error:** `MongoDB connection error`
-- **Solution:** Ensure your `MONGO_URI` is correct and your IP address is whitelisted in MongoDB Atlas.
-
-### 2. Mobile cannot connect to Backend
-
-- **Error:** `Network Error` or `Connection Timeout`
-- **Solution:**
-  - Ensure both your computer and mobile device are on the **same Wi-Fi network**.
-  - Check that the `API_URL` in `Config.ts` uses your computer's **local IP address**, not `localhost`.
-  - Disable any firewalls that might be blocking port `5000`.
-
-### 3. Missing Dependencies
-
-- **Error:** `Module not found`
-- **Solution:** Run `npm install` in the respective directory (`backend` or `mobile`).
-
----
-
-## 📁 Project Structure Summary
-
-- `/backend`: Node.js/Express API server.
-- `/mobile`: React Native (Expo) mobile application.
-- `/docs`: Project documentation and diagrams.
-- `README.md`: General project information.
-
----
-
-_Need help? Contact the development team or check the project documentation in the `/docs` folder._
+- If MongoDB fails, verify `MONGO_URI` and Atlas IP access
+- If the mobile app cannot reach the backend, use your machine's local IP instead of `localhost`
+- If dependencies are missing, rerun `npm install` in the relevant folder

@@ -4,7 +4,6 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useAuth } from '../../context/AuthContext';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
 

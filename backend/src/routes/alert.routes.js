@@ -18,7 +18,7 @@ router.route('/')
 
 router.route('/:id')
     .get(getAlertById)
-    .put(updateAlert)
-    .delete(deleteAlert);
+    .put(authorize('Expert', 'Admin'), updateAlert)
+    .delete(authorize('Expert', 'Admin'), deleteAlert);
 
 module.exports = router;

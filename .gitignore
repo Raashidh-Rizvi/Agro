@@ -13,6 +13,7 @@ mobile/.env.*
 
 # Expo / editor state
 mobile/.expo/
+mobile/.expo-shared/
 mobile/.vscode/
 mobile/expo-env.d.ts
 mobile/dist/
@@ -22,6 +23,9 @@ mobile/ios/
 mobile/android/
 
 # logs and caches
+coverage/
+*.log
+*.tmp
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

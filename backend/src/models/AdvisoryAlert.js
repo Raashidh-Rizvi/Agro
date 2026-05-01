@@ -48,4 +48,8 @@ const advisoryAlertSchema = new mongoose.Schema(
     }
 );
 
+advisoryAlertSchema.index({ createdAt: -1 });
+advisoryAlertSchema.index({ alertType: 1, createdAt: -1 });
+advisoryAlertSchema.index({ cropType: 1, district: 1, season: 1 });
+
 module.exports = mongoose.model('AdvisoryAlert', advisoryAlertSchema);

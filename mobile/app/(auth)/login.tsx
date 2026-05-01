@@ -15,7 +15,7 @@ import {
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useRouter } from 'expo-router';
-import { Palette, Shadows, Radius, Spacing, Typography } from '@/constants/theme';
+import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import { ThemeOverrideProvider } from '@/context/ThemeOverrideContext';
 
 // ─── Light Auth Palette ───────────────────────────────────────────────────────
@@ -182,7 +182,7 @@ export default function LoginScreen() {
             </Link>
 
             <Text style={styles.footer}>
-              By continuing, you agree to AgriSense Lanka's Terms of Service.
+              By continuing, you agree to AgriSense Lanka&apos;s Terms of Service.
             </Text>
           </View>
         </ScrollView>

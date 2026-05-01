@@ -1,317 +1,199 @@
-# Agro – AI-Powered Smart Farming Mobile Application
+# Agro
 
----
+Agro is a full-stack mobile application for smart farming in Sri Lanka. The repository name is **Agro**, while parts of the mobile UI still use the product label **AgriSense Lanka**. This README reflects the current state of the `Dinithi` branch after cleanup.
 
-## 1. Project Title
+## Overview
 
-**Agro – AI-Powered Mobile Application for Smart Farming in Sri Lanka**
+The app is intended to bring several farming workflows into one mobile-first platform:
 
----
+- authentication and role-based access
+- crop tracking
+- advisory alert publishing
+- diagnosis support
+- produce listing and market visibility
+- expert support
 
-## 2. Project Overview
+## Current Branch Status
 
-Agro is a full‑stack mobile application developed to assist Sri Lankan smallholder farmers by providing intelligent, real‑time agricultural support. The system integrates crop management, disease detection, advisory services, market insights, and expert support into a single mobile platform. It offers a practical, mobile‑first solution that is accessible, easy to use, and scalable.
+### Implemented and demo-ready
 
----
+- Shared authentication foundation
+  - user registration
+  - login
+  - password hashing
+  - JWT generation
+  - protected routes
+  - current-user profile endpoint
+- Advisory Alert Management (**Member 5 - Dinithi**)
+  - backend CRUD
+  - filter support
+  - role-based create/update/delete restrictions
+  - ownership and admin checks
+  - mobile alert management screen
+  - dashboard recent-alert feed
+  - focused backend tests
 
-## 3. Problem Statement
+### Present but not yet complete
 
-Smallholder farmers in Sri Lanka often face difficulties accessing timely, accurate, and localized agricultural information such as crop disease identification, weather‑based farming advice, fertilizer usage, and market pricing. Existing digital solutions are fragmented and do not provide a unified platform, leading to inefficient decision‑making, reduced productivity, and financial losses. An integrated, mobile‑based system is needed to combine multiple agricultural services into a single, user‑friendly application.
+- full user CRUD
+- crop management CRUD
+- diagnosis CRUD and AI flow
+- produce listing CRUD
+- expert query CRUD
+- market price CRUD
 
----
+For the clearest evaluation path, review the advisory alert module first.
 
-## 4. Solution
+## Technology Stack
 
-Agro provides an integrated platform with the following capabilities:
+### Mobile
 
-- **User authentication and role‑based access**
-- **Crop management system**
-- **AI‑based crop disease detection (image upload)**
-- **Produce listing and marketplace functionality**
-- **Market price management system**
-- **Expert consultation module**
-- **Advisory alert and notification system**
-
----
-
-## 5. Technology Stack
-
-### Frontend (Mobile Application)
-
-- **React Native (Expo)** – functional components & hooks
-- **Axios** – API communication
+- React Native
+- Expo
+- Expo Router
+- Axios
 
 ### Backend
 
-- **Node.js**
-- **Express.js** – RESTful API architecture
+- Node.js
+- Express
+- MongoDB Atlas
+- Mongoose
 
-### Database
+### Authentication and utilities
 
-- **MongoDB Atlas** – Cloud‑hosted
-- **Mongoose ODM**
+- JWT
+- bcryptjs
+- Multer
 
-### Authentication
+## Implemented API Surface
 
-- **JWT (JSON Web Token)**
-- **bcrypt** – password hashing
+### Health and base routes
 
-### Other Tools & Services
-
-- **Multer / Cloudinary** – image upload
-- **Postman** – API testing
-- **GitHub** – version control
-- **Render / Railway** – backend hosting
-- **Weather API** – advisory suggestions
-- **Pre‑trained AI model/API** – disease detection
-
----
-
-## 6. System Architecture
-
-```
-Mobile Application (React Native)
-    |
-    v
-Backend API (Node.js + Express)
-    |
-    v
-MongoDB Atlas Database
+```text
+GET /           - backend status message
+GET /api/health - health check
 ```
 
-**External Integrations**
+### Authentication routes
 
-- Image upload service (Cloudinary)
-- Weather API
-- AI disease detection API/model
-
----
-
-## 7. Core Features
-
-1. **User Authentication (Shared Module)**
-   - Registration, login, JWT‑based authentication
-   - Role‑based access (Farmer, Expert, Admin)
-   - Protected routes
-2. **Crop Management**
-   - Add, view, update, delete crop records
-3. **Diagnosis Management (AI Module)**
-   - Upload crop images
-   - Detect diseases using AI
-   - Store and view diagnosis history
-4. **Produce Listing Management**
-   - Create, view, update, delete produce listings
-5. **Expert Query System**
-   - Farmers ask questions, experts respond, track status
-6. **Advisory Alert System**
-   - Weather alerts, farming recommendations, irrigation & fertilizer guidance
-7. **Market Price Management**
-   - Add, view, update, delete crop price data
-
----
-
-## 8. Database Entities (7 CRUD Modules)
-
-| Entity             | Description                          |
-| ------------------ | ------------------------------------ |
-| **User**           | Shared by all members (auth, roles)  |
-| **Crop**           | Crop details and lifecycle           |
-| **Diagnosis**      | Image + AI result + timestamp        |
-| **ProduceListing** | Marketplace items for sale           |
-| **ExpertQuery**    | Farmer questions and expert answers  |
-| **AdvisoryAlert**  | Weather & advisory notifications     |
-| **MarketPrice**    | Historical and current market prices |
-
----
-
-## 9. Team Responsibility
-
-| Member                   | Role                       | Module                           |
-| ------------------------ | -------------------------- | -------------------------------- |
-| **All Members**          | Shared Module              | User Management & Authentication |
-| Member 1 (ITXXXX – Name) | Crop Management            |
-| Member 2 (ITXXXX – Name) | Diagnosis Management       |
-| Member 3 (ITXXXX – Name) | Produce Listing Management |
-| Member 4 (ITXXXX – Name) | Expert Query Management    |
-| Member 5 (ITXXXX – Name) | Advisory Alert Management  |
-| Member 6 (ITXXXX – Name) | Market Price Management    |
-
----
-
-## 10. API Endpoint Structure
-
-### Authentication
-
-```
-POST   /api/auth/register
-POST   /api/auth/login
+```text
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/auth/me
 ```
 
-### User
+### Advisory alert routes
 
-```
-GET    /api/users
-PUT    /api/users/:id
-DELETE /api/users/:id
-```
-
-### Crop
-
-```
-POST   /api/crops
-GET    /api/crops
-GET    /api/crops/:id
-PUT    /api/crops/:id
-DELETE /api/crops/:id
-```
-
-### Diagnosis
-
-```
-POST   /api/diagnosis
-GET    /api/diagnosis
-DELETE /api/diagnosis/:id
-```
-
-### Produce Listing
-
-```
-POST   /api/produce
-GET    /api/produce
-PUT    /api/produce/:id
-DELETE /api/produce/:id
-```
-
-### Expert Query
-
-```
-POST   /api/queries
-GET    /api/queries
-PUT    /api/queries/:id
-DELETE /api/queries/:id
-```
-
-### Advisory Alert
-
-```
-POST   /api/alerts
+```text
 GET    /api/alerts
+GET    /api/alerts/:id
+POST   /api/alerts
 PUT    /api/alerts/:id
 DELETE /api/alerts/:id
 ```
 
-### Market Price
+Alert rules:
 
+- all alert routes require JWT authentication
+- `POST`, `PUT`, and `DELETE` are restricted to `Expert` and `Admin`
+- `Admin` can manage any alert
+- `Expert` can manage only alerts they created
+
+Alert filters:
+
+- `alertType`
+- `cropType`
+- `district`
+- `season`
+- `search`
+- `limit`
+
+## Project Structure
+
+```text
+backend/
+  src/
+    controllers/
+    middleware/
+    models/
+    routes/
+  test/
+docs/
+  advisory-alert-management.md
+  phase-3-setup.md
+  progress.md
+  run-guide.md
+mobile/
+  app/
+  assets/
+  components/
+  constants/
+  context/
+  features/
+  hooks/
+  utils/
+README.md
 ```
-POST   /api/market-prices
-GET    /api/market-prices
-GET    /api/market-prices/:id
-PUT    /api/market-prices/:id
-DELETE /api/market-prices/:id
+
+## Team Modules
+
+| Member | Module |
+| --- | --- |
+| All members | Shared authentication foundation |
+| Member 1 | Crop Management |
+| Member 2 | Diagnosis Management |
+| Member 3 | Produce Listing Management |
+| Member 4 | Expert Query Management |
+| Member 5 (IT24104198 - Dinithi) | Advisory Alert Management |
+| Member 6 | Market Price Management |
+
+## Run Locally
+
+Detailed setup instructions are in `docs/run-guide.md`.
+
+### Backend
+
+```bash
+cd backend
+npm install
+npm run dev
 ```
 
----
+Required environment variables:
 
-## 11. Project Structure
-
-```
-Agro/
-├─ backend/
-│   ├─ src/
-│   │   ├─ controllers/
-│   │   ├─ middleware/
-│   │   ├─ models/
-│   │   ├─ routes/
-│   │   └─ server.js
-│   ├─ .env.example
-│   ├─ package.json
-│   └─ package-lock.json
-├─ mobile/
-│   ├─ app/
-│   ├─ assets/
-│   ├─ components/
-│   ├─ constants/
-│   ├─ context/
-│   ├─ features/
-│   ├─ hooks/
-│   ├─ utils/
-│   ├─ app.json
-│   └─ package.json
-├─ docs/
-│   ├─ run-guide.md
-│   ├─ phase-3-setup.md
-│   └─ progress.md
-└─ README.md
+```text
+PORT=5000
+MONGO_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_jwt_secret
+NODE_ENV=development
 ```
 
----
+### Mobile
 
-## 12. How to Run the Project
+```bash
+cd mobile
+npm install
+npx expo start
+```
 
-For a detailed, step-by-step guide on how to set up and run the project locally, please refer to the **[docs/run-guide.md](docs/run-guide.md)**.
+Before starting the mobile app, set `API_URL` in `mobile/constants/Config.ts` to the correct backend address for your machine or deployed backend.
 
-### Quick Start:
+## Recommended Demo Flow
 
-#### Backend Setup
+1. Register or log in
+2. Open the Alerts tab
+3. View live advisory alerts
+4. Log in as an `Expert` or `Admin`
+5. Create, edit, and delete an alert
+6. Confirm recent alerts also appear on the dashboard
 
-1. Open a terminal and navigate to the `backend` folder:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create a `.env` file with the following variables:
-   ```text
-   MONGO_URI=your_mongodb_atlas_connection_string
-   JWT_SECRET=your_jwt_secret
-   PORT=5000
-   ```
-4. Start the server:
-   ```bash
-   npm start
-   ```
+## Evaluator Notes
 
-### Mobile Setup
+- `docs/advisory-alert-management.md` gives the cleanest module-level breakdown
+- `docs/progress.md` summarizes what is complete vs still pending
+- `backend/test/alert.module.test.js` contains focused verification for the strongest implemented module
 
-1. Open a terminal and navigate to the `mobile` folder:
-   ```bash
-   cd mobile
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Launch the Expo development server:
-   ```bash
-   npx expo start
-   ```
-4. Use an emulator or a physical device (via Expo Go) to run the app.
+## Repository
 
----
-
-## 13. Deployment Details
-
-- **Backend URL**: `https://your-backend-url.com`
-- **Database**: MongoDB Atlas (cloud‑hosted)
-- **Mobile App**: Configured to communicate with the deployed backend API.
-
----
-
-## 14. GitHub Repository
-
-[https://github.com/your-repo-link](https://github.com/Raashidh-Rizvi/Agro)
-
----
-
-## 15. Important Submission Notes
-
-- Only documentation files are included in the ZIP submission.
-- Source code resides in the GitHub repository linked above.
-- The backend is deployed and publicly accessible.
-- The mobile application is connected to the hosted backend API.
-
----
-
-_End of README_
+[GitHub Repository](https://github.com/Raashidh-Rizvi/Agro)
