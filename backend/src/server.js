@@ -6,6 +6,19 @@ const dotenv = require('dotenv');
 // Load environment variables
 dotenv.config();
 
+const DEFAULT_MONGO_URI = 'mongodb://127.0.0.1:27017/agrisense';
+const DEFAULT_JWT_SECRET = 'dev_secret_change_me';
+
+process.env.MONGO_URI = process.env.MONGO_URI || DEFAULT_MONGO_URI;
+process.env.JWT_SECRET = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
+
+if (!process.env.MONGO_URI || process.env.MONGO_URI === DEFAULT_MONGO_URI) {
+    console.warn('WARNING: MONGO_URI is not set. Falling back to local development MongoDB URI.');
+}
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === DEFAULT_JWT_SECRET) {
+    console.warn('WARNING: JWT_SECRET is not set. Using a development fallback secret.');
+}
+
 const app = express();
 
 // Middleware

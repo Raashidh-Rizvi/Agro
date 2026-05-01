@@ -63,11 +63,13 @@ export default function LoginScreen() {
     <ThemeOverrideProvider scheme="light">
       <KeyboardAvoidingView
         style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="on-drag"
+          nestedScrollEnabled={true}
           showsVerticalScrollIndicator={false}
         >
           {/* ── Green Header ─────────────────────────── */}
@@ -94,17 +96,8 @@ export default function LoginScreen() {
             {/* Email */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email Address</Text>
-              <TouchableOpacity 
-                activeOpacity={1}
-                onPress={() => emailRef.current?.focus()}
-                style={[styles.inputWrapper, emailFocused && styles.inputFocused]}
-              >
-                <Ionicons
-                  name="mail-outline"
-                  size={18}
-                  color={emailFocused ? L.primary : L.muted}
-                  style={styles.inputIcon}
-                />
+              <TouchableOpacity activeOpacity={1} style={[styles.inputWrapper, emailFocused && styles.inputFocused]} onPress={() => emailRef.current?.focus()}>
+                <Ionicons name="mail-outline" size={18} color={emailFocused ? L.primary : L.muted} style={styles.inputIcon} />
                 <TextInput
                   ref={emailRef}
                   style={styles.input}
@@ -115,6 +108,7 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   returnKeyType="next"
+                  onSubmitEditing={() => passRef.current?.focus()}
                   onFocus={() => setEmailFocused(true)}
                   onBlur={() => setEmailFocused(false)}
                 />
@@ -124,17 +118,8 @@ export default function LoginScreen() {
             {/* Password */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
-              <TouchableOpacity 
-                activeOpacity={1}
-                onPress={() => passRef.current?.focus()}
-                style={[styles.inputWrapper, passFocused && styles.inputFocused]}
-              >
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={18}
-                  color={passFocused ? L.primary : L.muted}
-                  style={styles.inputIcon}
-                />
+              <TouchableOpacity activeOpacity={1} style={[styles.inputWrapper, passFocused && styles.inputFocused]} onPress={() => passRef.current?.focus()}>
+                <Ionicons name="lock-closed-outline" size={18} color={passFocused ? L.primary : L.muted} style={styles.inputIcon} />
                 <TextInput
                   ref={passRef}
                   style={[styles.input, { paddingRight: 48 }]}
@@ -148,16 +133,8 @@ export default function LoginScreen() {
                   onFocus={() => setPassFocused(true)}
                   onBlur={() => setPassFocused(false)}
                 />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => setShowPassword(!showPassword)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={L.muted}
-                  />
+                <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={L.muted} />
                 </TouchableOpacity>
               </TouchableOpacity>
             </View>

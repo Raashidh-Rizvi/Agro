@@ -4,13 +4,12 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import axios from 'axios';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
 import { useAppColors, useAppTheme } from '@/context/AppThemeContext';
-import { API_URL } from '@/constants/Config';
+import api from '@/services/api';
 import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import {
   ALERT_META,
@@ -59,7 +58,7 @@ export default function FarmerDashboard() {
 
     try {
       setAlertsError(null);
-      const response = await axios.get(`${API_URL}/alerts`, {
+      const response = await api.get('/alerts', {
         params: { limit: 3 },
       });
       setRecentAlerts(response.data.alerts || []);
