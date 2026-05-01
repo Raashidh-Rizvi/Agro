@@ -198,7 +198,7 @@ export default function LoginScreen() {
             </Link>
 
             <Text style={styles.footer}>
-              By continuing, you agree to AgriSense Lanka's Terms of Service.
+              By continuing, you agree to AgriSense Lanka&apos;s Terms of Service.
             </Text>
           </View>
         </ScrollView>

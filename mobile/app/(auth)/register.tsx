@@ -199,7 +199,7 @@ export default function RegisterScreen() {
             </Link>
 
             <Text style={styles.footer}>
-              By creating an account, you agree to AgriSense Lanka's Terms of Service and Privacy Policy.
+              By creating an account, you agree to AgriSense Lanka&apos;s Terms of Service and Privacy Policy.
             </Text>
           </View>
         </ScrollView>
