@@ -295,19 +295,19 @@ const renderQuery = ({ item }: { item: Query }) => {
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.center}>
+      <ThemedView style={styles.center}>
         <ActivityIndicator size="large" color="#0A5C36" />
-      </View>
+      </ThemedView>
     );
   }
 
   if (submitted) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <ThemedView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <IconSymbol name="checkmark.circle.fill" size={64} color="#0A5C36" />
-        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#0A5C36', marginTop: 16 }}>Submitted Successfully!</Text>
-        <Text style={{ fontSize: 16, color: '#666', marginTop: 8 }}>Your answer has been recorded.</Text>
-      </View>
+        <ThemedText style={{ fontSize: 24, fontWeight: 'bold', color: '#0A5C36', marginTop: 16 }}>Submitted Successfully!</ThemedText>
+        <ThemedText style={{ fontSize: 16, color: colors.subtext, marginTop: 8 }}>Your answer has been recorded.</ThemedText>
+      </ThemedView>
     );
   }
 
@@ -316,33 +316,33 @@ const renderQuery = ({ item }: { item: Query }) => {
       style={{ flex: 1 }} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.container}>
+      <ThemedView style={styles.container}>
         <Stack.Screen 
           options={{ 
             title: 'All Queries',
             headerLeft: onBack ? () => (
               <TouchableOpacity onPress={onBack} style={{marginLeft: 16}}>
-                <IconSymbol name="chevron.left" size={24} color="#0A5C36" />
+                <IconSymbol name="chevron.left" size={24} color={colors.primary} />
               </TouchableOpacity>
             ) : undefined,
             headerRight: () => (
               <TouchableOpacity onPress={() => router.push('/expert-queries/submit')} style={styles.headerButton}>
-                <IconSymbol name="plus" size={24} color="#0A5C36" />
+                <IconSymbol name="plus" size={24} color={colors.primary} />
               </TouchableOpacity>
             )
           }} 
         />
         
         {user?.role !== 'Expert' && (
-          <View style={styles.actionContainer}>
+          <ThemedView style={[styles.actionContainer, { backgroundColor: 'transparent' }]}>
             <TouchableOpacity 
               style={styles.createButton} 
               onPress={() => router.push('/expert-queries/submit')}
             >
               <IconSymbol name="plus.circle.fill" size={20} color="white" />
-              <Text style={styles.createButtonText}>Ask an Expert</Text>
+              <ThemedText style={styles.createButtonText}>Ask an Expert</ThemedText>
             </TouchableOpacity>
-          </View>
+          </ThemedView>
         )}
 
         <FlatList
@@ -351,17 +351,17 @@ const renderQuery = ({ item }: { item: Query }) => {
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContainer}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0A5C36" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <IconSymbol name="doc.text.magnifyingglass" size={48} color="#999" />
-              <Text style={styles.emptyText}>No queries found.</Text>
-              <Text style={styles.emptySubtext}>Submit your first query to get expert advice!</Text>
-            </View>
+            <ThemedView style={[styles.emptyContainer, { backgroundColor: 'transparent' }]}>
+              <IconSymbol name="doc.text.magnifyingglass" size={48} color={colors.placeholder} />
+              <ThemedText style={styles.emptyText}>No queries found.</ThemedText>
+              <ThemedText style={[styles.emptySubtext, { color: colors.subtext }]}>Submit your first query to get expert advice!</ThemedText>
+            </ThemedView>
           }
         />
-      </View>
+      </ThemedView>
     </KeyboardAvoidingView>
   );
 }
@@ -369,7 +369,6 @@ const renderQuery = ({ item }: { item: Query }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F9FB',
   },
   center: {
     flex: 1,
@@ -381,12 +380,10 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   queryCard: {
-    backgroundColor: 'white',
     padding: 16,
     marginBottom: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     ...Shadows.xs,
   },
   cardHeader: {
@@ -413,33 +410,27 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#333',
   },
   date: {
     fontSize: 12,
-    color: '#888',
   },
   title: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#11181C',
     marginBottom: 6,
   },
   cropName: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
     fontStyle: 'italic',
   },
   expandedContent: {
     marginTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
     paddingTop: 12,
   },
   description: {
     fontSize: 15,
-    color: '#333',
     lineHeight: 22,
     marginBottom: 8,
   },
@@ -458,26 +449,21 @@ const styles = StyleSheet.create({
   },
   authorText: {
     fontSize: 13,
-    color: '#888',
     marginBottom: 16,
   },
   replyBox: {
-    backgroundColor: '#E6F4EA',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#A3CFBB',
     marginTop: 8,
   },
   replyLabel: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#0A5C36',
     marginBottom: 6,
   },
   replyText: {
     fontSize: 15,
-    color: '#11181C',
     lineHeight: 22,
   },
   replyFooter: {
@@ -490,16 +476,13 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   pendingFooter: {
-    backgroundColor: '#F9FAFB',
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     alignItems: 'center',
   },
   pendingFooterText: {
     fontSize: 13,
-    color: '#6B7280',
     fontStyle: 'italic',
   },
   expertReplyContainer: {
@@ -512,9 +495,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   expertReplyInput: {
-    backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 8,
     padding: 12,
     minHeight: 100,
@@ -538,7 +519,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
   },
   cardIndicatorText: {
     fontSize: 13,
@@ -577,7 +557,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#555',
     marginTop: 16,
   },
   emptySubtext: {
