@@ -11,8 +11,9 @@ interface AuthContextType {
     register: (userData: any) => Promise<void>;
     updateProfile: (userData: any) => Promise<void>;
     updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-    forgotPassword: (email: string) => Promise<string | undefined>;
-    resetPassword: (token: string, password: string) => Promise<void>;
+    forgotPassword: (email: string) => Promise<void>;
+    verifyOtp: (email: string, otp: string) => Promise<void>;
+    resetPassword: (email: string, otp: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
 }
 
@@ -114,24 +115,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const forgotPassword = async (email: string) => {
         try {
-            const response = await api.post('/auth/forgot-password', { email });
-            // In development, the backend returns the token
-            return response.data.resetToken;
+            await api.post('/auth/forgot-password', { email });
         } catch (error: any) {
-            throw error.response?.data?.message || 'Failed to send reset email';
+            throw error.response?.data?.message || 'Failed to send OTP';
         }
     };
 
-    const resetPassword = async (token: string, password: string) => {
+    const verifyOtp = async (email: string, otp: string) => {
         try {
-            await api.put(`/auth/reset-password/${token}`, { password });
+            await api.post('/auth/verify-otp', { email, otp });
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Invalid or expired OTP';
+        }
+    };
+
+    const resetPassword = async (email: string, otp: string, password: string) => {
+        try {
+            await api.post('/auth/reset-password', { email, otp, password });
         } catch (error: any) {
             throw error.response?.data?.message || 'Failed to reset password';
         }
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, isInitializing, login, register, updateProfile, updatePassword, forgotPassword, resetPassword, logout }}>
+        <AuthContext.Provider value={{ user, token, isLoading, isInitializing, login, register, updateProfile, updatePassword, forgotPassword, verifyOtp, resetPassword, logout }}>
             {children}
         </AuthContext.Provider>
     );

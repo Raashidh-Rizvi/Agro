@@ -50,12 +50,25 @@ export default function RegisterScreen() {
   const passRef  = useRef<TextInput>(null);
 
   const handleRegister = async () => {
-    if (!name || !email || !password) {
+    if (!name.trim() || !email.trim() || !password) {
       Alert.alert('Missing Fields', 'Please fill in all fields to continue.');
       return;
     }
+    if (name.trim().length < 2) {
+      Alert.alert('Invalid Name', 'Name must be at least 2 characters.');
+      return;
+    }
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+      return;
+    }
     try {
-      await register({ name, email, password, role });
+      await register({ name: name.trim(), email: email.trim().toLowerCase(), password, role });
       router.replace('/(tabs)');
     } catch (err: any) {
       Alert.alert('Registration Failed', err.toString());

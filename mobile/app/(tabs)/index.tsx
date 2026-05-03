@@ -19,10 +19,10 @@ import {
 } from '@/features/alerts/alertSupport';
 
 const quickActions = [
-  { id: '1', title: 'Scan Disease', icon: 'camera-outline', color: '#0F9D58', bg: '#E6F4EA' },
-  { id: '2', title: 'Ask Expert', icon: 'people-outline', color: '#3B82F6', bg: '#EFF6FF' },
-  { id: '3', title: 'My Crops', icon: 'leaf-outline', color: '#0B6B3A', bg: '#D4EDDA' },
-  { id: '4', title: 'Prices', icon: 'trending-up-outline', color: '#F59E0B', bg: '#FEF3C7' },
+  { id: '1', title: 'Scan Disease', icon: 'camera-outline', color: '#0F9D58', bg: '#E6F4EA', route: '/diagnosis/history' },
+  { id: '2', title: 'Ask Expert', icon: 'people-outline', color: '#3B82F6', bg: '#EFF6FF', route: '/(tabs)/expert-queries' },
+  { id: '3', title: 'My Crops', icon: 'leaf-outline', color: '#0B6B3A', bg: '#D4EDDA', route: '/(tabs)/crops' },
+  { id: '4', title: 'Prices', icon: 'trending-up-outline', color: '#F59E0B', bg: '#FEF3C7', route: '/(tabs)/explore' },
 ] as const;
 
 const metrics = [
@@ -148,7 +148,8 @@ export default function FarmerDashboard() {
             <TouchableOpacity
               key={action.id}
               style={[styles.actionCard, { backgroundColor: C.card, borderColor: C.border }]}
-              activeOpacity={0.8}>
+              activeOpacity={0.8}
+              onPress={() => router.push(action.route as any)}>
               <View style={[styles.actionIconWrap, { backgroundColor: action.bg }]}>
                 <Ionicons name={action.icon as any} size={26} color={action.color} />
               </View>

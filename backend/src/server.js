@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const dns = require('dns');
 
 // Load environment variables
 dotenv.config();
@@ -119,8 +120,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']); // Bypass ISP/University SRV blocks
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 mongoose.connect(MONGO_URI)
     .then(() => {
