@@ -114,7 +114,7 @@ export default function FarmerDashboard() {
         <TouchableOpacity
           style={[styles.heroCard, Shadows.colored(C.primary)]}
           activeOpacity={0.9}
-          onPress={() => Alert.alert('Available Soon', 'This feature will be available soon')}>
+          onPress={() => router.push('/diagnosis')}>
           <View style={[styles.heroOverlay, { backgroundColor: C.heroOverlay }]} />
           <View style={styles.heroLeft}>
             <View style={styles.aiBadge}>
@@ -235,7 +235,7 @@ export default function FarmerDashboard() {
           <ThemedText style={[styles.sectionTitle, { color: C.text }]}>Market Prices</ThemedText>
           <TouchableOpacity 
             activeOpacity={0.8}
-            onPress={() => Alert.alert('Available Soon', 'This feature will be available soon')}>
+            onPress={() => router.push('/(tabs)/explore')}>
             <ThemedText style={[styles.viewAll, { color: C.primary }]}>View All</ThemedText>
           </TouchableOpacity>
         </View>
@@ -250,7 +250,7 @@ export default function FarmerDashboard() {
             <TouchableOpacity 
               key={price.crop} 
               style={[styles.priceCard, { backgroundColor: C.card, borderColor: C.border }]}
-              onPress={() => Alert.alert('Available Soon', 'This feature will be available soon')}>
+              onPress={() => router.push('/(tabs)/explore')}>
               <ThemedText style={[styles.priceCrop, { color: C.subtext }]}>{price.crop}</ThemedText>
               <ThemedText style={[styles.priceValue, { color: C.text }]}>{price.price}</ThemedText>
               <View style={[styles.priceChangePill, { backgroundColor: price.up ? C.primaryDim : '#FEE2E2' }]}>

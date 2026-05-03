@@ -1,12 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { FlatList, RefreshControl, Alert, StyleSheet, TouchableOpacity, Text, View, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
-import { Shadows, Radius, Spacing } from '@/constants/theme';
+import { FlatList, RefreshControl, Alert, StyleSheet, TouchableOpacity, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, useColorScheme } from 'react-native';
+import { Shadows, Radius, Spacing, Colors } from '@/constants/theme';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
 import { API_URL } from '../../../constants/Config';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import ExpertDashboard from '@/components/expert/ExpertDashboard';
 import { Image } from 'expo-image';
+import { ThemedView } from '@/components/themed-view';
+import { ThemedText } from '@/components/themed-text';
 
 interface Query {
   _id: string;
@@ -27,7 +29,7 @@ export default function QueriesScreen() {
 
   if (user?.role === 'Expert' && !showQueries) {
     return (
-      <View style={{ flex: 1 }}>
+      <ThemedView style={{ flex: 1 }}>
         <Stack.Screen options={{ title: 'Expert Dashboard' }} />
         <ExpertDashboard onQueriesPress={() => setShowQueries(true)} />
         <TouchableOpacity 
@@ -36,7 +38,7 @@ export default function QueriesScreen() {
         >
           <IconSymbol name="bubble.left.and.bubble.right.fill" size={24} color="white" />
         </TouchableOpacity>
-      </View>
+      </ThemedView>
     );
   }
 
@@ -138,8 +140,11 @@ const renderQuery = ({ item }: { item: Query }) => {
       authorName = String(item.userId);
     }
     
+  const theme = useColorScheme() ?? 'light';
+  const colors = Colors[theme];
+
     return (
-      <View style={styles.queryCard}>
+      <ThemedView style={[styles.queryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <TouchableOpacity 
           onPress={() => {
             setExpandedId(isExpanded ? null : item._id);
@@ -150,14 +155,14 @@ const renderQuery = ({ item }: { item: Query }) => {
           }}
           activeOpacity={0.8}
         >
-          <View style={styles.cardHeader}>
-            <View style={[styles.statusBadge, isAnswered ? styles.statusAnswered : styles.statusPending]}>
-              <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
-            </View>
-            <Text style={styles.date}>{new Date(item.createdAt).toLocaleDateString()}</Text>
-          </View>
+          <ThemedView style={[styles.cardHeader, { backgroundColor: 'transparent' }]}>
+            <ThemedView style={[styles.statusBadge, isAnswered ? styles.statusAnswered : styles.statusPending]}>
+              <ThemedText style={styles.statusText}>{item.status.toUpperCase()}</ThemedText>
+            </ThemedView>
+            <ThemedText style={[styles.date, { color: colors.subtext }]}>{new Date(item.createdAt).toLocaleDateString()}</ThemedText>
+          </ThemedView>
           
-          <Text style={styles.title} numberOfLines={isExpanded ? 0 : 2}>{item.title}</Text>
+          <ThemedText style={[styles.title, { color: colors.text }]} numberOfLines={isExpanded ? 0 : 2}>{item.title}</ThemedText>
           
           {!isExpanded && item.imageUrl && (
             <Image 
@@ -169,12 +174,12 @@ const renderQuery = ({ item }: { item: Query }) => {
           )}
 
           {item.cropId && (
-            <Text style={styles.cropName}>Crop: {typeof item.cropId === 'object' ? item.cropId.name : item.cropId}</Text>
+            <ThemedText style={[styles.cropName, { color: colors.subtext }]}>Crop: {typeof item.cropId === 'object' ? item.cropId.name : item.cropId}</ThemedText>
           )}
         </TouchableOpacity>
         
         {isExpanded && (
-          <View style={styles.expandedContent}>
+          <ThemedView style={[styles.expandedContent, { borderTopColor: colors.border, backgroundColor: 'transparent' }]}>
             {item.imageUrl && (
               <Image 
                 source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${API_URL.replace('/api', '')}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}` }} 
@@ -183,73 +188,75 @@ const renderQuery = ({ item }: { item: Query }) => {
                 onError={(e) => console.log('Full Image Load Error:', (e as any)?.nativeEvent?.error || (e as any)?.error || 'Unknown error')}
               />
             )}
-            <Text style={styles.description}>{item.description}</Text>
-            <Text style={styles.authorText}>Asked by: {authorName}</Text>
+            <ThemedText style={[styles.description, { color: colors.text }]}>{item.description}</ThemedText>
+            <ThemedText style={[styles.authorText, { color: colors.subtext }]}>Asked by: {authorName}</ThemedText>
             
             {isAnswered && item.reply && (
-              <View style={styles.replyBox}>
-                <Text style={styles.replyLabel}>Expert&apos;s Reply:</Text>
+              <ThemedView style={[styles.replyBox, { backgroundColor: colors.cardTint, borderColor: colors.border }]}>
+                <ThemedText style={styles.replyLabel}>Expert&apos;s Reply:</ThemedText>
                 
                 {editingReplyId === item._id ? (
-                  <View style={[styles.expertReplyContainer, {marginTop: 8}]}>
+                  <ThemedView style={[styles.expertReplyContainer, { marginTop: 8, backgroundColor: 'transparent' }]}>
                     <TextInput
-                      style={styles.expertReplyInput}
+                      style={[styles.expertReplyInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                       multiline
                       numberOfLines={4}
                       placeholder="Edit your advice here..."
+                      placeholderTextColor={colors.placeholder}
                       value={replyText}
                       onChangeText={setReplyText}
                     />
-                    <View style={{flexDirection: 'row', gap: 8, marginTop: 4}}>
+                    <ThemedView style={{ flexDirection: 'row', gap: 8, marginTop: 4, backgroundColor: 'transparent' }}>
                       <TouchableOpacity 
-                        style={[styles.submitReplyBtn, {flex: 1, backgroundColor: '#FF3B30'}]} 
+                        style={[styles.submitReplyBtn, { flex: 1, backgroundColor: '#FF3B30' }]} 
                         onPress={() => setEditingReplyId(null)}
                       >
-                         <Text style={styles.submitReplyBtnText}>Cancel</Text>
+                         <ThemedText style={styles.submitReplyBtnText}>Cancel</ThemedText>
                       </TouchableOpacity>
                       <TouchableOpacity 
-                        style={[styles.submitReplyBtn, {flex: 1}]} 
+                        style={[styles.submitReplyBtn, { flex: 1 }]} 
                         onPress={() => submitReply(item._id)}
                         disabled={answering}
                       >
-                         {answering ? <ActivityIndicator color="white" /> : <Text style={styles.submitReplyBtnText}>Update</Text>}
+                         {answering ? <ActivityIndicator color="white" /> : <ThemedText style={styles.submitReplyBtnText}>Update</ThemedText>}
                       </TouchableOpacity>
-                    </View>
-                  </View>
+                    </ThemedView>
+                  </ThemedView>
                 ) : (
                   <>
-                    <Text style={styles.replyText}>{item.reply}</Text>
-                    <View style={styles.replyFooter}>
-                      <Text style={styles.replyDate}>
+                    <ThemedText style={[styles.replyText, { color: colors.text }]}>{item.reply}</ThemedText>
+                    <ThemedView style={[styles.replyFooter, { backgroundColor: 'transparent' }]}>
+                      <ThemedText style={styles.replyDate}>
                         Answered: {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : new Date(item.createdAt).toLocaleDateString()}
-                      </Text>
+                      </ThemedText>
                       {isExpert && (
                         <TouchableOpacity 
                           onPress={() => {
                             setReplyText(item.reply || '');
                             setEditingReplyId(item._id);
                           }}
-                          style={{marginTop: 8}}
+                          style={{ marginTop: 8 }}
                         >
-                          <Text style={{color: '#0A5C36', fontWeight: 'bold', fontSize: 13}}>Edit Reply</Text>
+                          <ThemedText style={{ color: colors.primary, fontWeight: 'bold', fontSize: 13 }}>Edit Reply</ThemedText>
                         </TouchableOpacity>
                       )}
-                    </View>
+                    </ThemedView>
                   </>
                 )}
-              </View>
+              </ThemedView>
             )}
 
             {!isAnswered && (
-               <View style={styles.pendingFooter}>
+               <ThemedView style={[styles.pendingFooter, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                  {isExpert ? (
-                   <View style={styles.expertReplyContainer}>
-                     <Text style={styles.expertReplyTitle}>Answer Query:</Text>
+                   <ThemedView style={[styles.expertReplyContainer, { backgroundColor: 'transparent' }]}>
+                     <ThemedText style={styles.expertReplyTitle}>Answer Query:</ThemedText>
                      <TextInput
-                       style={styles.expertReplyInput}
+                       style={[styles.expertReplyInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                        multiline
                        numberOfLines={4}
                        placeholder="Provide your expert advice here..."
+                       placeholderTextColor={colors.placeholder}
                        value={replyText}
                        onChangeText={setReplyText}
                      />
@@ -258,19 +265,19 @@ const renderQuery = ({ item }: { item: Query }) => {
                        onPress={() => submitReply(item._id)}
                        disabled={answering}
                      >
-                        {answering ? <ActivityIndicator color="white" /> : <Text style={styles.submitReplyBtnText}>Submit Answer</Text>}
+                        {answering ? <ActivityIndicator color="white" /> : <ThemedText style={styles.submitReplyBtnText}>Submit Answer</ThemedText>}
                      </TouchableOpacity>
-                   </View>
+                   </ThemedView>
                  ) : (
-                   <Text style={styles.pendingFooterText}>Our experts are analyzing this inquiry...</Text>
+                   <ThemedText style={[styles.pendingFooterText, { color: colors.subtext }]}>Our experts are analyzing this inquiry...</ThemedText>
                  )}
-               </View>
+               </ThemedView>
             )}
-          </View>
+          </ThemedView>
         )}
         
         <TouchableOpacity 
-          style={styles.cardIndicator}
+          style={[styles.cardIndicator, { borderTopColor: colors.border }]}
           onPress={() => {
             setExpandedId(isExpanded ? null : item._id);
             if (!isExpanded) {
@@ -279,9 +286,9 @@ const renderQuery = ({ item }: { item: Query }) => {
             }
           }}
         >
-           <Text style={styles.cardIndicatorText}>{isExpanded ? 'Hide Details' : 'View Details'}</Text>
+           <ThemedText style={styles.cardIndicatorText}>{isExpanded ? 'Hide Details' : 'View Details'}</ThemedText>
         </TouchableOpacity>
-      </View>
+      </ThemedView>
     );
   };
 

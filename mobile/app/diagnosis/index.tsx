@@ -26,7 +26,7 @@ export default function DiagnosisLandingScreen() {
       let permissionResult;
       if (useCamera) {
         if (Platform.OS === 'web') {
-          Alert.alert('Not Available', 'Camera is not supported in the browser. Please use the Expo Go app.');
+          alert('Camera is not supported in the browser. Please use the Expo Go app.');
           return;
         }
         permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -35,7 +35,9 @@ export default function DiagnosisLandingScreen() {
       }
 
       if (!permissionResult.granted) {
-        Alert.alert('Permission Denied', `We need ${useCamera ? 'camera' : 'gallery'} permissions to analyze your crop.`);
+        const msg = `We need ${useCamera ? 'camera' : 'gallery'} permissions to analyze your crop.`;
+        if (Platform.OS === 'web') alert(msg);
+        else Alert.alert('Permission Denied', msg);
         return;
       }
 
@@ -65,7 +67,9 @@ export default function DiagnosisLandingScreen() {
     } catch (error: any) {
       setModalVisible(false);
       console.error('Diagnosis Error:', error);
-      Alert.alert('Analysis Failed', error.message || 'Could not analyze the image. Please try again.');
+      const msg = error.message || 'Could not analyze the image. Please try again.';
+      if (Platform.OS === 'web') alert('Analysis Failed: ' + msg);
+      else Alert.alert('Analysis Failed', msg);
     } finally {
       setIsScanning(false);
     }

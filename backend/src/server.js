@@ -48,9 +48,11 @@ const produceRoutes = require('./routes/produce.routes');
 const userRoutes = require('./routes/user.routes');
 const statsRoutes = require('./routes/stats.routes');
 const marketPriceRoutes = require('./routes/marketPrice.routes');
+const cartRoutes = require('./routes/cart.routes');
 
 
 // Use Routes
+app.use('/api/cart', cartRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/expert-query', expertQueryRoutes);
 app.use('/api/crops', cropRoutes);
@@ -60,6 +62,8 @@ app.use('/api/produce', produceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/market-prices', marketPriceRoutes);
+
+
 
 
 // Basic Test Route

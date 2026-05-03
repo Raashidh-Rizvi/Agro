@@ -9,4 +9,4 @@ const getBaseUrl = () => {
 };
 
 export const BASE_URL = getBaseUrl();
-export const API_URL = `${BASE_URL}/api`;
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || `${BASE_URL}/api`;

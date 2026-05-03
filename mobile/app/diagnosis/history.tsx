@@ -54,7 +54,51 @@ export default function DiagnosisHistoryScreen() {
     setModalVisible(true);
   };
 
+  const handleDeleteHistory = (id: string) => {
+    console.log('--- [DEBUG] handleDeleteHistory called for ID:', id);
+    if (!id || id === 'undefined') {
+      const msg = 'Invalid record ID. Cannot delete.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Error', msg);
+      return;
+    }
+
+    const performDelete = async () => {
+      console.log('--- [DEBUG] Delete confirmed for ID:', id);
+      try {
+        await DiagnosisService.deleteDiagnosis(id);
+        console.log('--- [DEBUG] Delete API call successful ---');
+        setHistory(prev => prev.filter(item => {
+          const itemId = ((item as any)._id || (item as any).id)?.toString();
+          return itemId !== id;
+        }));
+        if (Platform.OS === 'web') alert('Record deleted successfully.');
+      } catch (error: any) {
+        console.error('--- [ERROR] Delete API call failed ---', error);
+        const message = error.response?.data?.message || error.message || 'Failed to delete the record.';
+        if (Platform.OS === 'web') alert('Delete Failed: ' + message);
+        else Alert.alert('Delete Failed', message);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to delete this diagnosis record?')) {
+        performDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete Record',
+        'Are you sure you want to delete this diagnosis record?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: performDelete }
+        ]
+      );
+    }
+  };
+
   const renderItem = ({ item }: { item: DiagnosisResult }) => {
+    const id = (item as any)._id || (item as any).id;
     const date = new Date(item.createdAt).toLocaleDateString(undefined, {
       month: 'short', day: 'numeric', year: 'numeric',
     });
@@ -65,40 +109,50 @@ export default function DiagnosisHistoryScreen() {
     const isHealthy = item.diseaseName.toLowerCase().includes('healthy');
 
     return (
-      <TouchableOpacity
-        style={[styles.historyCard, { backgroundColor: C.card, borderColor: C.border }]}
-        onPress={() => handleItemPress(item)}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.thumbnailWrap, { backgroundColor: C.surface }]}>
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.thumbnail} contentFit="cover" />
-          ) : (
-            <Ionicons name="leaf-outline" size={28} color={C.muted} />
-          )}
-        </View>
-        <View style={styles.cardInfo}>
-          <View style={styles.cardHeader}>
-            <ThemedText style={[styles.diseaseName, { color: C.text }]} numberOfLines={1}>
-              {item.diseaseName.replace(/_/g, ' ')}
-            </ThemedText>
-            <View style={[styles.statusDot, { backgroundColor: isHealthy ? '#22C55E' : '#EF4444' }]} />
+      <View style={[styles.historyCard, { backgroundColor: C.card, borderColor: C.border }]}>
+        <TouchableOpacity
+          style={styles.cardContent}
+          onPress={() => handleItemPress(item)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.thumbnailWrap, { backgroundColor: C.surface }]}>
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={styles.thumbnail} contentFit="cover" />
+            ) : (
+              <Ionicons name="leaf-outline" size={28} color={C.muted} />
+            )}
           </View>
-          <ThemedText style={[styles.dateText, { color: C.muted }]}>{date}</ThemedText>
-          <View style={styles.confidenceRow}>
-            <View style={[styles.confidenceBar, { backgroundColor: C.border }]}>
-              <View style={[styles.confidenceFill, { backgroundColor: C.primary, width: `${confidence}%` as any }]} />
+          <View style={styles.cardInfo}>
+            <View style={styles.cardHeader}>
+              <ThemedText style={[styles.diseaseName, { color: C.text }]} numberOfLines={1}>
+                {item.diseaseName.replace(/_/g, ' ')}
+              </ThemedText>
+              <View style={[styles.statusDot, { backgroundColor: isHealthy ? '#22C55E' : '#EF4444' }]} />
             </View>
-            <ThemedText style={[styles.confidenceText, { color: C.primary }]}>{confidence}%</ThemedText>
+            <ThemedText style={[styles.dateText, { color: C.muted }]}>{date}</ThemedText>
+            <View style={styles.confidenceRow}>
+              <View style={[styles.confidenceBar, { backgroundColor: C.border }]}>
+                <View style={[styles.confidenceFill, { backgroundColor: C.primary, width: `${confidence}%` as any }]} />
+              </View>
+              <ThemedText style={[styles.confidenceText, { color: C.primary }]}>{confidence}%</ThemedText>
+            </View>
+            {item.isMock && (
+              <View style={[styles.mockBadge, { backgroundColor: C.dangerDim }]}>
+                <ThemedText style={[styles.mockBadgeText, { color: C.danger }]}>SIMULATION</ThemedText>
+              </View>
+            )}
           </View>
-          {item.isMock && (
-            <View style={[styles.mockBadge, { backgroundColor: C.dangerDim }]}>
-              <ThemedText style={[styles.mockBadgeText, { color: C.danger }]}>SIMULATION</ThemedText>
-            </View>
-          )}
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={C.muted} />
-      </TouchableOpacity>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.deleteBtn} 
+          onPress={() => handleDeleteHistory(id)}
+          activeOpacity={0.6}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+        >
+          <Ionicons name="trash-outline" size={22} color={C.danger} />
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -173,8 +227,23 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 18, fontWeight: '800', marginTop: Spacing.lg, marginBottom: 8 },
   emptySubtitle: { fontSize: 13, textAlign: 'center', lineHeight: 20 },
   historyCard: {
-    flexDirection: 'row', alignItems: 'center', padding: 12,
+    flexDirection: 'row', alignItems: 'center',
     borderRadius: Radius.lg, borderWidth: 1, marginBottom: 12, ...Shadows.xs,
+    overflow: 'hidden',
+  },
+  cardContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
+  deleteBtn: {
+    padding: 16,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(0,0,0,0.05)',
   },
   thumbnailWrap: {
     width: 64, height: 64, borderRadius: Radius.md,

@@ -12,6 +12,8 @@ import { Radius, Spacing, Shadows } from '@/constants/theme';
 import { ProduceService, ProduceListing } from '@/services/ProduceService';
 import { BASE_URL } from '@/constants/Config';
 import { useAuth } from '@/context/AuthContext';
+import { CartService } from '@/services/CartService';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 const CATEGORIES = ['All', 'Seeds', 'Fertilizers', 'Tools', 'Pesticides', 'Other'];
 const FORM_CATEGORIES = ['Seeds', 'Fertilizers', 'Tools', 'Pesticides', 'Other'];
@@ -39,6 +41,23 @@ export default function MarketplaceScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const router = useRouter();
+
+  const fetchCartCount = useCallback(async () => {
+    try {
+      const cart = await CartService.getCart();
+      setCartCount(cart.items.reduce((acc, item) => acc + item.quantity, 0));
+    } catch (error) {
+      console.log('Error fetching cart count:', error);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchCartCount();
+    }, [fetchCartCount])
+  );
 
   const fetchProducts = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -47,7 +66,8 @@ export default function MarketplaceScreen() {
       setProducts(data);
     } catch (error: any) {
       console.error('Fetch products error:', error);
-      Alert.alert('Error', error.message || 'Could not load products');
+      if (Platform.OS === 'web') alert(error.message || 'Could not load products');
+      else Alert.alert('Error', error.message || 'Could not load products');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -107,7 +127,8 @@ export default function MarketplaceScreen() {
       setModalVisible(false);
       fetchProducts(false);
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to save listing');
+      if (Platform.OS === 'web') alert(error.message || 'Failed to save listing');
+      else Alert.alert('Error', error.message || 'Failed to save listing');
     } finally {
       setSaving(false);
     }
@@ -131,59 +152,102 @@ export default function MarketplaceScreen() {
     setModalVisible(true);
   };
 
+  const handleAddToCart = async (item: ProduceListing) => {
+    try {
+      await CartService.addToCart(item._id, 1);
+      if (Platform.OS === 'web') {
+        alert(`${item.name} added to cart!`);
+      } else {
+        Alert.alert('Success', `${item.name} added to cart!`);
+      }
+      fetchCartCount();
+    } catch (error: any) {
+      if (Platform.OS === 'web') {
+        alert(error.message || 'Failed to add to cart');
+      } else {
+        Alert.alert('Error', error.message || 'Failed to add to cart');
+      }
+    }
+  };
+
   const renderProduct = ({ item }: { item: ProduceListing }) => (
-    <TouchableOpacity style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]} activeOpacity={0.9}>
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]}
+      activeOpacity={0.9}
+    >
       <View style={[styles.imageArea, { backgroundColor: C.surface }]}>
         {item.imageUrl ? (
-          <Image 
-            source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}` }} 
-            style={styles.productImage} 
+          <Image
+            source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}` }}
+            style={styles.productImage}
+            contentFit="cover"
           />
         ) : (
           <Ionicons name="image-outline" size={32} color={C.muted} />
         )}
         {item.badge && (
-          <View style={[styles.cardBadge, { backgroundColor: C.card, borderColor: C.border },
-            item.badge === 'AI Pick' && styles.cardBadgeAI]}>
-            {item.badge === 'AI Pick' && <MaterialCommunityIcons name="chip" size={9} color="#0B6B3A" />}
-            <ThemedText style={[styles.badgeText, item.badge === 'AI Pick' && styles.badgeTextAI]}>
+          <View
+            style={[
+              styles.cardBadge,
+              { backgroundColor: C.card, borderColor: C.border },
+              item.badge === 'AI Pick' && styles.cardBadgeAI,
+            ]}
+          >
+            {item.badge === 'AI Pick' && (
+              <MaterialCommunityIcons name="chip" size={9} color="#0B6B3A" />
+            )}
+            <ThemedText
+              style={[styles.badgeText, item.badge === 'AI Pick' && styles.badgeTextAI]}
+            >
               {item.badge}
             </ThemedText>
           </View>
         )}
       </View>
       <View style={styles.cardContent}>
-        <ThemedText style={[styles.productName, { color: C.text }]} numberOfLines={2}>{item.name}</ThemedText>
-        <ThemedText style={[styles.sellerName, { color: C.muted }]}>by {item.sellerName}</ThemedText>
+        <ThemedText style={[styles.productName, { color: C.text }]} numberOfLines={2}>
+          {item.name}
+        </ThemedText>
+        <ThemedText style={[styles.sellerName, { color: C.muted }]}>
+          by {item.sellerName}
+        </ThemedText>
         <View style={styles.priceRow}>
-          <ThemedText style={[styles.price, { color: C.primary }]}>Rs. {item.price.toLocaleString()}</ThemedText>
+          <ThemedText style={[styles.price, { color: C.primary }]}>
+            Rs. {item.price.toLocaleString()}
+          </ThemedText>
           <View style={[styles.ratingPill, { backgroundColor: C.surface }]}>
             <Ionicons name="star" size={11} color="#F59E0B" />
-            <ThemedText style={[styles.ratingText, { color: C.subtext }]}>{item.rating}</ThemedText>
+            <ThemedText style={[styles.ratingText, { color: C.subtext }]}>
+              {item.rating}
+            </ThemedText>
           </View>
         </View>
-        
+
         {item.userId === user?.id || item.userId === user?._id ? (
           <View style={styles.ownerActions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.editBtn, { borderColor: C.border }]}
               onPress={() => openEdit(item)}
             >
               <Ionicons name="create-outline" size={14} color={C.primary} />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.deleteBtn, { borderColor: C.border }]}
               onPress={() => {
                 Alert.alert('Delete', 'Are you sure?', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Delete', style: 'destructive', onPress: async () => {
-                    try {
-                      await ProduceService.delete(item._id);
-                      fetchProducts(false);
-                    } catch (e: any) {
-                      Alert.alert('Error', e.message);
-                    }
-                  }}
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        await ProduceService.delete(item._id);
+                        fetchProducts(false);
+                      } catch (e: any) {
+                        Alert.alert('Error', e.message);
+                      }
+                    },
+                  },
                 ]);
               }}
             >
@@ -191,7 +255,11 @@ export default function MarketplaceScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity style={[styles.addBtn, { backgroundColor: C.primary }]} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={[styles.addBtn, { backgroundColor: C.primary }]}
+            activeOpacity={0.8}
+            onPress={() => handleAddToCart(item)}
+          >
             <Ionicons name="add" size={15} color="#FFFFFF" />
             <ThemedText style={styles.addBtnText}>Add to Cart</ThemedText>
           </TouchableOpacity>
@@ -219,11 +287,17 @@ export default function MarketplaceScreen() {
             <Ionicons name="add-circle-outline" size={16} color="#FFFFFF" />
             <ThemedText style={styles.sellBtnText}>Sell</ThemedText>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.cartBtn, { backgroundColor: C.card, borderColor: C.border }]}>
-            <Ionicons name="cart-outline" size={22} color={C.primary} />
-            <View style={styles.cartBadge}>
-              <ThemedText style={styles.cartBadgeText}>3</ThemedText>
-            </View>
+          <TouchableOpacity 
+            style={[styles.cartBtn, { backgroundColor: C.card, borderColor: C.border }]}
+            onPress={() => router.push('/cart')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="cart-outline" size={24} color={C.primary} />
+            {cartCount > 0 && (
+              <View style={[styles.cartBadge, { backgroundColor: C.primary }]}>
+                <ThemedText style={styles.cartBadgeText}>{cartCount}</ThemedText>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -304,7 +378,7 @@ export default function MarketplaceScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               <TouchableOpacity style={[styles.imagePicker, { backgroundColor: C.surface, borderColor: C.border }]} onPress={handlePickImage}>
                 {form.imageUri ? (
-                  <Image source={{ uri: form.imageUri }} style={styles.pickerImage} />
+                  <Image source={{ uri: form.imageUri }} style={styles.pickerImage} contentFit="cover" />
                 ) : (
                   <View style={styles.pickerPlaceholder}>
                     <Ionicons name="camera-outline" size={32} color={C.primary} />
@@ -428,7 +502,7 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 9, fontWeight: '700', letterSpacing: 0.2, color: '#4A6358' },
   badgeTextAI: { color: '#0B6B3A' },
   cardContent: { padding: 12 },
-  productImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  productImage: { width: '100%', height: '100%' },
   productName: { fontWeight: '700', fontSize: 13, marginBottom: 2, lineHeight: 17 },
   sellerName: { fontSize: 11, marginBottom: 8 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
@@ -449,7 +523,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 22, fontWeight: '800' },
   imagePicker: { width: '100%', height: 180, borderRadius: Radius.xl, borderStyle: 'dashed', borderWidth: 2, marginBottom: Spacing.xl, overflow: 'hidden' },
   pickerPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  pickerImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  pickerImage: { width: '100%', height: '100%' },
   inputGroup: { marginBottom: Spacing.lg },
   inputLabel: { fontSize: 13, fontWeight: '700', color: '#6B7280', marginBottom: 8 },
   input: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: Radius.lg, borderWidth: 1, fontSize: 15 },
