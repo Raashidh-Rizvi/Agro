@@ -7,25 +7,37 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Radius, Spacing, Shadows } from '@/constants/theme';
+import api from '@/services/api';
 
 export default function EditProfileScreen() {
-    const { user, updateProfile } = useAuth();
+    const { user, updateProfile, logout } = useAuth();
     const router = useRouter();
     const C = useAppColors();
 
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
     const [loading, setLoading] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
+    const validate = () => {
+        if (!name.trim() || !email.trim()) {
+            Alert.alert('Error', 'Name and email are required'); return false;
+        }
+        if (name.trim().length < 2) {
+            Alert.alert('Error', 'Name must be at least 2 characters'); return false;
+        }
+        const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+        if (!emailRegex.test(email.trim())) {
+            Alert.alert('Error', 'Please enter a valid email address'); return false;
+        }
+        return true;
+    };
 
     const handleUpdate = async () => {
-        if (!name || !email) {
-            Alert.alert('Error', 'Please fill in all fields');
-            return;
-        }
-
+        if (!validate()) return;
         setLoading(true);
         try {
-            await updateProfile({ name, email });
+            await updateProfile({ name: name.trim(), email: email.trim().toLowerCase() });
             Alert.alert('Success', 'Profile updated successfully', [
                 { text: 'OK', onPress: () => router.back() }
             ]);
@@ -36,20 +48,39 @@ export default function EditProfileScreen() {
         }
     };
 
+    const handleDeleteAccount = () => {
+        Alert.alert(
+            'Delete Account',
+            'Are you sure? This will permanently deactivate your account and you will be logged out.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete', style: 'destructive', onPress: async () => {
+                        setDeleting(true);
+                        try {
+                            await api.delete(`/users/${user?.id || user?._id}`);
+                            await logout();
+                        } catch (error: any) {
+                            Alert.alert('Error', error.response?.data?.message || 'Failed to delete account');
+                        } finally {
+                            setDeleting(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     return (
         <ThemedView style={[styles.container, { backgroundColor: C.bg }]}>
-            <Stack.Screen options={{ 
+            <Stack.Screen options={{
                 title: 'Edit Profile',
                 headerShown: true,
                 headerStyle: { backgroundColor: C.card },
                 headerTintColor: C.text,
-                headerLeft: () => (
-                    <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 10 }}>
-                        <Ionicons name="arrow-back" size={24} color={C.text} />
-                    </TouchableOpacity>
-                )
+                headerShadowVisible: false,
             }} />
-            
+
             <ScrollView contentContainerStyle={styles.scroll}>
                 <View style={styles.form}>
                     <View style={styles.inputGroup}>
@@ -60,6 +91,7 @@ export default function EditProfileScreen() {
                             onChangeText={setName}
                             placeholder="Enter your name"
                             placeholderTextColor={C.muted}
+                            autoCapitalize="words"
                         />
                     </View>
 
@@ -76,15 +108,34 @@ export default function EditProfileScreen() {
                         />
                     </View>
 
-                    <TouchableOpacity 
-                        style={[styles.saveBtn, { backgroundColor: C.primary }]} 
+                    <View style={[styles.roleRow, { backgroundColor: C.card, borderColor: C.border }]}>
+                        <Ionicons name="shield-checkmark-outline" size={18} color={C.primary} />
+                        <ThemedText style={[styles.roleText, { color: C.text }]}>Role: {user?.role}</ThemedText>
+                        <View style={[styles.roleBadge, { backgroundColor: C.primaryDim }]}>
+                            <ThemedText style={[styles.roleBadgeText, { color: C.primary }]}>{user?.role}</ThemedText>
+                        </View>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[styles.saveBtn, { backgroundColor: C.primary, opacity: loading ? 0.7 : 1 }]}
                         onPress={handleUpdate}
                         disabled={loading}
                     >
-                        {loading ? (
-                            <ActivityIndicator color="#FFF" />
-                        ) : (
+                        {loading ? <ActivityIndicator color="#FFF" /> : (
                             <ThemedText style={styles.saveBtnText}>Save Changes</ThemedText>
+                        )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.deleteBtn, { opacity: deleting ? 0.7 : 1 }]}
+                        onPress={handleDeleteAccount}
+                        disabled={deleting}
+                    >
+                        {deleting ? <ActivityIndicator color="#EF4444" /> : (
+                            <>
+                                <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                                <ThemedText style={styles.deleteBtnText}>Delete Account</ThemedText>
+                            </>
                         )}
                     </TouchableOpacity>
                 </View>
@@ -100,6 +151,18 @@ const styles = StyleSheet.create({
     inputGroup: { gap: 8 },
     label: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
     input: { height: 50, borderRadius: Radius.md, paddingHorizontal: 16, borderWidth: 1, fontSize: 16 },
-    saveBtn: { height: 55, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.lg, ...Shadows.md },
-    saveBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' }
+    roleRow: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        padding: 14, borderRadius: Radius.md, borderWidth: 1,
+    },
+    roleText: { flex: 1, fontSize: 15 },
+    roleBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.pill },
+    roleBadgeText: { fontSize: 12, fontWeight: '700' },
+    saveBtn: { height: 55, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center', ...Shadows.md },
+    saveBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+    deleteBtn: {
+        height: 50, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'row', gap: 8, borderWidth: 1.5, borderColor: '#EF444440', backgroundColor: '#FEE2E2',
+    },
+    deleteBtnText: { fontSize: 15, fontWeight: '700', color: '#EF4444' },
 });

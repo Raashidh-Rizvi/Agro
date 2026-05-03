@@ -51,6 +51,15 @@ export default function LoginScreen() {
       Alert.alert('Missing Fields', 'Please enter your email and password.');
       return;
     }
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Invalid Password', 'Password must be at least 6 characters.');
+      return;
+    }
     try {
       await login(email, password);
       router.replace('/(tabs)');

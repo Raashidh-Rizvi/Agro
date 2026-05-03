@@ -6,22 +6,17 @@ const {
     updateUser,
     deleteUser
 } = require('../controllers/user.controller');
+const { protect, authorize } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
-const { protect, authorize } = require('../middleware/auth.middleware');
-
-// Apply protection to all user management routes
+// All routes require authentication via JWT (CSRF not applicable for JWT mobile API)
 router.use(protect);
-router.use(authorize('Admin'));
 
-router.route('/')
-    .get(getUsers)
-    .post(createUser);
-
-router.route('/:id')
-    .get(getUser)
-    .put(updateUser)
-    .delete(deleteUser);
+router.get('/', authorize('Admin'), getUsers);
+router.post('/', authorize('Admin'), createUser);
+router.get('/:id', authorize('Admin'), getUser);
+router.put('/:id', authorize('Admin'), updateUser);
+router.delete('/:id', deleteUser);
 
 module.exports = router;
