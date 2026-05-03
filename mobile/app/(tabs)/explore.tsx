@@ -174,9 +174,7 @@ export default function MarketplaceScreen() {
     <TouchableOpacity
       style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]}
       activeOpacity={0.9}
-    >
-      <View style={[styles.imageArea, { backgroundColor: C.surface }]}>
-        {item.imageUrl ? (
+    ><View style={[styles.imageArea, { backgroundColor: C.surface }]}>{item.imageUrl ? (
           <Image
             source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}` }}
             style={styles.productImage}
@@ -184,46 +182,19 @@ export default function MarketplaceScreen() {
           />
         ) : (
           <Ionicons name="image-outline" size={32} color={C.muted} />
-        )}
-        {item.badge && (
+        )}{item.badge && (
           <View
             style={[
               styles.cardBadge,
               { backgroundColor: C.card, borderColor: C.border },
               item.badge === 'AI Pick' && styles.cardBadgeAI,
             ]}
-          >
-            {item.badge === 'AI Pick' && (
+          >{item.badge === 'AI Pick' && (
               <MaterialCommunityIcons name="chip" size={9} color="#0B6B3A" />
-            )}
-            <ThemedText
+            )}<ThemedText
               style={[styles.badgeText, item.badge === 'AI Pick' && styles.badgeTextAI]}
-            >
-              {item.badge}
-            </ThemedText>
-          </View>
-        )}
-      </View>
-      <View style={styles.cardContent}>
-        <ThemedText style={[styles.productName, { color: C.text }]} numberOfLines={2}>
-          {item.name}
-        </ThemedText>
-        <ThemedText style={[styles.sellerName, { color: C.muted }]}>
-          by {item.sellerName}
-        </ThemedText>
-        <View style={styles.priceRow}>
-          <ThemedText style={[styles.price, { color: C.primary }]}>
-            Rs. {item.price.toLocaleString()}
-          </ThemedText>
-          <View style={[styles.ratingPill, { backgroundColor: C.surface }]}>
-            <Ionicons name="star" size={11} color="#F59E0B" />
-            <ThemedText style={[styles.ratingText, { color: C.subtext }]}>
-              {item.rating}
-            </ThemedText>
-          </View>
-        </View>
-
-        {item.userId === user?.id || item.userId === user?._id ? (
+            >{item.badge}</ThemedText></View>
+        )}</View><View style={styles.cardContent}><ThemedText style={[styles.productName, { color: C.text }]} numberOfLines={2}>{item.name}</ThemedText><ThemedText style={[styles.sellerName, { color: C.muted }]}>by {item.sellerName}</ThemedText><View style={styles.priceRow}><ThemedText style={[styles.price, { color: C.primary }]}>Rs. {item.price.toLocaleString()}</ThemedText><View style={[styles.ratingPill, { backgroundColor: C.surface }]}><Ionicons name="star" size={11} color="#F59E0B" /><ThemedText style={[styles.ratingText, { color: C.subtext }]}>{item.rating}</ThemedText></View></View>{item.userId === user?.id || item.userId === user?._id ? (
           <View style={styles.ownerActions}>
             <TouchableOpacity
               style={[styles.editBtn, { borderColor: C.border }]}
@@ -263,16 +234,12 @@ export default function MarketplaceScreen() {
             <Ionicons name="add" size={15} color="#FFFFFF" />
             <ThemedText style={styles.addBtnText}>Add to Cart</ThemedText>
           </TouchableOpacity>
-        )}
-      </View>
-    </TouchableOpacity>
+        )}</View></TouchableOpacity>
   );
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: C.bg }]}>
       <StatusBar style={C.statusBar} />
-
-      {/* Header */}
       <View style={styles.header}>
         <View>
           <ThemedText style={[styles.headerTitle, { color: C.text }]}>Marketplace</ThemedText>
@@ -292,34 +259,25 @@ export default function MarketplaceScreen() {
             onPress={() => router.push('/cart')}
             activeOpacity={0.7}
           >
-            <Ionicons name="cart-outline" size={24} color={C.primary} />
-            {cartCount > 0 && (
+            <Ionicons name="cart-outline" size={24} color={C.primary} />{cartCount > 0 && (
               <View style={[styles.cartBadge, { backgroundColor: C.primary }]}>
                 <ThemedText style={styles.cartBadgeText}>{cartCount}</ThemedText>
               </View>
-            )}
-          </TouchableOpacity>
+            )}</TouchableOpacity>
         </View>
       </View>
-
-      {/* Search */}
       <View style={[styles.searchBar, { backgroundColor: C.card, borderColor: C.border }]}>
         <Ionicons name="search-outline" size={18} color={C.muted} />
         <TextInput style={[styles.searchInput, { color: C.text }]}
           placeholder="Search products…" placeholderTextColor={C.muted}
-          value={search} onChangeText={setSearch} />
-        {search.length > 0 && (
+          value={search} onChangeText={setSearch} />{search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
             <Ionicons name="close-circle" size={18} color={C.muted} />
           </TouchableOpacity>
-        )}
-        <View style={[styles.searchDivider, { backgroundColor: C.border }]} />
-        <TouchableOpacity>
+        )}<View style={[styles.searchDivider, { backgroundColor: C.border }]} /><TouchableOpacity>
           <Ionicons name="options-outline" size={18} color={C.primary} />
         </TouchableOpacity>
       </View>
-
-      {/* Category Pills */}
       <View style={styles.categoriesRow}>
         <FlatList
           data={CATEGORIES as unknown as Category[]}
@@ -332,18 +290,11 @@ export default function MarketplaceScreen() {
               <TouchableOpacity
                 style={[styles.pill, { backgroundColor: active ? C.primary : C.card, borderColor: active ? C.primary : C.border }]}
                 onPress={() => setActiveCategory(item)} activeOpacity={0.8}
-              >
-                <ThemedText style={[styles.pillText, { color: active ? '#FFFFFF' : C.subtext, fontWeight: active ? '700' : '600' }]}>
-                  {item}
-                </ThemedText>
-              </TouchableOpacity>
+              ><ThemedText style={[styles.pillText, { color: active ? '#FFFFFF' : C.subtext, fontWeight: active ? '700' : '600' }]}>{item}</ThemedText></TouchableOpacity>
             );
           }}
         />
-      </View>
-
-      {/* Product Grid */}
-      {loading && !refreshing ? (
+      </View>{loading && !refreshing ? (
         <View style={styles.loader}>
           <ActivityIndicator size="large" color={C.primary} />
         </View>
@@ -362,10 +313,7 @@ export default function MarketplaceScreen() {
             </View>
           }
         />
-      )}
-
-      {/* Create / Edit Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
+      )}<Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalBox, { backgroundColor: C.card }]}>
             <View style={styles.modalHeader}>
@@ -374,19 +322,15 @@ export default function MarketplaceScreen() {
                 <Ionicons name="close" size={24} color={C.muted} />
               </TouchableOpacity>
             </View>
-
             <ScrollView showsVerticalScrollIndicator={false}>
-              <TouchableOpacity style={[styles.imagePicker, { backgroundColor: C.surface, borderColor: C.border }]} onPress={handlePickImage}>
-                {form.imageUri ? (
+              <TouchableOpacity style={[styles.imagePicker, { backgroundColor: C.surface, borderColor: C.border }]} onPress={handlePickImage}>{form.imageUri ? (
                   <Image source={{ uri: form.imageUri }} style={styles.pickerImage} contentFit="cover" />
                 ) : (
                   <View style={styles.pickerPlaceholder}>
                     <Ionicons name="camera-outline" size={32} color={C.primary} />
                     <ThemedText style={{ color: C.muted, marginTop: 8 }}>Add Product Image</ThemedText>
                   </View>
-                )}
-              </TouchableOpacity>
-
+                )}</TouchableOpacity>
               <View style={styles.inputGroup}>
                 <ThemedText style={styles.inputLabel}>Product Name *</ThemedText>
                 <TextInput 
@@ -397,22 +341,16 @@ export default function MarketplaceScreen() {
                   placeholderTextColor={C.muted}
                 />
               </View>
-
               <View style={styles.inputGroup}>
                 <ThemedText style={styles.inputLabel}>Category *</ThemedText>
-                <View style={styles.formCategories}>
-                  {FORM_CATEGORIES.map(cat => (
+                <View style={styles.formCategories}>{FORM_CATEGORIES.map(cat => (
                     <TouchableOpacity 
                       key={cat}
                       style={[styles.catPill, { backgroundColor: form.category === cat ? C.primary : C.surface, borderColor: C.border }]}
                       onPress={() => setForm({...form, category: cat})}
-                    >
-                      <ThemedText style={{ color: form.category === cat ? '#FFF' : C.subtext, fontSize: 12 }}>{cat}</ThemedText>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                    ><ThemedText style={{ color: form.category === cat ? '#FFF' : C.subtext, fontSize: 12 }}>{cat}</ThemedText></TouchableOpacity>
+                  ))}</View>
               </View>
-
               <View style={styles.inputGroup}>
                 <ThemedText style={styles.inputLabel}>Price (Rs.) *</ThemedText>
                 <TextInput 
@@ -424,7 +362,6 @@ export default function MarketplaceScreen() {
                   keyboardType="numeric"
                 />
               </View>
-
               <View style={styles.inputGroup}>
                 <ThemedText style={styles.inputLabel}>Description *</ThemedText>
                 <TextInput 
@@ -437,18 +374,15 @@ export default function MarketplaceScreen() {
                   numberOfLines={4}
                 />
               </View>
-
               <TouchableOpacity 
                 style={[styles.saveBtn, { backgroundColor: C.primary, opacity: saving ? 0.7 : 1 }]} 
                 onPress={handleSave}
                 disabled={saving}
-              >
-                {saving ? (
+              >{saving ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (
                   <ThemedText style={styles.saveBtnText}>{editingId ? 'Update Listing' : 'Post Listing'}</ThemedText>
-                )}
-              </TouchableOpacity>
+                )}</TouchableOpacity>
             </ScrollView>
           </View>
         </View>
