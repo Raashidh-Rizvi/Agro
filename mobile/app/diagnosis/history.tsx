@@ -23,7 +23,6 @@ export default function DiagnosisHistoryScreen() {
   const [history, setHistory] = useState<DiagnosisResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<DiagnosisResult | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -44,76 +43,7 @@ export default function DiagnosisHistoryScreen() {
 
   useEffect(() => { fetchHistory(); }, []);
 
-  const handleScan = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission Required', 'Please allow access to your photo library.');
-      return;
-    }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (result.canceled) return;
-
-    const uri = result.assets[0].uri;
-    setSelectedImage(uri);
-    setSelectedDiagnosis(null);
-    setModalVisible(true);
-    setIsScanning(true);
-
-    try {
-      const diagnosis = await DiagnosisService.predict(uri);
-      setSelectedDiagnosis(diagnosis);
-      fetchHistory(false);
-    } catch (error: any) {
-      setModalVisible(false);
-      Alert.alert('Scan Failed', error.message || 'Could not analyze the image. Make sure the ML service is running.');
-    } finally {
-      setIsScanning(false);
-    }
-  };
-
-  const handleCamera = async () => {
-    if (Platform.OS === 'web') {
-      Alert.alert('Not Available', 'Camera is not supported in the browser. Please use the Expo Go app on your iPhone.');
-      return;
-    }
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission Required', 'Please allow camera access.');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (result.canceled) return;
-
-    const uri = result.assets[0].uri;
-    setSelectedImage(uri);
-    setSelectedDiagnosis(null);
-    setModalVisible(true);
-    setIsScanning(true);
-
-    try {
-      const diagnosis = await DiagnosisService.predict(uri);
-      setSelectedDiagnosis(diagnosis);
-      fetchHistory(false);
-    } catch (error: any) {
-      setModalVisible(false);
-      Alert.alert('Scan Failed', error.message || 'Could not analyze the image.');
-    } finally {
-      setIsScanning(false);
-    }
-  };
 
   const handleItemPress = (item: DiagnosisResult) => {
     const imageUrl = item.imageUrl
@@ -176,7 +106,7 @@ export default function DiagnosisHistoryScreen() {
     <ThemedView style={[styles.container, { backgroundColor: C.bg }]}>
       <Stack.Screen
         options={{
-          title: 'Disease Scanner',
+          title: 'Scan History',
           headerShadowVisible: false,
           headerStyle: { backgroundColor: C.bg },
           headerTintColor: C.text,
@@ -184,31 +114,6 @@ export default function DiagnosisHistoryScreen() {
       />
       <StatusBar style={C.statusBar} />
 
-      {/* Scan Buttons */}
-      <View style={[styles.scanSection, { backgroundColor: C.card, borderBottomColor: C.border }]}>
-        <ThemedText style={[styles.scanTitle, { color: C.text }]}>Scan a Crop Leaf</ThemedText>
-        <ThemedText style={[styles.scanSubtitle, { color: C.muted }]}>
-          Upload or take a photo to detect diseases
-        </ThemedText>
-        <View style={styles.scanButtons}>
-          <TouchableOpacity
-            style={[styles.scanBtn, { backgroundColor: C.primary }, Shadows.colored(C.primary)]}
-            onPress={handleCamera}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="camera" size={20} color="#FFF" />
-            <ThemedText style={styles.scanBtnText}>Take Photo</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.scanBtnOutline, { borderColor: C.primary, backgroundColor: C.card }]}
-            onPress={handleScan}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="images-outline" size={20} color={C.primary} />
-            <ThemedText style={[styles.scanBtnText, { color: C.primary }]}>Upload Image</ThemedText>
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {/* History */}
       <View style={styles.historyHeader}>
@@ -246,7 +151,7 @@ export default function DiagnosisHistoryScreen() {
         visible={modalVisible}
         onClose={() => { setModalVisible(false); setSelectedImage(null); }}
         result={selectedDiagnosis}
-        isLoading={isScanning}
+        isLoading={false}
         selectedImage={selectedImage}
       />
     </ThemedView>
@@ -255,22 +160,7 @@ export default function DiagnosisHistoryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scanSection: {
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-  },
-  scanTitle: { fontSize: 18, fontWeight: '800', marginBottom: 4 },
-  scanSubtitle: { fontSize: 13, marginBottom: Spacing.md },
-  scanButtons: { flexDirection: 'row', gap: 12 },
-  scanBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 13, borderRadius: Radius.lg,
-  },
-  scanBtnOutline: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 13, borderRadius: Radius.lg, borderWidth: 1.5,
-  },
-  scanBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
+
   historyHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm,
