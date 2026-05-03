@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: L.inputBg, borderWidth: 1.5, borderColor: L.border, borderRadius: Radius.md,
   },
-  inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF', ...Shadows.xs },
+  inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF' },
   inputIcon: { marginLeft: 16, marginRight: 4 },
   input: { 
     flex: 1, 

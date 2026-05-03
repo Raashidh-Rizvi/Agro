@@ -61,141 +61,275 @@ export default function LoginScreen() {
 
   return (
     <ThemeOverrideProvider scheme="light">
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* ── Green Header ─────────────────────────── */}
-          <View style={styles.headerPanel}>
-            <View style={styles.bubble1} />
-            <View style={styles.bubble2} />
-            <View style={styles.bubble3} />
-
-            <View style={styles.logoRing}>
-              <MaterialCommunityIcons name="leaf" size={40} color="#FFFFFF" />
-            </View>
-            <Text style={styles.appName}>AgriSense Lanka</Text>
-            <View style={styles.aiBadge}>
-              <MaterialCommunityIcons name="chip" size={11} color={L.panelTop} />
-              <Text style={styles.aiBadgeText}>AI-POWERED FARMING</Text>
-            </View>
-          </View>
-
-          {/* ── White Card ─────────────────────────── */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Welcome back 👋</Text>
-            <Text style={styles.cardSubtitle}>Sign in to manage your farm</Text>
-
-            {/* Email */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
-              <View style={[styles.inputWrapper, emailFocused && styles.inputFocused]}>
-                <Ionicons
-                  name="mail-outline"
-                  size={18}
-                  color={emailFocused ? L.primary : L.muted}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  ref={emailRef}
-                  style={styles.input}
-                  placeholder="you@example.com"
-                  placeholderTextColor={L.muted}
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  returnKeyType="next"
-                  onSubmitEditing={() => passRef.current?.focus()}
-                  onFocus={() => setEmailFocused(true)}
-                  onBlur={() => setEmailFocused(false)}
-                />
+      {Platform.OS === 'ios' ? (
+        <KeyboardAvoidingView style={styles.root} behavior="padding">
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ── Green Header ─────────────────────────── */}
+            <View style={styles.headerPanel}>
+              <View style={styles.bubble1} />
+              <View style={styles.bubble2} />
+              <View style={styles.bubble3} />
+  
+              <View style={styles.logoRing}>
+                <MaterialCommunityIcons name="leaf" size={40} color="#FFFFFF" />
+              </View>
+              <Text style={styles.appName}>AgriSense Lanka</Text>
+              <View style={styles.aiBadge}>
+                <MaterialCommunityIcons name="chip" size={11} color={L.panelTop} />
+                <Text style={styles.aiBadgeText}>AI-POWERED FARMING</Text>
               </View>
             </View>
-
-            {/* Password */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={[styles.inputWrapper, passFocused && styles.inputFocused]}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={18}
-                  color={passFocused ? L.primary : L.muted}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  ref={passRef}
-                  style={[styles.input, { paddingRight: 48 }]}
-                  placeholder="Enter your password"
-                  placeholderTextColor={L.muted}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  returnKeyType="done"
-                  onSubmitEditing={handleLogin}
-                  onFocus={() => setPassFocused(true)}
-                  onBlur={() => setPassFocused(false)}
-                />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => setShowPassword(!showPassword)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
+  
+            {/* ── White Card ─────────────────────────── */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Welcome back 👋</Text>
+              <Text style={styles.cardSubtitle}>Sign in to manage your farm</Text>
+  
+              {/* Email */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email Address</Text>
+                <View style={[styles.inputWrapper, emailFocused && styles.inputFocused]}>
                   <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={L.muted}
+                    name="mail-outline"
+                    size={18}
+                    color={emailFocused ? L.primary : L.muted}
+                    style={styles.inputIcon}
                   />
+                  <TextInput
+                    ref={emailRef}
+                    style={styles.input}
+                    placeholder="you@example.com"
+                    placeholderTextColor={L.muted}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    returnKeyType="next"
+                    onSubmitEditing={() => passRef.current?.focus()}
+                    onFocus={() => setEmailFocused(true)}
+                    onBlur={() => setEmailFocused(false)}
+                  />
+                </View>
+              </View>
+  
+              {/* Password */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <View style={[styles.inputWrapper, passFocused && styles.inputFocused]}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={18}
+                    color={passFocused ? L.primary : L.muted}
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    ref={passRef}
+                    style={[styles.input, { paddingRight: 48 }]}
+                    placeholder="Enter your password"
+                    placeholderTextColor={L.muted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    returnKeyType="done"
+                    onSubmitEditing={handleLogin}
+                    onFocus={() => setPassFocused(true)}
+                    onBlur={() => setPassFocused(false)}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeIcon}
+                    onPress={() => setShowPassword(!showPassword)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={L.muted}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+  
+              <TouchableOpacity 
+                style={styles.forgotWrapper}
+                onPress={() => router.push('/(auth)/forgot-password')}
+              >
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+  
+              <TouchableOpacity
+                style={[styles.button, isLoading && styles.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={isLoading}
+                activeOpacity={0.85}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Text style={styles.buttonText}>Sign In</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#fff" />
+                  </>
+                )}
+              </TouchableOpacity>
+  
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>or</Text>
+                <View style={styles.dividerLine} />
+              </View>
+  
+              <Link href="/(auth)/register" asChild>
+                <TouchableOpacity style={styles.outlineButton}>
+                  <Text style={styles.outlineButtonText}>Create an Account</Text>
                 </TouchableOpacity>
+              </Link>
+  
+              <Text style={styles.footer}>
+                By continuing, you agree to AgriSense Lanka&apos;s Terms of Service.
+              </Text>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      ) : (
+        <View style={styles.root}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ── Green Header ─────────────────────────── */}
+            <View style={styles.headerPanel}>
+              <View style={styles.bubble1} />
+              <View style={styles.bubble2} />
+              <View style={styles.bubble3} />
+  
+              <View style={styles.logoRing}>
+                <MaterialCommunityIcons name="leaf" size={40} color="#FFFFFF" />
+              </View>
+              <Text style={styles.appName}>AgriSense Lanka</Text>
+              <View style={styles.aiBadge}>
+                <MaterialCommunityIcons name="chip" size={11} color={L.panelTop} />
+                <Text style={styles.aiBadgeText}>AI-POWERED FARMING</Text>
               </View>
             </View>
-
-            <TouchableOpacity 
-              style={styles.forgotWrapper}
-              onPress={() => router.push('/(auth)/forgot-password')}
-            >
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={isLoading}
-              activeOpacity={0.85}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Text style={styles.buttonText}>Sign In</Text>
-                  <Ionicons name="arrow-forward" size={18} color="#fff" />
-                </>
-              )}
-            </TouchableOpacity>
-
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <Link href="/(auth)/register" asChild>
-              <TouchableOpacity style={styles.outlineButton}>
-                <Text style={styles.outlineButtonText}>Create an Account</Text>
+  
+            {/* ── White Card ─────────────────────────── */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Welcome back 👋</Text>
+              <Text style={styles.cardSubtitle}>Sign in to manage your farm</Text>
+  
+              {/* Email */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email Address</Text>
+                <View style={[styles.inputWrapper, emailFocused && styles.inputFocused]}>
+                  <Ionicons
+                    name="mail-outline"
+                    size={18}
+                    color={emailFocused ? L.primary : L.muted}
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    ref={emailRef}
+                    style={styles.input}
+                    placeholder="you@example.com"
+                    placeholderTextColor={L.muted}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    returnKeyType="next"
+                    onSubmitEditing={() => passRef.current?.focus()}
+                    onFocus={() => setEmailFocused(true)}
+                    onBlur={() => setEmailFocused(false)}
+                  />
+                </View>
+              </View>
+  
+              {/* Password */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <View style={[styles.inputWrapper, passFocused && styles.inputFocused]}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={18}
+                    color={passFocused ? L.primary : L.muted}
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    ref={passRef}
+                    style={[styles.input, { paddingRight: 48 }]}
+                    placeholder="Enter your password"
+                    placeholderTextColor={L.muted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    returnKeyType="done"
+                    onSubmitEditing={handleLogin}
+                    onFocus={() => setPassFocused(true)}
+                    onBlur={() => setPassFocused(false)}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeIcon}
+                    onPress={() => setShowPassword(!showPassword)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={L.muted}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+  
+              <TouchableOpacity 
+                style={styles.forgotWrapper}
+                onPress={() => router.push('/(auth)/forgot-password')}
+              >
+                <Text style={styles.forgotText}>Forgot Password?</Text>
               </TouchableOpacity>
-            </Link>
-
-            <Text style={styles.footer}>
-              By continuing, you agree to AgriSense Lanka&apos;s Terms of Service.
-            </Text>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+  
+              <TouchableOpacity
+                style={[styles.button, isLoading && styles.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={isLoading}
+                activeOpacity={0.85}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Text style={styles.buttonText}>Sign In</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#fff" />
+                  </>
+                )}
+              </TouchableOpacity>
+  
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>or</Text>
+                <View style={styles.dividerLine} />
+              </View>
+  
+              <Link href="/(auth)/register" asChild>
+                <TouchableOpacity style={styles.outlineButton}>
+                  <Text style={styles.outlineButtonText}>Create an Account</Text>
+                </TouchableOpacity>
+              </Link>
+  
+              <Text style={styles.footer}>
+                By continuing, you agree to AgriSense Lanka&apos;s Terms of Service.
+              </Text>
+            </View>
+          </ScrollView>
+        </View>
+      )}
     </ThemeOverrideProvider>
   );
 }
@@ -255,7 +389,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#F4F9F6', borderWidth: 1.5, borderColor: L.border, borderRadius: Radius.md,
   },
-  inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF', ...Shadows.xs },
+  inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF' },
   inputIcon: { marginLeft: 16, marginRight: 4 },
   input: { 
     flex: 1, 

@@ -33,6 +33,7 @@ const alertRoutes = require('./routes/alert.routes');
 const produceRoutes = require('./routes/produce.routes');
 const userRoutes = require('./routes/user.routes');
 const statsRoutes = require('./routes/stats.routes');
+const marketPriceRoutes = require('./routes/marketPrice.routes');
 
 
 // Use Routes
@@ -44,6 +45,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/produce', produceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/market-prices', marketPriceRoutes);
 
 
 // Basic Test Route
@@ -106,8 +108,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
-const dns = require('dns');
-dns.setServers(['1.1.1.1', '1.0.0.1']); // Bypass ISP/University SRV blocks (using Cloudflare for faster response)
+
 
 mongoose.connect(MONGO_URI)
     .then(() => {

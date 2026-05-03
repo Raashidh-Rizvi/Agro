@@ -12,9 +12,7 @@ const ExpertQuery = require('./models/ExpertQuery');
 
 dotenv.config();
 
-// Configure DNS for MongoDB connection
-const dns = require('dns');
-dns.setServers(['1.1.1.1', '1.0.0.1']); // Cloudflare DNS
+
 
 const seedData = async () => {
     try {

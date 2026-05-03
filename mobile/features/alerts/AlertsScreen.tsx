@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import axios from 'axios';
+import api from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { ThemedText } from '@/components/themed-text';
@@ -57,7 +57,7 @@ const getSummaryCount = (alerts: AdvisoryAlert[], type: AlertType) =>
   alerts.filter((alert) => alert.alertType === type).length;
 
 export default function AlertsScreen() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const C = useAppColors();
   const canManageAlerts = user?.role === 'Expert' || user?.role === 'Admin';
 
@@ -80,7 +80,7 @@ export default function AlertsScreen() {
 
     try {
       setError(null);
-      const response = await axios.get(`${API_URL}/alerts`);
+      const response = await api.get('/alerts');
       setAlerts(response.data.alerts || []);
     } catch (fetchError) {
       setError(getAlertErrorMessage(fetchError));
@@ -168,11 +168,11 @@ export default function AlertsScreen() {
       };
 
       if (editingAlertId) {
-        const response = await axios.put(`${API_URL}/alerts/${editingAlertId}`, payload);
+        const response = await api.put(`/alerts/${editingAlertId}`, payload);
         const updatedAlert: AdvisoryAlert = response.data.alert;
         setAlerts((prev) => prev.map((alert) => (alert._id === updatedAlert._id ? updatedAlert : alert)));
       } else {
-        const response = await axios.post(`${API_URL}/alerts`, payload);
+        const response = await api.post('/alerts', payload);
         const newAlert: AdvisoryAlert = response.data.alert;
         setAlerts((prev) => [newAlert, ...prev]);
       }
@@ -187,7 +187,7 @@ export default function AlertsScreen() {
 
   const deleteAlert = async (alertId: string) => {
     try {
-      await axios.delete(`${API_URL}/alerts/${alertId}`);
+      await api.delete(`/alerts/${alertId}`);
       setAlerts((prev) => prev.filter((alert) => alert._id !== alertId));
     } catch (deleteError) {
       Alert.alert('Delete Failed', getAlertErrorMessage(deleteError));
@@ -339,6 +339,15 @@ export default function AlertsScreen() {
               activeOpacity={0.85}>
               <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
             </TouchableOpacity>
+            
+            {error?.includes('Not authorized') && (
+              <TouchableOpacity
+                style={[styles.retryButton, { backgroundColor: C.danger, marginTop: 10 }]}
+                onPress={logout}
+                activeOpacity={0.85}>
+                <ThemedText style={styles.retryButtonText}>Log Out & Reconnect</ThemedText>
+              </TouchableOpacity>
+            )}
           </View>
         ) : filteredAlerts.length === 0 ? (
           <View style={styles.stateBlock}>
