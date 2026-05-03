@@ -34,7 +34,7 @@ const upload = multer({
 router.post("/", (req, res, next) => {
     upload.single('image')(req, res, function (err) {
         if (err) {
-            console.error('Mutler Upload Error:', err);
+            console.error('Multer Upload Error:', err);
             return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
         }
         console.log('--- POST /api/expert-query ---');
@@ -60,7 +60,7 @@ router.get("/:id", protect, getQueryById);
 router.put("/:id", (req, res, next) => {
     upload.single('image')(req, res, function (err) {
         if (err) {
-            console.error('Mutler Update Error:', err);
+            console.error('Multer Update Error:', err);
             return res.status(400).json({ success: false, message: `Update upload error: ${err.message}` });
         }
         next();

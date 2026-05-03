@@ -117,7 +117,12 @@ export default function RegisterScreen() {
                   ref={nameRef}
                   style={styles.input} placeholder="e.g. Kamal Perera"
                   placeholderTextColor={L.muted} value={name} onChangeText={setName}
-                  returnKeyType="next" onSubmitEditing={() => emailRef.current?.focus()}
+                  returnKeyType="next"
+                  onSubmitEditing={() => {
+                    if (Platform.OS === 'web') (document as any)?.activeElement?.blur?.();
+                    else emailRef.current?.focus();
+                  }}
+                  autoCapitalize="words"
                   onFocus={() => setNameFocused(true)} onBlur={() => setNameFocused(false)}
                 />
               </TouchableOpacity>
@@ -275,7 +280,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: L.inputBg, borderWidth: 1.5, borderColor: L.border, borderRadius: Radius.md,
   },
-  inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF', ...Shadows.xs },
+  inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF' },
   inputIcon: { marginLeft: 16, marginRight: 4 },
   input: { 
     flex: 1, 

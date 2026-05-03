@@ -280,7 +280,11 @@ const styles = StyleSheet.create({
   cardSubtitle: { ...Typography.body, color: L.subtext, marginBottom: Spacing.xl },
   inputGroup: { marginBottom: Spacing.md },
   label: { ...Typography.smallBold, color: L.text, marginBottom: 7 },
-  inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F4F9F6', borderWidth: 1.5, borderColor: L.border, borderRadius: Radius.md },
+  inputWrapper: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#F4F9F6', borderWidth: 1.5, borderColor: L.border, borderRadius: Radius.md,
+  },
+  inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF' },
   inputIcon: { marginLeft: 16, marginRight: 4 },
   input: { flex: 1, paddingVertical: 15, paddingHorizontal: 10, fontSize: 15, color: L.text, minHeight: 50 },
   otpInput: { fontSize: 24, fontWeight: '800', letterSpacing: 6, textAlign: 'center' },

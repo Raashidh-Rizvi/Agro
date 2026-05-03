@@ -86,7 +86,6 @@ export default function LoginScreen() {
             <View style={styles.bubble1} />
             <View style={styles.bubble2} />
             <View style={styles.bubble3} />
-
             <View style={styles.logoRing}>
               <MaterialCommunityIcons name="leaf" size={40} color="#FFFFFF" />
             </View>
@@ -148,19 +147,11 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity 
-              style={styles.forgotWrapper}
-              onPress={() => router.push('/(auth)/forgot-password')}
-            >
+            <TouchableOpacity style={styles.forgotWrapper} onPress={() => router.push('/(auth)/forgot-password')}>
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={isLoading}
-              activeOpacity={0.85}
-            >
+            <TouchableOpacity style={[styles.button, isLoading && styles.buttonDisabled]} onPress={handleLogin} disabled={isLoading} activeOpacity={0.85}>
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
@@ -248,7 +239,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#F4F9F6', borderWidth: 1.5, borderColor: L.border, borderRadius: Radius.md,
   },
-  inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF', ...Shadows.xs },
+  inputFocused: { borderColor: L.borderFocus, backgroundColor: '#FFFFFF' },
   inputIcon: { marginLeft: 16, marginRight: 4 },
   input: { 
     flex: 1, 

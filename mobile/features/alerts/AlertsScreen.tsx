@@ -56,7 +56,7 @@ const getSummaryCount = (alerts: AdvisoryAlert[], type: AlertType) =>
   alerts.filter((alert) => alert.alertType === type).length;
 
 export default function AlertsScreen() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const C = useAppColors();
   const canManageAlerts = user?.role === 'Expert' || user?.role === 'Admin';
 
@@ -338,6 +338,15 @@ export default function AlertsScreen() {
               activeOpacity={0.85}>
               <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
             </TouchableOpacity>
+            
+            {error?.includes('Not authorized') && (
+              <TouchableOpacity
+                style={[styles.retryButton, { backgroundColor: C.danger, marginTop: 10 }]}
+                onPress={logout}
+                activeOpacity={0.85}>
+                <ThemedText style={styles.retryButtonText}>Log Out & Reconnect</ThemedText>
+              </TouchableOpacity>
+            )}
           </View>
         ) : filteredAlerts.length === 0 ? (
           <View style={styles.stateBlock}>
