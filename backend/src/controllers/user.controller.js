@@ -1,19 +1,24 @@
 const User = require('../models/User');
 
+// Simple safe email validation - avoids ReDoS by using only string operations
+const isValidEmail = (email) => {
+    if (!email || typeof email !== 'string' || email.length > 254) return false;
+    const atIndex = email.indexOf('@');
+    if (atIndex < 1 || atIndex !== email.lastIndexOf('@')) return false;
+    const domain = email.slice(atIndex + 1);
+    const dotIndex = domain.lastIndexOf('.');
+    if (dotIndex < 1 || dotIndex === domain.length - 1) return false;
+    return true;
+};
+
 // @desc    Get all users
 // @route   GET /api/users
 // @access  Private/Admin
 exports.getUsers = async (req, res, next) => {
     try {
-        const users = await User.find();
-        res.status(200).json({
-            success: true,
-            count: users.length,
-            data: users
-        });
-    } catch (error) {
-        next(error);
-    }
+        const users = await User.find({ isActive: true });
+        res.status(200).json({ success: true, count: users.length, data: users });
+    } catch (error) { next(error); }
 };
 
 // @desc    Get single user
@@ -22,18 +27,10 @@ exports.getUsers = async (req, res, next) => {
 exports.getUser = async (req, res, next) => {
     try {
         const user = await User.findById(req.params.id);
-
-        if (!user) {
+        if (!user || !user.isActive)
             return res.status(404).json({ success: false, message: 'User not found' });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: user
-        });
-    } catch (error) {
-        next(error);
-    }
+        res.status(200).json({ success: true, data: user });
+    } catch (error) { next(error); }
 };
 
 // @desc    Create user
@@ -41,15 +38,23 @@ exports.getUser = async (req, res, next) => {
 // @access  Private/Admin
 exports.createUser = async (req, res, next) => {
     try {
-        const user = await User.create(req.body);
+        const { name, email, password, role } = req.body;
+        if (!name || !email || !password)
+            return res.status(400).json({ success: false, message: 'Name, email and password are required' });
 
-        res.status(201).json({
-            success: true,
-            data: user
-        });
-    } catch (error) {
-        next(error);
-    }
+        if (!isValidEmail(email))
+            return res.status(400).json({ success: false, message: 'Invalid email format' });
+
+        if (password.length < 6)
+            return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+
+        const exists = await User.findOne({ email });
+        if (exists)
+            return res.status(400).json({ success: false, message: 'Email already in use' });
+
+        const user = await User.create({ name, email, password, role });
+        res.status(201).json({ success: true, data: user });
+    } catch (error) { next(error); }
 };
 
 // @desc    Update user
@@ -57,40 +62,49 @@ exports.createUser = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateUser = async (req, res, next) => {
     try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runValidators: true
-        });
+        const { name, email, role } = req.body;
 
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
+        if (email) {
+            if (!isValidEmail(email))
+                return res.status(400).json({ success: false, message: 'Invalid email format' });
+
+            const exists = await User.findOne({ email, _id: { $ne: req.params.id } });
+            if (exists)
+                return res.status(400).json({ success: false, message: 'Email already in use' });
         }
 
-        res.status(200).json({
-            success: true,
-            data: user
-        });
-    } catch (error) {
-        next(error);
-    }
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { ...(name && { name }), ...(email && { email }), ...(role && { role }) },
+            { new: true, runValidators: true }
+        );
+
+        if (!user || !user.isActive)
+            return res.status(404).json({ success: false, message: 'User not found' });
+
+        res.status(200).json({ success: true, data: user });
+    } catch (error) { next(error); }
 };
 
-// @desc    Delete user
+// @desc    Soft delete user
 // @route   DELETE /api/users/:id
-// @access  Private/Admin
+// @access  Private (own account) or Admin
 exports.deleteUser = async (req, res, next) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
+        const requestingUserId = req.user._id.toString();
+        const targetId = req.params.id;
 
-        if (!user) {
+        if (requestingUserId !== targetId && req.user.role !== 'Admin')
+            return res.status(403).json({ success: false, message: 'Not authorized to delete this account' });
+
+        const user = await User.findByIdAndUpdate(
+            targetId,
+            { isActive: false },
+            { new: true }
+        );
+        if (!user)
             return res.status(404).json({ success: false, message: 'User not found' });
-        }
 
-        res.status(200).json({
-            success: true,
-            data: {}
-        });
-    } catch (error) {
-        next(error);
-    }
+        res.status(200).json({ success: true, message: 'User deactivated successfully' });
+    } catch (error) { next(error); }
 };

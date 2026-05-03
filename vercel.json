@@ -2,8 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "Dinithi": false,
-      "Dinithi-clean-pr": false
-    }
+      "Dinithi": true,
+      "Dinithi-clean-pr": true
+    } 
   }
 }

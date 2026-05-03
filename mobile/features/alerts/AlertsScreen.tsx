@@ -20,7 +20,6 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { useAuth } from '@/context/AuthContext';
-import { API_URL } from '@/constants/Config';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
 import {
   ALERT_FIELD_LIMITS,

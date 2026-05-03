@@ -12,12 +12,12 @@ const {
 router.use(protect);
 
 router.route('/')
-    .post(authorize('Admin'), createCrop)
+    .post(authorize('Farmer', 'Admin'), createCrop)
     .get(getCrops);
 
 router.route('/:id')
     .get(getCropById)
-    .put(authorize('Admin'), updateCrop)
-    .delete(authorize('Admin'), deleteCrop);
+    .put(authorize('Farmer', 'Admin'), updateCrop)
+    .delete(authorize('Farmer', 'Admin'), deleteCrop);
 
 module.exports = router;
