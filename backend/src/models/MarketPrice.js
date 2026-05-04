@@ -3,34 +3,34 @@ const mongoose = require('mongoose');
 const marketPriceSchema = new mongoose.Schema({
     cropName: {
         type: String,
-        required: [true, 'Please add a crop name'],
+        required: [true, 'Please provide the crop name'],
         trim: true
     },
     district: {
         type: String,
-        required: [true, 'Please add a district'],
+        required: [true, 'Please provide the district'],
         trim: true
     },
     price: {
         type: Number,
-        required: [true, 'Please add a price']
+        required: [true, 'Please provide the price']
     },
     unit: {
         type: String,
-        default: '1kg',
-        trim: true
+        required: [true, 'Please provide the unit (e.g., kg, bundle)'],
+        default: 'kg'
     },
-    market: {
+    trend: {
         type: String,
-        trim: true,
-        default: 'General Market'
+        enum: ['up', 'down', 'stable'],
+        default: 'stable'
     },
-    recordedAt: {
+    date: {
         type: Date,
         default: Date.now
     },
-    recordedBy: {
-        type: mongoose.Schema.ObjectId,
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     }
