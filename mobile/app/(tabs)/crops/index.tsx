@@ -543,9 +543,6 @@ export default function CropsScreen() {
             )}
           </View>
         </TouchableOpacity>
-            )}
-          </View>
-        </TouchableOpacity>
       </Modal>
       <ValidationModal
         visible={validationVisible}

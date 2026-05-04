@@ -97,7 +97,6 @@ export default function ForgotPasswordScreen() {
     setIsLoading(true);
     try {
       await resetPassword(email.trim().toLowerCase(), otp, newPassword);
-      await resetPassword(email.trim().toLowerCase(), otp, newPassword);
       showModal('Success', 'Your password has been reset successfully!', 'success');
     } catch (err: any) {
       showModal('Error', err.toString(), 'error');

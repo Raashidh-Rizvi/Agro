@@ -125,7 +125,12 @@ export default function MarketplaceScreen() {
 
     setSaving(true);
     try {
-           category: form.category,
+      if (editingId) {
+        await ProduceService.update(editingId, {
+          name: form.name,
+          description: form.description,
+          price: parseFloat(form.price),
+          category: form.category,
         }, form.imageUri.startsWith('http') ? undefined : form.imageUri);
         showValidation('Success', 'Listing updated successfully', 'success');
       } else {
