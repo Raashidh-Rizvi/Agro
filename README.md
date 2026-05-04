@@ -10,13 +10,13 @@
 
 ## 2. Project Overview
 
-Agro is a full‑stack mobile application developed to assist Sri Lankan smallholder farmers by providing intelligent, real‑time agricultural support. The system integrates crop management, disease detection, advisory services, market insights, and expert support into a single mobile platform. It offers a practical, mobile‑first solution that is accessible, easy to use, and scalable.
+Agro is a full‑stack mobile application developed to assist Sri Lankan smallholder farmers by providing intelligent, real‑time agricultural support. The system integrates crop management, disease detection, advisory services, marketplace listings, and expert support into a single mobile platform. It offers a practical, mobile‑first solution that is accessible, easy to use, and scalable.
 
 ---
 
 ## 3. Problem Statement
 
-Smallholder farmers in Sri Lanka often face difficulties accessing timely, accurate, and localized agricultural information such as crop disease identification, weather‑based farming advice, fertilizer usage, and market pricing. Existing digital solutions are fragmented and do not provide a unified platform, leading to inefficient decision‑making, reduced productivity, and financial losses. An integrated, mobile‑based system is needed to combine multiple agricultural services into a single, user‑friendly application.
+Smallholder farmers in Sri Lanka often face difficulties accessing timely, accurate, and localized agricultural information such as crop disease identification, weather‑based farming advice, and fertilizer usage. Existing digital solutions are fragmented and do not provide a unified platform, leading to inefficient decision‑making, reduced productivity, and financial losses. An integrated, mobile‑based system is needed to combine multiple agricultural services into a single, user‑friendly application.
 
 ---
 
@@ -28,7 +28,6 @@ Agro provides an integrated platform with the following capabilities:
 - **Crop management system**
 - **AI‑based crop disease detection (image upload)**
 - **Produce listing and marketplace functionality**
-- **Market price management system**
 - **Expert consultation module**
 - **Advisory alert and notification system**
 
@@ -105,12 +104,9 @@ MongoDB Atlas Database
    - Farmers ask questions, experts respond, track status
 6. **Advisory Alert System**
    - Weather alerts, farming recommendations, irrigation & fertilizer guidance
-7. **Market Price Management**
-   - Add, view, update, delete crop price data
-
 ---
 
-## 8. Database Entities (7 CRUD Modules)
+## 8. Database Entities (6 CRUD Modules)
 
 | Entity             | Description                          |
 | ------------------ | ------------------------------------ |
@@ -120,7 +116,6 @@ MongoDB Atlas Database
 | **ProduceListing** | Marketplace items for sale           |
 | **ExpertQuery**    | Farmer questions and expert answers  |
 | **AdvisoryAlert**  | Weather & advisory notifications     |
-| **MarketPrice**    | Historical and current market prices |
 
 ---
 
@@ -134,7 +129,6 @@ MongoDB Atlas Database
 | Member 3 (ITXXXX – Name) | Produce Listing Management |
 | Member 4 (ITXXXX – Name) | Expert Query Management    |
 | Member 5 (IT24104198)    | Advisory Alert Management  |
-| Member 6 (ITXXXX – Name) | Market Price Management    |
 
 ---
 
@@ -200,18 +194,6 @@ PUT    /api/alerts/:id
 DELETE /api/alerts/:id
 ```
 
-### Market Price
-
-```
-POST   /api/market-prices
-GET    /api/market-prices
-GET    /api/market-prices/:id
-PUT    /api/market-prices/:id
-DELETE /api/market-prices/:id
-```
-
----
-
 ## 11. Project Structure
 
 ```
@@ -225,8 +207,7 @@ AgriSense-Lanka/
 │       │   ├─ Diagnosis.js
 │       │   ├─ ProduceListing.js
 │       │   ├─ ExpertQuery.js
-│       │   ├─ AdvisoryAlert.js
-│       │   └─ MarketPrice.js
+│       │   └─ AdvisoryAlert.js
 │       ├─ controllers/
 │       ├─ routes/
 │       ├─ middleware/
