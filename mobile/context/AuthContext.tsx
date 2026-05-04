@@ -5,23 +5,24 @@ import api from '../services/api';
 interface AuthContextType {
     user: any | null;
     token: string | null;
-    isLoading: boolean;
-    isInitializing: boolean;
+    isLoading: boolean;      // true only during active register/login/update API calls
+    isInitializing: boolean; // true only while loading stored credentials on startup
     login: (email: string, password: string) => Promise<void>;
     register: (userData: any) => Promise<void>;
     updateProfile: (userData: any) => Promise<void>;
     updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-    forgotPassword: (email: string) => Promise<string | undefined>;
-    resetPassword: (token: string, password: string) => Promise<void>;
+    forgotPassword: (email: string) => Promise<void>;
+    verifyOtp: (email: string, otp: string) => Promise<void>;
+    resetPassword: (email: string, otp: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser]       = useState<any | null>(null);
-    const [token, setToken]     = useState<string | null>(null);
-    const [isLoading, setIsLoading]   = useState(false);
+    const [user, setUser] = useState<any | null>(null);
+    const [token, setToken] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
     const [isInitializing, setIsInitializing] = useState(true);
 
     useEffect(() => {
@@ -46,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async (email: string, password: string) => {
         setIsLoading(true);
         try {
-            const response = await api.post('/auth/login', { email, password });
+            const response = await api.post('/auth/login', { email: email.trim().toLowerCase(), password });
             const { token, user } = response.data;
 
             await storage.setItemAsync('userToken', token);
@@ -64,7 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const register = async (userData: any) => {
         setIsLoading(true);
         try {
-            const response = await api.post('/auth/register', userData);
+            const payload = { ...userData };
+            if (payload.email) payload.email = payload.email.trim().toLowerCase();
+            const response = await api.post('/auth/register', payload);
             const { token, user } = response.data;
 
             await storage.setItemAsync('userToken', token);
@@ -114,24 +117,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const forgotPassword = async (email: string) => {
         try {
-            const response = await api.post('/auth/forgot-password', { email });
-            // In development, the backend returns the token
-            return response.data.resetToken;
+            await api.post('/auth/forgot-password', { email });
         } catch (error: any) {
-            throw error.response?.data?.message || 'Failed to send reset email';
+            throw error.response?.data?.message || 'Failed to send OTP';
         }
     };
 
-    const resetPassword = async (token: string, password: string) => {
+    const verifyOtp = async (email: string, otp: string) => {
         try {
-            await api.put(`/auth/reset-password/${token}`, { password });
+            await api.post('/auth/verify-otp', { email, otp });
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Invalid or expired OTP';
+        }
+    };
+
+    const resetPassword = async (email: string, otp: string, password: string) => {
+        try {
+            await api.post('/auth/reset-password', { email, otp, password });
         } catch (error: any) {
             throw error.response?.data?.message || 'Failed to reset password';
         }
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, isInitializing, login, register, updateProfile, updatePassword, forgotPassword, resetPassword, logout }}>
+        <AuthContext.Provider value={{ user, token, isLoading, isInitializing, login, register, updateProfile, updatePassword, forgotPassword, verifyOtp, resetPassword, logout }}>
             {children}
         </AuthContext.Provider>
     );

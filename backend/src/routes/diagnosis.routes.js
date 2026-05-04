@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { predictDisease, getDiagnosisHistory } = require('../controllers/diagnosis.controller');
+const { predictDisease, getDiagnosisHistory, deleteDiagnosis } = require('../controllers/diagnosis.controller');
 const { protect } = require('../middleware/auth.middleware');
 
 const fs = require('fs');
@@ -45,5 +45,8 @@ router.post('/predict', protect, upload.single('image'), predictDisease);
 
 // GET /api/diagnosis/history - Get all diagnoses for current user
 router.get('/history', protect, getDiagnosisHistory);
+
+// DELETE /api/diagnosis/:id - Delete a diagnosis record
+router.delete('/:id', protect, deleteDiagnosis);
 
 module.exports = router;

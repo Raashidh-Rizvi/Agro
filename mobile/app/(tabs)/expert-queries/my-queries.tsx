@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FlatList, RefreshControl, Alert, StyleSheet, TouchableOpacity, Text, View, ActivityIndicator, Platform } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, TouchableOpacity, Text, View, ActivityIndicator, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { Shadows } from '@/constants/theme';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
 import { API_URL } from '../../../constants/Config';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import ValidationModal from '@/components/ValidationModal';
 
 interface Query {
   _id: string;
@@ -23,6 +24,24 @@ export default function QueriesList() {
   const [refreshing, setRefreshing] = useState(false);
   const { user, token } = useAuth();
   const router = useRouter();
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+      title: string;
+      message: string;
+      type: 'error' | 'success' | 'confirm';
+      onConfirm?: () => void;
+      confirmText?: string;
+  }>({
+      title: '',
+      message: '',
+      type: 'error'
+  });
+
+  const showModal = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', onConfirm?: () => void, confirmText?: string) => {
+      setModalConfig({ title, message, type, onConfirm, confirmText });
+      setModalVisible(true);
+  };
 
   const fetchQueries = async () => {
     if (!user || !token) return;
@@ -43,7 +62,7 @@ export default function QueriesList() {
       }
     } catch (error) {
       console.error('Fetch err:', error);
-      Alert.alert('Error', 'Failed to load queries');
+      showModal('Error', 'Failed to load queries');
     } finally {
       setLoading(false);
     }
@@ -62,20 +81,13 @@ export default function QueriesList() {
   };
 
   const deleteConfirm = (id: string) => {
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to delete this query?')) {
-        executeDelete(id);
-      }
-    } else {
-      Alert.alert(
-        'Delete Query',
-        'Are you sure you want to delete this query?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: () => executeDelete(id) }
-        ]
-      );
-    }
+    showModal(
+      'Delete Query',
+      'Are you sure you want to delete this query?',
+      'confirm',
+      () => executeDelete(id),
+      'Delete'
+    );
   };
 
   const executeDelete = async (id: string) => {
@@ -88,10 +100,10 @@ export default function QueriesList() {
       if (data.success) {
         setQueries(prev => prev.filter(q => q._id !== id));
       } else {
-        Alert.alert('Error', data.message || 'Delete failed');
+        showModal('Error', data.message || 'Delete failed');
       }
     } catch (err) {
-      Alert.alert('Error', 'Network error while deleting');
+      showModal('Error', 'Network error while deleting');
     }
   };
 
@@ -117,7 +129,7 @@ const renderQuery = ({ item }: { item: Query }) => {
         
         <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
         
-        {item.imageUrl && (
+        {!!item.imageUrl && (
           <Image 
             source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${API_URL.replace('/api', '')}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}` }} 
             style={styles.queryImage} 
@@ -126,7 +138,7 @@ const renderQuery = ({ item }: { item: Query }) => {
           />
         )}
         
-        {item.cropId && (
+        {!!item.cropId && (
           <Text style={styles.cropName}>Crop: {typeof item.cropId === 'object' ? item.cropId.name : item.cropId}</Text>
         )}
         
@@ -187,6 +199,15 @@ return (
           <Text style={styles.emptySubtext}>Submit your first query to get expert advice!</Text>
         </View>
       }
+    />
+    <ValidationModal
+      visible={modalVisible}
+      title={modalConfig.title}
+      message={modalConfig.message}
+      type={modalConfig.type}
+      onConfirm={modalConfig.onConfirm}
+      confirmText={modalConfig.confirmText}
+      onClose={() => setModalVisible(false)}
     />
   </View>
 );

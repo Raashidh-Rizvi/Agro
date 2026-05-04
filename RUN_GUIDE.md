@@ -49,6 +49,8 @@ Due to **Python 3.14** being the latest experimental version, the original AI mo
 
    ```powershell
    cd ml-service
+   python -m venv venv
+   .\venv\Scripts\activate
    ```
 
 2. **Create and Activate a Virtual Environment**:

@@ -4,6 +4,7 @@ import { storage } from '../utils/storage';
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,10 +16,11 @@ api.interceptors.request.use(
     try {
       const token = await storage.getItemAsync('userToken');
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-        // console.log(`[API] Token attached to ${config.url}`);
-      } else {
-        // console.log(`[API] No token found for ${config.url}`);
+        if (config.headers && typeof config.headers.set === 'function') {
+           config.headers.set('Authorization', `Bearer ${token}`);
+        } else {
+           config.headers.Authorization = `Bearer ${token}`;
+        }
       }
     } catch (error) {
       console.error('Error fetching token from storage', error);

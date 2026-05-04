@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 
+
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
@@ -17,12 +18,13 @@ import {
   formatAlertRelativeTime,
   getAlertErrorMessage,
 } from '@/features/alerts/alertSupport';
+import ValidationModal from '@/components/ValidationModal';
 
 const quickActions = [
-  { id: '1', title: 'Scan Disease', icon: 'camera-outline', color: '#0F9D58', bg: '#E6F4EA' },
-  { id: '2', title: 'Ask Expert', icon: 'people-outline', color: '#3B82F6', bg: '#EFF6FF' },
-  { id: '3', title: 'My Crops', icon: 'leaf-outline', color: '#0B6B3A', bg: '#D4EDDA' },
-  { id: '4', title: 'Prices', icon: 'trending-up-outline', color: '#F59E0B', bg: '#FEF3C7' },
+  { id: '1', title: 'Scan Disease', icon: 'camera-outline', color: '#0F9D58', bg: '#E6F4EA', route: '/diagnosis' },
+  { id: '2', title: 'Ask Expert', icon: 'people-outline', color: '#3B82F6', bg: '#EFF6FF', route: '/(tabs)/expert-queries' },
+  { id: '3', title: 'My Crops', icon: 'leaf-outline', color: '#0B6B3A', bg: '#D4EDDA', route: '/(tabs)/crops' },
+  { id: '4', title: 'Prices', icon: 'trending-up-outline', color: '#F59E0B', bg: '#FEF3C7', route: '/(tabs)/explore' },
 ] as const;
 
 const metrics = [
@@ -48,6 +50,14 @@ export default function FarmerDashboard() {
   const [recentAlerts, setRecentAlerts] = useState<AdvisoryAlert[]>([]);
   const [isLoadingAlerts, setIsLoadingAlerts] = useState(true);
   const [alertsError, setAlertsError] = useState<string | null>(null);
+  
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ title: '', message: '' });
+
+  const showInfoModal = (title: string, message: string) => {
+    setModalConfig({ title, message });
+    setModalVisible(true);
+  };
 
   const openAlerts = () => {
     router.push('/(tabs)/alerts');
@@ -110,26 +120,33 @@ export default function FarmerDashboard() {
           </View>
         </View>
 
-        <View style={[styles.heroCard, Shadows.colored(C.primary)]}>
+        <TouchableOpacity
+          style={[styles.heroCard, Shadows.colored(C.primary)]}
+          activeOpacity={0.9}
+          onPress={() => router.push('/diagnosis')}>
           <View style={[styles.heroOverlay, { backgroundColor: C.heroOverlay }]} />
           <View style={styles.heroLeft}>
             <View style={styles.aiBadge}>
               <MaterialCommunityIcons name="chip" size={11} color="#FFFFFF" />
               <ThemedText style={styles.aiBadgeText}>AI INSIGHT</ThemedText>
             </View>
-            <ThemedText style={styles.heroTitle}>Optimal Planting Day</ThemedText>
+            <ThemedText style={styles.heroTitle}>AI Disease Diagnosis</ThemedText>
             <ThemedText style={styles.heroSubtitle}>
-              Today is ideal for sowing paddy. Soil moisture is trending favorable for planting.
+              Scan your crop leaves to detect pests and diseases instantly with AI.
             </ThemedText>
           </View>
           <View style={styles.heroIcon}>
-            <MaterialCommunityIcons name="weather-partly-cloudy" size={46} color="#FFFFFF" />
+            <MaterialCommunityIcons name="camera-iris" size={46} color="#FFFFFF" />
           </View>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.metricsRow}>
           {metrics.map((metric) => (
-            <View key={metric.id} style={[styles.metricCard, { backgroundColor: C.card, borderColor: C.border }]}>
+            <TouchableOpacity
+              key={metric.id}
+              style={[styles.metricCard, { backgroundColor: C.card, borderColor: C.border }]}
+              activeOpacity={0.7}
+              onPress={() => showInfoModal('Available Soon', 'This feature will be available soon')}>
               <View style={styles.metricHeader}>
                 <Ionicons name={metric.icon} size={15} color={C.primary} />
                 <ThemedText style={[styles.metricDelta, { color: metric.good ? C.accent : C.danger }]}>
@@ -138,7 +155,7 @@ export default function FarmerDashboard() {
               </View>
               <ThemedText style={[styles.metricValue, { color: C.text }]}>{metric.value}</ThemedText>
               <ThemedText style={[styles.metricLabel, { color: C.muted }]}>{metric.label}</ThemedText>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -148,7 +165,8 @@ export default function FarmerDashboard() {
             <TouchableOpacity
               key={action.id}
               style={[styles.actionCard, { backgroundColor: C.card, borderColor: C.border }]}
-              activeOpacity={0.8}>
+              activeOpacity={0.8}
+              onPress={() => router.push(action.route as any)}>
               <View style={[styles.actionIconWrap, { backgroundColor: action.bg }]}>
                 <Ionicons name={action.icon as any} size={26} color={action.color} />
               </View>
@@ -224,7 +242,9 @@ export default function FarmerDashboard() {
 
         <View style={[styles.sectionRow, { marginTop: Spacing.lg }]}>
           <ThemedText style={[styles.sectionTitle, { color: C.text }]}>Market Prices</ThemedText>
-          <TouchableOpacity activeOpacity={0.8}>
+          <TouchableOpacity 
+            activeOpacity={0.8}
+            onPress={() => router.push('/(tabs)/explore')}>
             <ThemedText style={[styles.viewAll, { color: C.primary }]}>View All</ThemedText>
           </TouchableOpacity>
         </View>
@@ -236,7 +256,10 @@ export default function FarmerDashboard() {
             { crop: 'Tomato', price: 'Rs. 200/kg', change: '+12%', up: true },
             { crop: 'Coconut', price: 'Rs. 45/nut', change: '+1%', up: true },
           ].map((price) => (
-            <View key={price.crop} style={[styles.priceCard, { backgroundColor: C.card, borderColor: C.border }]}>
+            <TouchableOpacity 
+              key={price.crop} 
+              style={[styles.priceCard, { backgroundColor: C.card, borderColor: C.border }]}
+              onPress={() => router.push('/(tabs)/explore')}>
               <ThemedText style={[styles.priceCrop, { color: C.subtext }]}>{price.crop}</ThemedText>
               <ThemedText style={[styles.priceValue, { color: C.text }]}>{price.price}</ThemedText>
               <View style={[styles.priceChangePill, { backgroundColor: price.up ? C.primaryDim : '#FEE2E2' }]}>
@@ -249,12 +272,18 @@ export default function FarmerDashboard() {
                   {price.change}
                 </ThemedText>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
 
         <View style={{ height: Spacing.xxl }} />
       </ScrollView>
+      <ValidationModal
+        visible={modalVisible}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onClose={() => setModalVisible(false)}
+      />
     </ThemedView>
   );
 }

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -25,6 +26,10 @@ const userSchema = new mongoose.Schema({
         enum: ['Farmer', 'Expert', 'Admin'],
         default: 'Farmer'
     },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
     farmName: {
         type: String,
         trim: true
@@ -45,14 +50,14 @@ const userSchema = new mongoose.Schema({
         default: Date.now
     },
     resetPasswordToken: String,
-    resetPasswordExpire: Date
+    resetPasswordExpire: Date,
+    otpCode: String,
+    otpExpire: Date
 });
 
 // Encrypt password before saving
-userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) {
-        next();
-    }
+userSchema.pre('save', async function() {
+    if (!this.isModified('password')) return;
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
 });
@@ -64,7 +69,6 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
 
 // Generate and hash password token
 userSchema.methods.getResetPasswordToken = function() {
-    const crypto = require('crypto');
     // Generate token
     const resetToken = crypto.randomBytes(20).toString('hex');
 

@@ -66,5 +66,16 @@ export const DiagnosisService = {
         } else {
             throw new Error(response.data.message || 'Failed to fetch history');
         }
+    },
+
+    /**
+     * Delete a diagnosis record
+     * @param id The ID of the diagnosis to delete
+     */
+    deleteDiagnosis: async (id: string): Promise<void> => {
+        const response = await api.delete(`/diagnosis/${id}`);
+        if (!response.data.success) {
+            throw new Error(response.data.message || 'Failed to delete record');
+        }
     }
 };

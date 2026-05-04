@@ -66,22 +66,37 @@ exports.createQuery = async (req, res) => {
 };
 
 exports.getMyQueries = async (req, res) => {
-  const queries = await ExpertQuery.find({ userId: req.user.id }).populate('cropId', 'name');
-  res.json({ success: true, data: queries });
+  try {
+    const queries = await ExpertQuery.find({ userId: req.user.id }).populate('cropId', 'name');
+    res.json({ success: true, data: queries });
+  } catch (err) {
+    console.error('Error fetching user queries:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch queries', error: err.message });
+  }
 };
 
 exports.getQueries = async (req, res) => {
-  const queries = await ExpertQuery.find().populate('cropId', 'name').populate('userId', 'name');
-  console.log('GET ALL QUERIES - Sample Query User:', queries[0]?.userId);
-  res.json({ success: true, data: queries });
+  try {
+    const queries = await ExpertQuery.find().populate('cropId', 'name').populate('userId', 'name');
+    console.log('GET ALL QUERIES - Sample Query User:', queries[0]?.userId);
+    res.json({ success: true, data: queries });
+  } catch (err) {
+    console.error('Error fetching all queries:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch queries', error: err.message });
+  }
 };
 
 exports.getQueryById = async (req, res) => {
-  const query = await ExpertQuery.findById(req.params.id).populate('cropId', 'name').populate('userId', 'name');
-  if (!query) {
-    return res.status(404).json({ success: false, message: 'Query not found' });
+  try {
+    const query = await ExpertQuery.findById(req.params.id).populate('cropId', 'name').populate('userId', 'name');
+    if (!query) {
+      return res.status(404).json({ success: false, message: 'Query not found' });
+    }
+    res.json({ success: true, data: query });
+  } catch (err) {
+    console.error('Error fetching query:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch query', error: err.message });
   }
-  res.json({ success: true, data: query });
 };
 
 exports.updateQuery = async (req, res) => {
@@ -141,7 +156,15 @@ exports.updateQuery = async (req, res) => {
 };
 
 exports.deleteQuery = async (req, res) => {
-  await ExpertQuery.findByIdAndDelete(req.params.id);
-  res.json({ success: true, message: "Deleted successfully" });
+  try {
+    const query = await ExpertQuery.findByIdAndDelete(req.params.id);
+    if (!query) {
+      return res.status(404).json({ success: false, message: 'Query not found' });
+    }
+    res.json({ success: true, message: "Deleted successfully" });
+  } catch (err) {
+    console.error('Error deleting query:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete query', error: err.message });
+  }
 };
 

@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
+  FlatList,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -21,6 +21,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
+import ValidationModal from '@/components/ValidationModal';
 import {
   ALERT_FIELD_LIMITS,
   ALERT_META,
@@ -56,7 +57,7 @@ const getSummaryCount = (alerts: AdvisoryAlert[], type: AlertType) =>
   alerts.filter((alert) => alert.alertType === type).length;
 
 export default function AlertsScreen() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const C = useAppColors();
   const canManageAlerts = user?.role === 'Expert' || user?.role === 'Admin';
 
@@ -69,6 +70,24 @@ export default function AlertsScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingAlertId, setEditingAlertId] = useState<string | null>(null);
   const [form, setForm] = useState<AlertFormState>(EMPTY_FORM);
+
+  const [validationVisible, setValidationVisible] = useState(false);
+  const [validationConfig, setValidationConfig] = useState<{
+      title: string;
+      message: string;
+      type: 'error' | 'success' | 'confirm';
+      onConfirm?: () => void;
+      confirmText?: string;
+  }>({
+      title: '',
+      message: '',
+      type: 'error'
+  });
+
+  const showValidation = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', onConfirm?: () => void, confirmText?: string) => {
+      setValidationConfig({ title, message, type, onConfirm, confirmText });
+      setValidationVisible(true);
+  };
 
   const fetchAlerts = useCallback(async (refresh = false) => {
     if (refresh) {
@@ -129,7 +148,7 @@ export default function AlertsScreen() {
 
   const validateForm = () => {
     if (!form.title.trim() || !form.cropType.trim() || !form.district.trim() || !form.season.trim() || !form.message.trim()) {
-      Alert.alert('Missing Fields', 'Please fill in all alert details.');
+      showValidation('Missing Fields', 'Please fill in all alert details.');
       return false;
     }
 
@@ -144,7 +163,7 @@ export default function AlertsScreen() {
     const invalidField = lengthChecks.find(([field, value]) => value.trim().length > ALERT_FIELD_LIMITS[field]);
     if (invalidField) {
       const [field, , label] = invalidField;
-      Alert.alert('Too Long', `${label} must be ${ALERT_FIELD_LIMITS[field]} characters or fewer.`);
+      showValidation('Too Long', `${label} must be ${ALERT_FIELD_LIMITS[field]} characters or fewer.`);
       return false;
     }
 
@@ -178,7 +197,7 @@ export default function AlertsScreen() {
 
       closeModal();
     } catch (saveError) {
-      Alert.alert(editingAlertId ? 'Update Failed' : 'Create Failed', getAlertErrorMessage(saveError));
+      showValidation(editingAlertId ? 'Update Failed' : 'Create Failed', getAlertErrorMessage(saveError));
     } finally {
       setIsSaving(false);
     }
@@ -189,22 +208,17 @@ export default function AlertsScreen() {
       await api.delete(`/alerts/${alertId}`);
       setAlerts((prev) => prev.filter((alert) => alert._id !== alertId));
     } catch (deleteError) {
-      Alert.alert('Delete Failed', getAlertErrorMessage(deleteError));
+      showValidation('Delete Failed', getAlertErrorMessage(deleteError));
     }
   };
 
   const confirmDelete = (alert: AdvisoryAlert) => {
-    Alert.alert(
+    showValidation(
       'Delete Alert',
       `Delete "${alert.title}"? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteAlert(alert._id),
-        },
-      ]
+      'confirm',
+      () => deleteAlert(alert._id),
+      'Delete'
     );
   };
 
@@ -338,6 +352,15 @@ export default function AlertsScreen() {
               activeOpacity={0.85}>
               <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
             </TouchableOpacity>
+            
+            {error?.includes('Not authorized') && (
+              <TouchableOpacity
+                style={[styles.retryButton, { backgroundColor: C.danger, marginTop: 10 }]}
+                onPress={logout}
+                activeOpacity={0.85}>
+                <ThemedText style={styles.retryButtonText}>Log Out & Reconnect</ThemedText>
+              </TouchableOpacity>
+            )}
           </View>
         ) : filteredAlerts.length === 0 ? (
           <View style={styles.stateBlock}>
@@ -565,6 +588,15 @@ export default function AlertsScreen() {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+      <ValidationModal
+        visible={validationVisible}
+        title={validationConfig.title}
+        message={validationConfig.message}
+        type={validationConfig.type}
+        onConfirm={validationConfig.onConfirm}
+        confirmText={validationConfig.confirmText}
+        onClose={() => setValidationVisible(false)}
+      />
     </ThemedView>
   );
 }

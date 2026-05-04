@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const dns = require('dns');
 
 // Load environment variables
 dotenv.config();
@@ -46,9 +47,12 @@ const alertRoutes = require('./routes/alert.routes');
 const produceRoutes = require('./routes/produce.routes');
 const userRoutes = require('./routes/user.routes');
 const statsRoutes = require('./routes/stats.routes');
+const marketPriceRoutes = require('./routes/marketPrice.routes');
+const cartRoutes = require('./routes/cart.routes');
 
 
 // Use Routes
+app.use('/api/cart', cartRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/expert-query', expertQueryRoutes);
 app.use('/api/crops', cropRoutes);
@@ -57,6 +61,9 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/produce', produceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/market-prices', marketPriceRoutes);
+
+
 
 
 // Basic Test Route
@@ -119,8 +126,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']); // Bypass ISP/University SRV blocks
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 mongoose.connect(MONGO_URI)
     .then(() => {
