@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
   View, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert, Modal, TextInput, Platform, FlatList
+  ActivityIndicator, Modal, TextInput, Platform, FlatList
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -14,6 +14,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
+import ValidationModal from '@/components/ValidationModal';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const FILTER_TABS = ['All', 'Growing', 'At Risk', 'Harvest'] as const;
@@ -69,6 +70,24 @@ export default function CropsScreen() {
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [selectedCrop, setSelectedCrop]         = useState<any>(null);
 
+  const [validationVisible, setValidationVisible] = useState(false);
+  const [validationConfig, setValidationConfig] = useState<{
+      title: string;
+      message: string;
+      type: 'error' | 'success' | 'confirm';
+      onConfirm?: () => void;
+      confirmText?: string;
+  }>({
+      title: '',
+      message: '',
+      type: 'error'
+  });
+
+  const showValidation = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', onConfirm?: () => void, confirmText?: string) => {
+      setValidationConfig({ title, message, type, onConfirm, confirmText });
+      setValidationVisible(true);
+  };
+
   const onDateChange = (_: DateTimePickerEvent, selected?: Date) => {
     if (Platform.OS === 'android') setShowDatePicker(false);
     if (selected) {
@@ -91,7 +110,7 @@ export default function CropsScreen() {
       const res = await api.get('/crops', { params });
       setCrops(res.data.data);
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || 'Failed to fetch crops');
+      showValidation('Error', err.response?.data?.message || 'Failed to fetch crops');
     } finally {
       setLoading(false);
     }
@@ -143,7 +162,7 @@ export default function CropsScreen() {
 
   const saveCrop = async () => {
     const err = validateForm();
-    if (err) return Alert.alert('Validation', err);
+    if (err) return showValidation('Validation', err);
     setSaving(true);
     try {
       const payload = {
@@ -159,26 +178,21 @@ export default function CropsScreen() {
       setModalVisible(false);
       fetchCrops();
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.message || 'Failed to save crop');
+      showValidation('Error', e.response?.data?.message || 'Failed to save crop');
     } finally {
       setSaving(false);
     }
   };
 
   const deleteCrop = (id: string) => {
-    Alert.alert('Delete Crop', 'Are you sure you want to delete this crop?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete', style: 'destructive', onPress: async () => {
-          try {
+    showValidation('Delete Crop', 'Are you sure you want to delete this crop?', 'confirm', async () => {
+        try {
             await api.delete(`/crops/${id}`);
             fetchCrops();
-          } catch (e: any) {
-            Alert.alert('Error', e.response?.data?.message || 'Failed to delete');
-          }
+        } catch (e: any) {
+            showValidation('Error', e.response?.data?.message || 'Failed to delete');
         }
-      }
-    ]);
+    }, 'Delete');
   };
 
   // ─── Render ─────────────────────────────────────────────────────────────────
@@ -530,6 +544,15 @@ export default function CropsScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+      <ValidationModal
+        visible={validationVisible}
+        title={validationConfig.title}
+        message={validationConfig.message}
+        type={validationConfig.type}
+        onConfirm={validationConfig.onConfirm}
+        confirmText={validationConfig.confirmText}
+        onClose={() => setValidationVisible(false)}
+      />
     </ThemedView>
   );
 }

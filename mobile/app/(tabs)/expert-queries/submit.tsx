@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Alert, ScrollView, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, useColorScheme } from 'react-native';
+import { View, ScrollView, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, useColorScheme } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Shadows, Colors } from '@/constants/theme';
@@ -9,6 +9,7 @@ import { API_URL } from '../../../constants/Config';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
+import ValidationModal from '@/components/ValidationModal';
 
 export default function SubmitQuery() {
   const [title, setTitle] = useState('');
@@ -20,6 +21,14 @@ export default function SubmitQuery() {
   const [crops, setCrops] = useState<string[]>([]);
   const { token } = useAuth();
   const router = useRouter();
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ title: '', message: '', type: 'error' as 'error' | 'success' });
+
+  const showModal = (title: string, message: string, type: 'error' | 'success' = 'error') => {
+      setModalConfig({ title, message, type });
+      setModalVisible(true);
+  };
 
   // In a real app we would fetch the crops from /api/crops
   useEffect(() => {
@@ -48,7 +57,7 @@ export default function SubmitQuery() {
 
   const submitQuery = async () => {
     if (!title || !description || !cropId) {
-      Alert.alert('Missing Info', 'Please fill all the required fields (Title, Description, and Crop).');
+      showModal('Missing Info', 'Please fill all the required fields (Title, Description, and Crop).');
       return;
     }
 
@@ -106,10 +115,10 @@ export default function SubmitQuery() {
           router.back();
         }, 2500);
       } else {
-        Alert.alert('Error', data.message || 'Failed to submit query. Ensure crop exists in DB.');
+        showModal('Error', data.message || 'Failed to submit query. Ensure crop exists in DB.');
       }
     } catch (error) {
-      Alert.alert('Error', 'Submission failed. Please check your connection.');
+      showModal('Error', 'Submission failed. Please check your connection.');
     } finally {
       setLoading(false);
     }
@@ -230,6 +239,13 @@ export default function SubmitQuery() {
           </TouchableOpacity>
         </ThemedView>
       </ThemedView>
+      <ValidationModal
+        visible={modalVisible}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onClose={() => setModalVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }

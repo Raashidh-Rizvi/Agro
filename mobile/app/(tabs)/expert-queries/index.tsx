@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { FlatList, RefreshControl, Alert, StyleSheet, TouchableOpacity, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, useColorScheme } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, TouchableOpacity, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, useColorScheme } from 'react-native';
 import { Shadows, Radius, Spacing, Colors } from '@/constants/theme';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
@@ -9,6 +9,7 @@ import ExpertDashboard from '@/components/expert/ExpertDashboard';
 import { Image } from 'expo-image';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
+import ValidationModal from '@/components/ValidationModal';
 
 interface Query {
   _id: string;
@@ -81,7 +82,7 @@ const QueryItem = ({ item, user, token, expandedId, setExpandedId, setReplyText,
         
         <ThemedText style={[styles.title, { color: colors.text }]} numberOfLines={isExpanded ? 0 : 2}>{item.title}</ThemedText>
         
-        {!isExpanded && item.imageUrl && (
+        {!isExpanded && !!item.imageUrl && (
           <Image 
             source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${API_URL.replace('/api', '')}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}` }} 
             style={styles.thumbnailImage} 
@@ -90,14 +91,14 @@ const QueryItem = ({ item, user, token, expandedId, setExpandedId, setReplyText,
           />
         )}
 
-        {item.cropId && (
+        {!!item.cropId && (
           <ThemedText style={[styles.cropName, { color: colors.subtext }]}>Crop: {typeof item.cropId === 'object' ? item.cropId.name : item.cropId}</ThemedText>
         )}
       </TouchableOpacity>
       
       {isExpanded && (
         <ThemedView style={[styles.expandedContent, { borderTopColor: colors.border, backgroundColor: 'transparent' }]}>
-          {item.imageUrl && (
+          {!!item.imageUrl && (
             <Image 
               source={{ uri: item.imageUrl.startsWith('http') ? item.imageUrl : `${API_URL.replace('/api', '')}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}` }} 
               style={styles.queryImage} 
@@ -108,7 +109,7 @@ const QueryItem = ({ item, user, token, expandedId, setExpandedId, setReplyText,
           <ThemedText style={[styles.description, { color: colors.text }]}>{item.description}</ThemedText>
           <ThemedText style={[styles.authorText, { color: colors.subtext }]}>Asked by: {authorName}</ThemedText>
           
-          {isAnswered && item.reply && (
+          {isAnswered && !!item.reply && (
             <ThemedView style={[styles.replyBox, { backgroundColor: colors.cardTint, borderColor: colors.border }]}>
               <ThemedText style={styles.replyLabel}>Expert&apos;s Reply:</ThemedText>
               
@@ -221,6 +222,14 @@ function QueriesList({ onBack }: { onBack?: () => void }) {
   const { user, token } = useAuth();
   const router = useRouter();
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ title: '', message: '', type: 'error' as 'error' | 'success' });
+
+  const showModal = (title: string, message: string, type: 'error' | 'success' = 'error') => {
+      setModalConfig({ title, message, type });
+      setModalVisible(true);
+  };
+
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
 
@@ -243,7 +252,7 @@ function QueriesList({ onBack }: { onBack?: () => void }) {
       }
     } catch (error) {
       console.error('Fetch err:', error);
-      Alert.alert('Error', 'Failed to load queries');
+      showModal('Error', 'Failed to load queries');
     } finally {
       setLoading(false);
     }
@@ -263,7 +272,7 @@ function QueriesList({ onBack }: { onBack?: () => void }) {
 
   const submitReply = async (queryId: string) => {
     if (!replyText.trim()) {
-      Alert.alert('Missing Info', 'Please enter your reply.');
+      showModal('Missing Info', 'Please enter your reply.');
       return;
     }
     setAnswering(true);
@@ -287,10 +296,10 @@ function QueriesList({ onBack }: { onBack?: () => void }) {
           fetchQueries();
         }, 2500);
       } else {
-        Alert.alert('Error', data.message || 'Failed to submit answer');
+        showModal('Error', data.message || 'Failed to submit answer');
       }
     } catch (err) {
-      Alert.alert('Error', 'Network error while submitting answer');
+      showModal('Error', 'Network error while submitting answer');
     } finally {
       setAnswering(false);
     }
@@ -380,6 +389,13 @@ function QueriesList({ onBack }: { onBack?: () => void }) {
               <ThemedText style={[styles.emptySubtext, { color: colors.subtext }]}>Submit your first query to get expert advice!</ThemedText>
             </ThemedView>
           }
+        />
+        <ValidationModal
+          visible={modalVisible}
+          title={modalConfig.title}
+          message={modalConfig.message}
+          type={modalConfig.type}
+          onClose={() => setModalVisible(false)}
         />
       </ThemedView>
     </KeyboardAvoidingView>

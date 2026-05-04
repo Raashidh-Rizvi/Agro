@@ -1,13 +1,15 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
+  ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'expo-router';
 import { Radius, Spacing, Typography, Shadows } from '@/constants/theme';
 import { ThemeOverrideProvider } from '@/context/ThemeOverrideContext';
+import ValidationModal from '@/components/ValidationModal';
+import { validatePassword } from '../../utils/passwordValidation';
 
 const L = {
   bg: '#F4F9F6', card: '#FFFFFF', border: '#DDE8E3', borderFocus: '#0F9D58',
@@ -15,13 +17,6 @@ const L = {
   primary: '#0F9D58', primaryDim: '#E6F4EA', panelTop: '#0F9D58',
 };
 
-const showAlert = (title: string, message: string) => {
-  if (Platform.OS === 'web') {
-    window.alert(`${title}: ${message}`);
-  } else {
-    Alert.alert(title, message);
-  }
-};
 
 const isValidEmail = (email: string) => {
   if (!email || email.length > 254) return false;
@@ -47,53 +42,64 @@ export default function ForgotPasswordScreen() {
   const router = useRouter();
   const otpRef = useRef<TextInput>(null);
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<'error' | 'success'>('error');
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+
+  const showModal = (title: string, message: string, type: 'error' | 'success' = 'error') => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalType(type);
+    setModalVisible(true);
+  };
+
   const handleSendOtp = async () => {
     const trimmed = email.trim().toLowerCase();
-    if (!trimmed) { showAlert('Required', 'Please enter your email.'); return; }
-    if (!isValidEmail(trimmed)) { showAlert('Invalid Email', 'Please enter a valid email address.'); return; }
+    if (!trimmed) { showModal('Required', 'Please enter your email.', 'error'); return; }
+    if (!isValidEmail(trimmed)) { showModal('Invalid Email', 'Please enter a valid email address.', 'error'); return; }
 
     setIsLoading(true);
     try {
       await forgotPassword(trimmed);
       setStep(2);
     } catch (err: any) {
-      showAlert('Error', err.toString());
+      showModal('Error', err.toString(), 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length !== 6) { showAlert('Invalid OTP', 'Please enter the 6-digit code.'); return; }
+    if (otp.length !== 6) { showModal('Invalid OTP', 'Please enter the 6-digit code.', 'error'); return; }
     setIsLoading(true);
     try {
       await verifyOtp(email.trim().toLowerCase(), otp);
       setStep(3);
     } catch (err: any) {
-      showAlert('Invalid OTP', err.toString());
+      showModal('Invalid OTP', err.toString(), 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleResetPassword = async () => {
-    if (!newPassword || !confirmPassword) { showAlert('Required', 'Please fill in all fields.'); return; }
-    if (newPassword.length < 6) { showAlert('Weak Password', 'Password must be at least 6 characters.'); return; }
-    if (newPassword !== confirmPassword) { showAlert('Mismatch', 'Passwords do not match.'); return; }
+    if (!newPassword || !confirmPassword) { showModal('Required', 'Please fill in all fields.', 'error'); return; }
+    
+    const passwordErrors = validatePassword(newPassword, { email });
+    if (passwordErrors.length > 0) {
+      showModal('Weak Password', passwordErrors.join('\n'), 'error');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) { showModal('Mismatch', 'Passwords do not match.', 'error'); return; }
 
     setIsLoading(true);
     try {
       await resetPassword(email.trim().toLowerCase(), otp, newPassword);
-      if (Platform.OS === 'web') {
-        window.alert('Success: Your password has been reset successfully!');
-        router.replace('/(auth)/login');
-      } else {
-        Alert.alert('Success', 'Your password has been reset successfully!', [
-          { text: 'Login Now', onPress: () => router.replace('/(auth)/login') }
-        ]);
-      }
+      showModal('Success', 'Your password has been reset successfully!', 'success');
     } catch (err: any) {
-      showAlert('Error', err.toString());
+      showModal('Error', err.toString(), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -261,6 +267,18 @@ export default function ForgotPasswordScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ValidationModal
+        visible={modalVisible}
+        title={modalTitle}
+        message={modalMessage}
+        type={modalType}
+        onClose={() => {
+            setModalVisible(false);
+            if (modalType === 'success') {
+                router.replace('/(auth)/login');
+            }
+        }}
+      />
     </ThemeOverrideProvider>
   );
 }

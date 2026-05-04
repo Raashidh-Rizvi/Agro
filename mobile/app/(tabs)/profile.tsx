@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useAppColors, useAppTheme } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing } from '@/constants/theme';
 import api from '../../services/api';
+import ValidationModal from '@/components/ValidationModal';
 
 const SETTINGS = [
   {
@@ -65,6 +66,14 @@ export default function ProfileScreen() {
   const [stats, setStats] = useState({ crops: 0, queries: 0, alerts: 0 });
   const [loading, setLoading] = useState(true);
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ title: '', message: '' });
+
+  const showInfoModal = (title: string, message: string) => {
+    setModalConfig({ title, message });
+    setModalVisible(true);
+  };
+
   const fetchStats = async () => {
     if (!token) return;
     try {
@@ -96,7 +105,7 @@ export default function ProfileScreen() {
     } else if (item.route) {
       router.push(item.route as any);
     } else {
-      Alert.alert('Coming Soon', `${item.label} feature is currently under development.`);
+      showInfoModal('Coming Soon', `${item.label} feature is currently under development.`);
     }
   };
 
@@ -152,7 +161,7 @@ export default function ProfileScreen() {
         {/* AI Advisor Banner */}
         <TouchableOpacity 
           style={[styles.aiBanner, { backgroundColor: C.primaryDim, borderColor: C.primary + '40' }]}
-          onPress={() => Alert.alert('Available Soon', 'The AgriSense Pro subscription will be available soon!')}
+          onPress={() => showInfoModal('Available Soon', 'The AgriSense Pro subscription will be available soon!')}
           activeOpacity={0.8}
         >
           <View style={styles.aiBannerLeft}>
@@ -252,6 +261,12 @@ export default function ProfileScreen() {
         <ThemedText style={[styles.version, { color: C.muted }]}>AgriSense Lanka v1.0.0</ThemedText>
         <View style={{ height: Spacing.xxl }} />
       </ScrollView>
+      <ValidationModal
+        visible={modalVisible}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onClose={() => setModalVisible(false)}
+      />
     </ThemedView>
   );
 }

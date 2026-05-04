@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Radius, Spacing, Shadows } from '@/constants/theme';
+import ValidationModal from '@/components/ValidationModal';
 
 export default function NotificationsScreen() {
     const router = useRouter();
@@ -18,14 +19,20 @@ export default function NotificationsScreen() {
         news: false
     });
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState({ title: '', message: '', type: 'error' as 'error' | 'success' });
+
+    const showModal = (title: string, message: string, type: 'error' | 'success' = 'error') => {
+        setModalConfig({ title, message, type });
+        setModalVisible(true);
+    };
+
     const toggle = (key: keyof typeof settings) => {
         setSettings(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
     const handleSave = () => {
-        Alert.alert('Success', 'Notification preferences saved!', [
-            { text: 'OK', onPress: () => router.back() }
-        ]);
+        showModal('Success', 'Notification preferences saved!', 'success');
     };
 
     return (
@@ -115,6 +122,18 @@ export default function NotificationsScreen() {
                     <ThemedText style={styles.saveBtnText}>Save Preferences</ThemedText>
                 </TouchableOpacity>
             </ScrollView>
+            <ValidationModal
+                visible={modalVisible}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                type={modalConfig.type}
+                onClose={() => {
+                    setModalVisible(false);
+                    if (modalConfig.type === 'success') {
+                        router.back();
+                    }
+                }}
+            />
         </ThemedView>
     );
 }

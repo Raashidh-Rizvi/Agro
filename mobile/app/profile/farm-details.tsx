@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
@@ -7,6 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Radius, Spacing, Shadows } from '@/constants/theme';
+import ValidationModal from '@/components/ValidationModal';
 
 export default function FarmDetailsScreen() {
     const { user, updateProfile } = useAuth();
@@ -19,6 +20,14 @@ export default function FarmDetailsScreen() {
     const [farmType, setFarmType] = useState(user?.farmType || '');
     const [loading, setLoading] = useState(false);
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState({ title: '', message: '', type: 'error' as 'error' | 'success' });
+
+    const showModal = (title: string, message: string, type: 'error' | 'success' = 'error') => {
+        setModalConfig({ title, message, type });
+        setModalVisible(true);
+    };
+
     const handleUpdate = async () => {
         setLoading(true);
         try {
@@ -28,11 +37,9 @@ export default function FarmDetailsScreen() {
                 farmSize: farmSize ? parseFloat(farmSize) : undefined, 
                 farmType 
             });
-            Alert.alert('Success', 'Farm details updated successfully', [
-                { text: 'OK', onPress: () => router.back() }
-            ]);
+            showModal('Success', 'Farm details updated successfully', 'success');
         } catch (error: any) {
-            Alert.alert('Error', error);
+            showModal('Error', error.toString());
         } finally {
             setLoading(false);
         }
@@ -121,6 +128,16 @@ export default function FarmDetailsScreen() {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+            <ValidationModal
+                visible={modalVisible}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                type={modalConfig.type}
+                onClose={() => {
+                    setModalVisible(false);
+                    if (modalConfig.type === 'success') router.back();
+                }}
+            />
         </ThemedView>
     );
 }

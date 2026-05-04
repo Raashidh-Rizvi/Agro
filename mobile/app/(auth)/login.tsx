@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -17,6 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Link, useRouter } from 'expo-router';
 import { Palette, Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import { ThemeOverrideProvider } from '@/context/ThemeOverrideContext';
+import ValidationModal from '@/components/ValidationModal';
 
 // ─── Light Auth Palette ────────────────────────────────────────────────────────
 const L = {
@@ -43,28 +43,38 @@ export default function LoginScreen() {
   const { login, isLoading }              = useAuth();
   const router                            = useRouter();
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+
   const emailRef = React.useRef<TextInput>(null);
   const passRef  = React.useRef<TextInput>(null);
 
+  const showError = (title: string, message: string) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalVisible(true);
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Missing Fields', 'Please enter your email and password.');
+      showError('Missing Fields', 'Please enter your email and password.');
       return;
     }
     const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      showError('Invalid Email', 'Please enter a valid email address.');
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Invalid Password', 'Password must be at least 6 characters.');
+      showError('Invalid Password', 'Password must be at least 6 characters.');
       return;
     }
     try {
       await login(email, password);
       router.replace('/(tabs)');
     } catch (err: any) {
-      Alert.alert('Login Failed', err.toString());
+      showError('Login Failed', err.toString());
     }
   };
 
@@ -180,6 +190,12 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ValidationModal
+        visible={modalVisible}
+        title={modalTitle}
+        message={modalMessage}
+        onClose={() => setModalVisible(false)}
+      />
     </ThemeOverrideProvider>
   );
 }

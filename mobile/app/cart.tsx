@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, View, ActivityIndicator, Alert, RefreshControl, Platform } from 'react-native';
+import { StyleSheet, FlatList, TouchableOpacity, View, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
@@ -11,6 +11,7 @@ import { useAppColors } from '@/context/AppThemeContext';
 import { Radius, Spacing, Shadows, Typography } from '@/constants/theme';
 import { CartService, Cart, CartItem } from '@/services/CartService';
 import { BASE_URL } from '@/constants/Config';
+import ValidationModal from '@/components/ValidationModal';
 
 export default function CartScreen() {
   const C = useAppColors();
@@ -21,6 +22,24 @@ export default function CartScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+      title: string;
+      message: string;
+      type: 'error' | 'success' | 'confirm';
+      onConfirm?: () => void;
+      confirmText?: string;
+  }>({
+      title: '',
+      message: '',
+      type: 'error'
+  });
+
+  const showModal = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', onConfirm?: () => void, confirmText?: string) => {
+      setModalConfig({ title, message, type, onConfirm, confirmText });
+      setModalVisible(true);
+  };
+
   const fetchCart = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
@@ -28,8 +47,7 @@ export default function CartScreen() {
       setCart(data);
     } catch (error: any) {
       console.error('Fetch cart error:', error);
-      if (Platform.OS === 'web') alert(error.message || 'Could not load cart');
-      else Alert.alert('Error', error.message || 'Could not load cart');
+      showModal('Error', error.message || 'Could not load cart');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -52,8 +70,7 @@ export default function CartScreen() {
       const updatedCart = await CartService.updateQuantity(productId, newQuantity);
       setCart(updatedCart);
     } catch (error: any) {
-      if (Platform.OS === 'web') alert(error.message || 'Failed to update quantity');
-      else Alert.alert('Error', error.message || 'Failed to update quantity');
+      showModal('Error', error.message || 'Failed to update quantity');
     } finally {
       setProcessingId(null);
     }
@@ -66,23 +83,19 @@ export default function CartScreen() {
         const updatedCart = await CartService.removeFromCart(productId);
         setCart(updatedCart);
       } catch (error: any) {
-        if (Platform.OS === 'web') alert(error.message || 'Failed to remove item');
-        else Alert.alert('Error', error.message || 'Failed to remove item');
+        showModal('Error', error.message || 'Failed to remove item');
       } finally {
         setProcessingId(null);
       }
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to remove this item from your cart?')) {
-        performRemove();
-      }
-    } else {
-      Alert.alert('Remove Item', 'Are you sure you want to remove this item from your cart?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: performRemove }
-      ]);
-    }
+    showModal(
+      'Remove Item',
+      'Are you sure you want to remove this item from your cart?',
+      'confirm',
+      performRemove,
+      'Remove'
+    );
   };
 
   const handleCheckout = () => {
@@ -90,25 +103,41 @@ export default function CartScreen() {
       try {
         await CartService.clearCart();
         setCart(null);
-        if (Platform.OS === 'web') alert('Order placed successfully!');
-        else Alert.alert('Success', 'Order placed successfully!');
-        router.back();
+        showModal('Success', 'Order placed successfully!', 'success', () => router.back());
       } catch (error: any) {
-        if (Platform.OS === 'web') alert(error.message || 'Checkout failed');
-        else Alert.alert('Error', error.message || 'Checkout failed');
+        showModal('Error', error.message || 'Checkout failed');
       }
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm('Proceed to payment and place order?')) {
-        performCheckout();
+    showModal(
+      'Checkout',
+      'Proceed to payment and place order?',
+      'confirm',
+      performCheckout,
+      'Confirm'
+    );
+  };
+
+  const handleClearCart = () => {
+    const performClear = async () => {
+      setLoading(true);
+      try {
+        await CartService.clearCart();
+        setCart({ userId: cart?.userId || '', items: [], totalAmount: 0 });
+      } catch (error: any) {
+        showModal('Error', error.message || 'Failed to clear cart');
+      } finally {
+        setLoading(false);
       }
-    } else {
-      Alert.alert('Checkout', 'Proceed to payment and place order?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Confirm', onPress: performCheckout }
-      ]);
-    }
+    };
+
+    showModal(
+      'Clear Cart',
+      'Are you sure you want to remove all items from your cart?',
+      'confirm',
+      performClear,
+      'Clear All'
+    );
   };
 
   const renderItem = ({ item }: { item: CartItem }) => (
@@ -165,6 +194,17 @@ export default function CartScreen() {
           headerShadowVisible: false,
           headerStyle: { backgroundColor: C.bg },
           headerTintColor: C.text,
+          headerRight: () => (
+            (cart && cart.items.length > 0) ? (
+              <TouchableOpacity 
+                onPress={handleClearCart}
+                style={styles.headerClearBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="trash-outline" size={22} color="#EF4444" />
+              </TouchableOpacity>
+            ) : null
+          )
         }} 
       />
       <StatusBar style={C.statusBar} />
@@ -214,6 +254,15 @@ export default function CartScreen() {
           </View>
         </>
       )}
+      <ValidationModal
+        visible={modalVisible}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+        confirmText={modalConfig.confirmText}
+        onClose={() => setModalVisible(false)}
+      />
     </ThemedView>
   );
 }
@@ -306,4 +355,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
   },
   checkoutBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  headerClearBtn: {
+    marginRight: 4,
+    padding: 4,
+  },
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Radius, Spacing, Shadows } from '@/constants/theme';
 import api from '../../services/api';
+import ValidationModal from '@/components/ValidationModal';
 
 interface User {
     _id: string;
@@ -26,12 +27,30 @@ export default function AdminUsersScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState<{
+        title: string;
+        message: string;
+        type: 'error' | 'success' | 'confirm';
+        onConfirm?: () => void;
+        confirmText?: string;
+    }>({
+        title: '',
+        message: '',
+        type: 'error'
+    });
+
+    const showModal = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', onConfirm?: () => void, confirmText?: string) => {
+        setModalConfig({ title, message, type, onConfirm, confirmText });
+        setModalVisible(true);
+    };
+
     const fetchUsers = async () => {
         try {
             const response = await api.get('/users');
             setUsers(response.data.data);
         } catch (error: any) {
-            Alert.alert('Error', error.response?.data?.message || 'Failed to fetch users');
+            showModal('Error', error.response?.data?.message || 'Failed to fetch users');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -48,25 +67,20 @@ export default function AdminUsersScreen() {
     };
 
     const handleDeleteUser = (userId: string, userName: string) => {
-        Alert.alert(
+        showModal(
             'Confirm Delete',
             `Are you sure you want to delete user "${userName}"?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                { 
-                    text: 'Delete', 
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await api.delete(`/users/${userId}`);
-                            setUsers(users.filter(u => u._id !== userId));
-                            Alert.alert('Success', 'User deleted successfully');
-                        } catch (error: any) {
-                            Alert.alert('Error', error.response?.data?.message || 'Failed to delete user');
-                        }
-                    }
+            'confirm',
+            async () => {
+                try {
+                    await api.delete(`/users/${userId}`);
+                    setUsers(users.filter(u => u._id !== userId));
+                    showModal('Success', 'User deleted successfully', 'success');
+                } catch (error: any) {
+                    showModal('Error', error.response?.data?.message || 'Failed to delete user');
                 }
-            ]
+            },
+            'Delete'
         );
     };
 
@@ -94,7 +108,7 @@ export default function AdminUsersScreen() {
                 <View style={styles.actions}>
                     <TouchableOpacity 
                         style={styles.actionBtn}
-                        onPress={() => Alert.alert('Info', 'Edit user feature coming soon!')}
+                        onPress={() => showModal('Info', 'Edit user feature coming soon!')}
                     >
                         <Ionicons name="create-outline" size={20} color={C.primary} />
                     </TouchableOpacity>
@@ -152,6 +166,15 @@ export default function AdminUsersScreen() {
                     }
                 />
             )}
+            <ValidationModal
+                visible={modalVisible}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                type={modalConfig.type}
+                onConfirm={modalConfig.onConfirm}
+                confirmText={modalConfig.confirmText}
+                onClose={() => setModalVisible(false)}
+            />
         </ThemedView>
     );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
@@ -7,9 +7,11 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '../../context/AuthContext';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Radius, Spacing, Shadows } from '@/constants/theme';
+import ValidationModal from '@/components/ValidationModal';
+import { validatePassword } from '../../utils/passwordValidation';
 
 export default function ChangePasswordScreen() {
-    const { updatePassword } = useAuth();
+    const { user, updatePassword } = useAuth();
     const router = useRouter();
     const C = useAppColors();
 
@@ -19,30 +21,50 @@ export default function ChangePasswordScreen() {
     const [loading, setLoading] = useState(false);
     const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false });
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalType, setModalType] = useState<'error' | 'success'>('error');
+    const [modalTitle, setModalTitle] = useState('');
+    const [modalMessage, setModalMessage] = useState('');
+    const [modalCallback, setModalCallback] = useState<(() => void) | null>(null);
+
+    const showModal = (title: string, message: string, type: 'error' | 'success' = 'error', callback?: () => void) => {
+        setModalTitle(title);
+        setModalMessage(message);
+        setModalType(type);
+        setModalCallback(() => callback);
+        setModalVisible(true);
+    };
+
+    const handleModalClose = () => {
+        setModalVisible(false);
+        if (modalCallback) {
+            modalCallback();
+        }
+    };
+
     const handleUpdate = async () => {
         if (!currentPassword || !newPassword || !confirmPassword) {
-            Alert.alert('Error', 'Please fill in all fields');
+            showModal('Error', 'Please fill in all fields', 'error');
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            Alert.alert('Error', 'New passwords do not match');
+            showModal('Error', 'New passwords do not match', 'error');
             return;
         }
 
-        if (newPassword.length < 6) {
-            Alert.alert('Error', 'Password must be at least 6 characters long');
+        const passwordErrors = validatePassword(newPassword, { name: user?.name, email: user?.email });
+        if (passwordErrors.length > 0) {
+            showModal('Weak Password', passwordErrors.join('\n'), 'error');
             return;
         }
 
         setLoading(true);
         try {
             await updatePassword(currentPassword, newPassword);
-            Alert.alert('Success', 'Password updated successfully', [
-                { text: 'OK', onPress: () => router.back() }
-            ]);
+            showModal('Success', 'Password updated successfully', 'success', () => router.back());
         } catch (error: any) {
-            Alert.alert('Error', error);
+            showModal('Error', error.toString(), 'error');
         } finally {
             setLoading(false);
         }
@@ -140,6 +162,14 @@ export default function ChangePasswordScreen() {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+
+            <ValidationModal
+                visible={modalVisible}
+                title={modalTitle}
+                message={modalMessage}
+                type={modalType}
+                onClose={handleModalClose}
+            />
         </ThemedView>
     );
 }

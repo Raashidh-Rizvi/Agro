@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, FlatList, TouchableOpacity, View,
-  ActivityIndicator, RefreshControl, Alert
+  ActivityIndicator, RefreshControl
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,6 +17,7 @@ import { Shadows, Radius, Spacing } from '@/constants/theme';
 import { DiagnosisResult, DiagnosisService } from '../../services/DiagnosisService';
 import { BASE_URL } from '@/constants/Config';
 import { ScanResultModal } from '@/components/ScanResultModal';
+import ValidationModal from '@/components/ValidationModal';
 
 export default function DiagnosisHistoryScreen() {
   const C = useAppColors();
@@ -26,6 +27,24 @@ export default function DiagnosisHistoryScreen() {
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<DiagnosisResult | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const [validationVisible, setValidationVisible] = useState(false);
+  const [validationConfig, setValidationConfig] = useState<{
+      title: string;
+      message: string;
+      type: 'error' | 'success' | 'confirm';
+      onConfirm?: () => void;
+      confirmText?: string;
+  }>({
+      title: '',
+      message: '',
+      type: 'error'
+  });
+
+  const showValidation = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', onConfirm?: () => void, confirmText?: string) => {
+      setValidationConfig({ title, message, type, onConfirm, confirmText });
+      setValidationVisible(true);
+  };
 
   const fetchHistory = async (refreshing = false) => {
     if (refreshing) setIsRefreshing(true);
@@ -57,9 +76,7 @@ export default function DiagnosisHistoryScreen() {
   const handleDeleteHistory = (id: string) => {
     console.log('--- [DEBUG] handleDeleteHistory called for ID:', id);
     if (!id || id === 'undefined') {
-      const msg = 'Invalid record ID. Cannot delete.';
-      if (Platform.OS === 'web') alert(msg);
-      else Alert.alert('Error', msg);
+      showValidation('Error', 'Invalid record ID. Cannot delete.');
       return;
     }
 
@@ -72,29 +89,21 @@ export default function DiagnosisHistoryScreen() {
           const itemId = ((item as any)._id || (item as any).id)?.toString();
           return itemId !== id;
         }));
-        if (Platform.OS === 'web') alert('Record deleted successfully.');
+        showValidation('Success', 'Record deleted successfully.', 'success');
       } catch (error: any) {
         console.error('--- [ERROR] Delete API call failed ---', error);
         const message = error.response?.data?.message || error.message || 'Failed to delete the record.';
-        if (Platform.OS === 'web') alert('Delete Failed: ' + message);
-        else Alert.alert('Delete Failed', message);
+        showValidation('Delete Failed', message);
       }
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to delete this diagnosis record?')) {
-        performDelete();
-      }
-    } else {
-      Alert.alert(
-        'Delete Record',
-        'Are you sure you want to delete this diagnosis record?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: performDelete }
-        ]
-      );
-    }
+    showValidation(
+      'Delete Record',
+      'Are you sure you want to delete this diagnosis record?',
+      'confirm',
+      performDelete,
+      'Delete'
+    );
   };
 
   const renderItem = ({ item }: { item: DiagnosisResult }) => {
@@ -207,6 +216,15 @@ export default function DiagnosisHistoryScreen() {
         result={selectedDiagnosis}
         isLoading={false}
         selectedImage={selectedImage}
+      />
+      <ValidationModal
+        visible={validationVisible}
+        title={validationConfig.title}
+        message={validationConfig.message}
+        type={validationConfig.type}
+        onConfirm={validationConfig.onConfirm}
+        confirmText={validationConfig.confirmText}
+        onClose={() => setValidationVisible(false)}
       />
     </ThemedView>
   );
