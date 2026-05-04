@@ -99,7 +99,7 @@ exports.updateMarketPrice = async (req, res, next) => {
     }
 };
 
-// @desc    Delete market price
+
 // @route   DELETE /api/market-prices/:id
 // @access  Protected/Admin
 exports.deleteMarketPrice = async (req, res, next) => {
