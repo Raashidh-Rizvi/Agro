@@ -14,7 +14,7 @@ export default function DashboardGuideScreen() {
     const STEPS = [
         { title: 'Home Overview', content: 'The home screen gives you a snapshot of your farm, including current weather, active alerts, and quick actions.' },
         { title: 'Crops Management', content: 'Track your planting cycles, set reminders for fertilizer application, and record harvest data.' },
-        { title: 'Market Insights', content: 'Check real-time prices for your produce and manage your listings in the marketplace.' },
+        { title: 'Marketplace', content: 'Manage your produce listings and browse available items in the marketplace.' },
         { title: 'Expert Help', content: 'If you see something unusual with your crops, use the AI Diagnosis or talk to an Expert.' },
     ];
 
