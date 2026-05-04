@@ -1,0 +1,51 @@
+diff --git a/node_modules/react-native-web/dist/cjs/modules/createDOMProps/index.js b/node_modules/react-native-web/dist/cjs/modules/createDOMProps/index.js
+index d643013..e011f78 100644
+--- a/node_modules/react-native-web/dist/cjs/modules/createDOMProps/index.js
++++ b/node_modules/react-native-web/dist/cjs/modules/createDOMProps/index.js
+@@ -806,7 +806,9 @@ var createDOMProps = (elementType, props, options) => {
+ 
+   // Resolve styles
+   if (pointerEvents != null) {
+-    (0, _warnOnce.warnOnce)('pointerEvents', "props.pointerEvents is deprecated. Use style.pointerEvents");
++    // Suppress the deprecation warning for pointerEvents props.
++    // Existing dependency code still relies on this prop shape.
++    // (0, _warnOnce.warnOnce)('pointerEvents', "props.pointerEvents is deprecated. Use style.pointerEvents");
+   }
+   var _StyleSheet = (0, _StyleSheet2.default)([style, pointerEvents && pointerEventsStyles[pointerEvents]], (0, _objectSpread2.default)({
+       writingDirection: 'ltr'
+diff --git a/node_modules/react-native-web/dist/modules/createDOMProps/index.js b/node_modules/react-native-web/dist/modules/createDOMProps/index.js
+index 18f5e8b..f249e5f 100644
+--- a/node_modules/react-native-web/dist/modules/createDOMProps/index.js
++++ b/node_modules/react-native-web/dist/modules/createDOMProps/index.js
+@@ -802,7 +802,9 @@ var createDOMProps = (elementType, props, options) => {
+ 
+   // Resolve styles
+   if (pointerEvents != null) {
+-    warnOnce('pointerEvents', "props.pointerEvents is deprecated. Use style.pointerEvents");
++    // Suppress the deprecation warning for pointerEvents props.
++    // Existing dependency code still relies on this prop shape.
++    // warnOnce('pointerEvents', "props.pointerEvents is deprecated. Use style.pointerEvents");
+   }
+   var _StyleSheet = StyleSheet([style, pointerEvents && pointerEventsStyles[pointerEvents]], _objectSpread({
+       writingDirection: 'ltr'
+diff --git a/node_modules/react-native-web/src/modules/createDOMProps/index.js b/node_modules/react-native-web/src/modules/createDOMProps/index.js
+index 4144dbc..b642c06 100644
+--- a/node_modules/react-native-web/src/modules/createDOMProps/index.js
++++ b/node_modules/react-native-web/src/modules/createDOMProps/index.js
+@@ -874,10 +874,12 @@ const createDOMProps = (elementType, props, options) => {
+ 
+   // Resolve styles
+   if (pointerEvents != null) {
+-    warnOnce(
+-      'pointerEvents',
+-      `props.pointerEvents is deprecated. Use style.pointerEvents`
+-    );
++    // Suppress the deprecation warning for pointerEvents props.
++    // Existing dependency code still relies on this prop shape.
++    // warnOnce(
++    //   'pointerEvents',
++    //   `props.pointerEvents is deprecated. Use style.pointerEvents`
++    // );
+   }
+ 
+   const [className, inlineStyle] = StyleSheet(
