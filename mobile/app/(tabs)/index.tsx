@@ -114,7 +114,7 @@ export default function FarmerDashboard() {
         <TouchableOpacity
           style={[styles.heroCard, Shadows.colored(C.primary)]}
           activeOpacity={0.9}
-          onPress={() => Alert.alert('Available Soon', 'This feature will be available soon')}>
+          onPress={() => router.push('/diagnosis')}>
           <View style={[styles.heroOverlay, { backgroundColor: C.heroOverlay }]} />
           <View style={styles.heroLeft}>
             <View style={styles.aiBadge}>
@@ -230,7 +230,6 @@ export default function FarmerDashboard() {
             );
           })
         )}
-
 
         <View style={{ height: Spacing.xxl }} />
       </ScrollView>

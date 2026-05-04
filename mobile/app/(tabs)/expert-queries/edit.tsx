@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform, useColorScheme } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Tabs, useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
 import { API_URL } from '../../../constants/Config';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Colors } from '@/constants/theme';
+import { ThemedView } from '@/components/themed-view';
+import { ThemedText } from '@/components/themed-text';
 
 export default function MyQueryEdit() {
   const { id } = useLocalSearchParams();
@@ -157,11 +160,14 @@ export default function MyQueryEdit() {
     }
   };
 
+  const theme = useColorScheme() ?? 'light';
+  const colors = Colors[theme];
+
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0A5C36" />
-      </View>
+      <ThemedView style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </ThemedView>
     );
   }
 
@@ -171,150 +177,153 @@ export default function MyQueryEdit() {
   const isAnswered = query.status === 'answered';
 
   return (
-    <ScrollView style={styles.container}>
-      <Tabs.Screen 
-        options={{ 
-          title: 'Edit My Query',
-          headerRight: () => (
-            <TouchableOpacity onPress={handleDelete} style={styles.headerDeleteBtn}>
-              <IconSymbol name="trash" size={22} color="#FF3B30" />
-            </TouchableOpacity>
-          )
-        }} 
-      />
-
-      {query.imageUrl && !removePhoto && (
-        <Image 
-          source={{ uri: query.imageUrl.startsWith('http') ? query.imageUrl : `${SERVER_BASE}${query.imageUrl.startsWith('/') ? '' : '/'}${query.imageUrl}` }} 
-          style={styles.image} 
-          contentFit="contain"
-          onError={(e) => console.log('Edit Image Load Error:', (e as any)?.nativeEvent?.error || (e as any)?.error || 'Unknown error')}
+    <ThemedView style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
+        <Tabs.Screen 
+          options={{ 
+            title: 'Edit My Query',
+            headerRight: () => (
+              <TouchableOpacity onPress={handleDelete} style={styles.headerDeleteBtn}>
+                <IconSymbol name="trash" size={22} color="#FF3B30" />
+              </TouchableOpacity>
+            )
+          }} 
         />
-      )}
 
-      {!isAnswered && (
-        <View style={styles.field}>
-          <Text style={styles.label}>Photo of the Problem</Text>
-          {newImage ? (
-            <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: newImage.uri }} style={styles.imagePreview} contentFit="cover" />
-              <TouchableOpacity style={styles.removeImageBtn} onPress={() => setNewImage(null)}>
-                <IconSymbol name="xmark.circle.fill" size={28} color="#FF3B30" />
+        {query.imageUrl && !removePhoto && (
+          <Image 
+            source={{ uri: query.imageUrl.startsWith('http') ? query.imageUrl : `${SERVER_BASE}${query.imageUrl.startsWith('/') ? '' : '/'}${query.imageUrl}` }} 
+            style={[styles.image, { backgroundColor: colors.surface }]} 
+            contentFit="contain"
+            onError={(e) => console.log('Edit Image Load Error:', (e as any)?.nativeEvent?.error || (e as any)?.error || 'Unknown error')}
+          />
+        )}
+
+        {!isAnswered && (
+          <ThemedView style={[styles.field, { backgroundColor: 'transparent', paddingHorizontal: 20, marginTop: 12 }]}>
+            <ThemedText style={styles.label}>Photo of the Problem</ThemedText>
+            {newImage ? (
+              <ThemedView style={[styles.imagePreviewContainer, { backgroundColor: 'transparent' }]}>
+                <Image source={{ uri: newImage.uri }} style={styles.imagePreview} contentFit="cover" />
+                <TouchableOpacity style={styles.removeImageBtn} onPress={() => setNewImage(null)}>
+                  <IconSymbol name="xmark.circle.fill" size={28} color="#FF3B30" />
+                </TouchableOpacity>
+              </ThemedView>
+            ) : query.imageUrl ? (
+              <View>
+                <ThemedText style={{ fontSize: 14, color: colors.subtext, marginBottom: 8 }}>Current photo shown above</ThemedText>
+                <TouchableOpacity style={[styles.uploadBox, { borderColor: colors.primary, backgroundColor: colors.surface }]} onPress={pickImage}>
+                  <IconSymbol name="camera.fill" size={32} color={colors.primary} />
+                  <ThemedText style={[styles.uploadText, { color: colors.primary }]}>Tap to change photo</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.removeBtn, { backgroundColor: theme === 'dark' ? '#3D1A1A' : '#FFEBEE', borderColor: theme === 'dark' ? '#5A2A2A' : '#FFCDD2' }]} 
+                  onPress={() => {
+                    setRemovePhoto(!removePhoto);
+                  }}
+                >
+                  <ThemedText style={styles.removeBtnText}>
+                    {removePhoto ? 'Cancel Remove' : 'Remove Photo'}
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={[styles.uploadBox, { borderColor: colors.primary, backgroundColor: colors.surface }]} onPress={pickImage}>
+                <IconSymbol name="camera.fill" size={32} color={colors.primary} />
+                <ThemedText style={[styles.uploadText, { color: colors.primary }]}>Tap to add photo</ThemedText>
               </TouchableOpacity>
-            </View>
-          ) : query.imageUrl ? (
-            <View>
-              <Text style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>Current photo shown above</Text>
-              <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
-                <IconSymbol name="camera.fill" size={32} color="#0A5C36" />
-                <Text style={styles.uploadText}>Tap to change photo</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.removeBtn} 
-                onPress={() => {
-                  setRemovePhoto(!removePhoto);
-                }}
-              >
-                <Text style={styles.removeBtnText}>
-                  {removePhoto ? 'Cancel Remove' : 'Remove Photo'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            )}
+          </ThemedView>
+        )}
+
+        <ThemedView style={[styles.form, { backgroundColor: 'transparent' }]}>
+          <ThemedText style={styles.label}>Title</ThemedText>
+          {isAnswered ? (
+            <ThemedView style={[styles.readOnlyBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <ThemedText style={[styles.readOnlyText, { color: colors.text }]}>{query.title}</ThemedText>
+            </ThemedView>
           ) : (
-            <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
-              <IconSymbol name="camera.fill" size={32} color="#0A5C36" />
-              <Text style={styles.uploadText}>Tap to add photo</Text>
-            </TouchableOpacity>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+              value={editingTitle}
+              onChangeText={setEditingTitle}
+              placeholder="Query title"
+              placeholderTextColor={colors.placeholder}
+            />
           )}
-        </View>
-      )}
 
-      <View style={styles.form}>
-        <Text style={styles.label}>Title</Text>
-        {isAnswered ? (
-          <View style={styles.readOnlyBox}>
-            <Text style={styles.readOnlyText}>{query.title}</Text>
-          </View>
-        ) : (
-          <TextInput
-            style={styles.input}
-            value={editingTitle}
-            onChangeText={setEditingTitle}
-            placeholder="Query title"
-          />
-        )}
+          <ThemedText style={styles.label}>Description</ThemedText>
+          {isAnswered ? (
+            <ThemedView style={[styles.readOnlyBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <ThemedText style={[styles.readOnlyText, { color: colors.text }]}>{query.description}</ThemedText>
+            </ThemedView>
+          ) : (
+            <TextInput
+              style={[styles.input, styles.textArea, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+              value={editingDescription}
+              onChangeText={setEditingDescription}
+              multiline
+              numberOfLines={4}
+              placeholder="Describe your query..."
+              placeholderTextColor={colors.placeholder}
+            />
+          )}
 
-        <Text style={styles.label}>Description</Text>
-        {isAnswered ? (
-          <View style={styles.readOnlyBox}>
-            <Text style={styles.readOnlyText}>{query.description}</Text>
-          </View>
-        ) : (
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={editingDescription}
-            onChangeText={setEditingDescription}
-            multiline
-            numberOfLines={4}
-            placeholder="Describe your query..."
-          />
-        )}
+          {query.cropId && (
+            <ThemedView style={[styles.cropTag, { backgroundColor: colors.cardTint }]}>
+              <ThemedText style={[styles.cropText, { color: colors.primary }]}>Crop: {typeof query.cropId === 'object' ? query.cropId.name : query.cropId}</ThemedText>
+            </ThemedView>
+          )}
 
-        {query.cropId && (
-          <View style={styles.cropTag}>
-            <Text style={styles.cropText}>Crop: {typeof query.cropId === 'object' ? query.cropId.name : query.cropId}</Text>
-          </View>
-        )}
+          {isAnswered && query.reply && (
+            <ThemedView style={[styles.replyBox, { backgroundColor: colors.cardTint, borderColor: colors.border }]}>
+              <ThemedText style={[styles.replyLabel, { color: colors.primary }]}>Expert&apos;s Reply:</ThemedText>
+              <ThemedText style={[styles.replyText, { color: colors.text }]}>{query.reply}</ThemedText>
+            </ThemedView>
+          )}
 
-        {isAnswered && query.reply && (
-          <View style={styles.replyBox}>
-            <Text style={styles.replyLabel}>Expert&apos;s Reply:</Text>
-            <Text style={styles.replyText}>{query.reply}</Text>
-          </View>
-        )}
-
-        {isAnswered ? (
-          <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={[styles.deleteBtnInline, { borderStyle: 'dashed' }]} 
-              onPress={handleDelete}
-              disabled={submitting}
-            >
-              <Text style={styles.deleteBtnText}>Delete History</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={[styles.updateBtn, submitting && styles.disabledBtn]} 
-              onPress={handleUpdate}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text style={styles.updateBtnText}>Update</Text>
-              )}
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.deleteBtnInline} 
-              onPress={handleDelete}
-              disabled={submitting}
-            >
-              <Text style={styles.deleteBtnText}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+          {isAnswered ? (
+            <ThemedView style={[styles.actionButtons, { backgroundColor: 'transparent' }]}>
+              <TouchableOpacity 
+                style={[styles.deleteBtnInline, { backgroundColor: theme === 'dark' ? '#3D1A1A' : '#FFEBEE', borderColor: theme === 'dark' ? '#5A2A2A' : '#FFCDD2', borderStyle: 'dashed' }]} 
+                onPress={handleDelete}
+                disabled={submitting}
+              >
+                <ThemedText style={styles.deleteBtnText}>Delete History</ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          ) : (
+            <ThemedView style={[styles.actionButtons, { backgroundColor: 'transparent' }]}>
+              <TouchableOpacity 
+                style={[styles.updateBtn, { backgroundColor: colors.primary }, submitting && styles.disabledBtn]} 
+                onPress={handleUpdate}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <ThemedText style={styles.updateBtnText}>Update</ThemedText>
+                )}
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.deleteBtnInline, { backgroundColor: theme === 'dark' ? '#3D1A1A' : '#FFEBEE', borderColor: theme === 'dark' ? '#5A2A2A' : '#FFCDD2' }]} 
+                onPress={handleDelete}
+                disabled={submitting}
+              >
+                <ThemedText style={styles.deleteBtnText}>Delete</ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          )}
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F9FB',
   },
   field: {
     marginBottom: 20,
@@ -322,7 +331,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#11181C',
     marginBottom: 8,
   },
   imagePreviewContainer: {
@@ -344,17 +352,14 @@ const styles = StyleSheet.create({
   },
   uploadBox: {
     borderWidth: 2,
-    borderColor: '#0A5C36',
     borderStyle: 'dashed',
     borderRadius: 12,
     padding: 32,
     alignItems: 'center',
-    backgroundColor: '#F0FDF4',
     marginBottom: 12,
   },
   uploadText: {
     marginTop: 12,
-    color: '#0A5C36',
     fontWeight: '600',
     fontSize: 15,
   },
@@ -382,27 +387,21 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 200,
-    backgroundColor: '#E5E7EB',
   },
   form: {
     padding: 20,
     gap: 16,
   },
   readOnlyBox: {
-    backgroundColor: '#F3F4F6',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 12,
     padding: 16,
   },
   readOnlyText: {
     fontSize: 16,
-    color: '#374151',
   },
   replyBox: {
-    backgroundColor: '#E6F4EA',
     borderWidth: 1,
-    borderColor: '#A3CFBB',
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
@@ -410,18 +409,14 @@ const styles = StyleSheet.create({
   replyLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#0A5C36',
     marginBottom: 8,
   },
   replyText: {
     fontSize: 16,
-    color: '#11181C',
     lineHeight: 24,
   },
   input: {
-    backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
@@ -431,16 +426,13 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   cropTag: {
-    backgroundColor: '#F0FDF4',
     padding: 12,
     borderRadius: 8,
   },
   cropText: {
-    color: '#0A5C36',
     fontWeight: '600',
   },
   updateBtn: {
-    backgroundColor: '#0A5C36',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -464,13 +456,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   deleteBtnInline: {
-    backgroundColor: '#FFEBEE',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#FFCDD2',
     flex: 1,
   },
   deleteBtnText: {

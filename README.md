@@ -10,7 +10,7 @@
 
 ## 2. Project Overview
 
-Agro is a full‑stack mobile application developed to assist Sri Lankan smallholder farmers by providing intelligent, real‑time agricultural support. The system integrates crop management, disease detection, advisory services, market insights, and expert support into a single mobile platform. It offers a practical, mobile‑first solution that is accessible, easy to use, and scalable.
+Agro is a full‑stack mobile application developed to assist Sri Lankan smallholder farmers by providing intelligent, real‑time agricultural support. The system integrates crop management, disease detection, advisory services, marketplace listings, and expert support into a single mobile platform. It offers a practical, mobile‑first solution that is accessible, easy to use, and scalable.
 
 ---
 
