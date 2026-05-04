@@ -128,7 +128,8 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 mongoose.connect(MONGO_URI)
     .then(() => {
-        console.log('Successfully connected to MongoDB Atlas');
+        const dbHost = MONGO_URI.startsWith('mongodb+srv://') ? 'MongoDB Atlas' : `local MongoDB (${MONGO_URI})`;
+        console.log(`Successfully connected to ${dbHost}`);
         app.listen(PORT, () => {
             console.log(`Server is listening on port ${PORT}`);
         });

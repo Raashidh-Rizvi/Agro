@@ -42,6 +42,20 @@ type AlertFormState = {
   alertType: AlertType;
 };
 
+type TextFormField = Exclude<keyof AlertFormState, 'alertType'>;
+type FormErrors = Partial<Record<TextFormField, string>>;
+type TouchedFields = Partial<Record<TextFormField, boolean>>;
+
+const TEXT_FIELDS: TextFormField[] = ['title', 'cropType', 'district', 'season', 'message'];
+
+const FIELD_LABELS: Record<TextFormField, string> = {
+  title: 'Title',
+  cropType: 'Crop Type',
+  district: 'District',
+  season: 'Season',
+  message: 'Message',
+};
+
 const FILTER_TABS: Filter[] = ['All', 'weather', 'pest', 'irrigation', 'fertilizer', 'general'];
 
 const EMPTY_FORM: AlertFormState = {
@@ -70,23 +84,25 @@ export default function AlertsScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingAlertId, setEditingAlertId] = useState<string | null>(null);
   const [form, setForm] = useState<AlertFormState>(EMPTY_FORM);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<TouchedFields>({});
 
   const [validationVisible, setValidationVisible] = useState(false);
   const [validationConfig, setValidationConfig] = useState<{
-      title: string;
-      message: string;
-      type: 'error' | 'success' | 'confirm';
-      onConfirm?: () => void;
-      confirmText?: string;
+    title: string;
+    message: string;
+    type: 'error' | 'success' | 'confirm';
+    onConfirm?: () => void;
+    confirmText?: string;
   }>({
-      title: '',
-      message: '',
-      type: 'error'
+    title: '',
+    message: '',
+    type: 'error'
   });
 
   const showValidation = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', onConfirm?: () => void, confirmText?: string) => {
-      setValidationConfig({ title, message, type, onConfirm, confirmText });
-      setValidationVisible(true);
+    setValidationConfig({ title, message, type, onConfirm, confirmText });
+    setValidationVisible(true);
   };
 
   const fetchAlerts = useCallback(async (refresh = false) => {
@@ -117,6 +133,8 @@ export default function AlertsScreen() {
   const resetForm = () => {
     setEditingAlertId(null);
     setForm(EMPTY_FORM);
+    setFormErrors({});
+    setTouched({});
   };
 
   const openCreateModal = () => {
@@ -142,32 +160,39 @@ export default function AlertsScreen() {
     resetForm();
   };
 
-  const handleFieldChange = (field: keyof AlertFormState, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+  const validateField = (field: TextFormField, value: string): string | undefined => {
+    const trimmed = value.trim();
+    if (!trimmed) return `${FIELD_LABELS[field]} is required`;
+    if (trimmed.length > ALERT_FIELD_LIMITS[field]) return `Max ${ALERT_FIELD_LIMITS[field]} characters allowed`;
+    if (field === 'message' && trimmed.length < 10) return 'Message must be at least 10 characters';
+    return undefined;
   };
 
-  const validateForm = () => {
-    if (!form.title.trim() || !form.cropType.trim() || !form.district.trim() || !form.season.trim() || !form.message.trim()) {
-      showValidation('Missing Fields', 'Please fill in all alert details.');
-      return false;
+  const handleFieldChange = (field: keyof AlertFormState, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (field !== 'alertType' && touched[field as TextFormField]) {
+      const error = validateField(field as TextFormField, value);
+      setFormErrors((prev) => ({ ...prev, [field]: error }));
     }
+  };
 
-    const lengthChecks: [keyof typeof ALERT_FIELD_LIMITS, string, string][] = [
-      ['title', form.title, 'Title'],
-      ['cropType', form.cropType, 'Crop Type'],
-      ['district', form.district, 'District'],
-      ['season', form.season, 'Season'],
-      ['message', form.message, 'Message'],
-    ];
+  const handleBlur = (field: TextFormField) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    const error = validateField(field, form[field]);
+    setFormErrors((prev) => ({ ...prev, [field]: error }));
+  };
 
-    const invalidField = lengthChecks.find(([field, value]) => value.trim().length > ALERT_FIELD_LIMITS[field]);
-    if (invalidField) {
-      const [field, , label] = invalidField;
-      showValidation('Too Long', `${label} must be ${ALERT_FIELD_LIMITS[field]} characters or fewer.`);
-      return false;
-    }
-
-    return true;
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    const allTouched: TouchedFields = {};
+    TEXT_FIELDS.forEach((field) => {
+      allTouched[field] = true;
+      const err = validateField(field, form[field]);
+      if (err) newErrors[field] = err;
+    });
+    setTouched(allTouched);
+    setFormErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSaveAlert = async () => {
@@ -195,7 +220,11 @@ export default function AlertsScreen() {
         setAlerts((prev) => [newAlert, ...prev]);
       }
 
+      const successMsg = editingAlertId
+        ? 'Advisory alert updated successfully.'
+        : 'Alert published and now visible to farmers.';
       closeModal();
+      showValidation(editingAlertId ? 'Alert Updated' : 'Alert Published', successMsg, 'success');
     } catch (saveError) {
       showValidation(editingAlertId ? 'Update Failed' : 'Create Failed', getAlertErrorMessage(saveError));
     } finally {
@@ -282,7 +311,7 @@ export default function AlertsScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => fetchAlerts(true)} />}>
 
-          <View style={styles.summaryRow}>
+        <View style={styles.summaryRow}>
           {(Object.keys(ALERT_META) as AlertType[]).map((type) => {
             const meta = ALERT_META[type];
             return (
@@ -352,7 +381,7 @@ export default function AlertsScreen() {
               activeOpacity={0.85}>
               <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
             </TouchableOpacity>
-            
+
             {error?.includes('Not authorized') && (
               <TouchableOpacity
                 style={[styles.retryButton, { backgroundColor: C.danger, marginTop: 10 }]}
@@ -366,11 +395,11 @@ export default function AlertsScreen() {
           <View style={styles.stateBlock}>
             <Ionicons name="notifications-off-outline" size={52} color={C.accent} />
             <ThemedText style={[styles.stateTitle, { color: C.text }]}>No alerts in this view</ThemedText>
-              <ThemedText style={[styles.stateText, { color: C.muted }]}>
-                {emptyStateMessage}
-              </ThemedText>
-            </View>
-          ) : (
+            <ThemedText style={[styles.stateText, { color: C.muted }]}>
+              {emptyStateMessage}
+            </ThemedText>
+          </View>
+        ) : (
           filteredAlerts.map((alert) => {
             const meta = ALERT_META[alert.alertType];
             const editable = canEditAlert(alert);
@@ -472,17 +501,38 @@ export default function AlertsScreen() {
               </View>
 
               <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
+                {/* Title */}
                 <View style={styles.formGroup}>
-                  <ThemedText style={[styles.formLabel, { color: C.text }]}>Title</ThemedText>
+                  <View style={styles.formLabelRow}>
+                    <ThemedText style={[styles.formLabel, { color: C.text }]}>Title</ThemedText>
+                    <ThemedText style={[styles.charCount, {
+                      color: form.title.length > ALERT_FIELD_LIMITS.title * 0.85 ? '#EF4444' : C.muted
+                    }]}>{form.title.length}/{ALERT_FIELD_LIMITS.title}</ThemedText>
+                  </View>
                   <TextInput
-                    style={[styles.formInput, { backgroundColor: C.card, borderColor: C.border, color: C.text }]}
+                    style={[styles.formInput, {
+                      backgroundColor: C.card,
+                      borderColor: formErrors.title && touched.title ? '#EF4444' : C.border,
+                      color: C.text,
+                    }]}
                     placeholder="e.g. Paddy pest alert"
                     placeholderTextColor={C.muted}
                     value={form.title}
-                    onChangeText={(value) => handleFieldChange('title', value)}
+                    onChangeText={(v) => handleFieldChange('title', v)}
+                    onBlur={() => handleBlur('title')}
+                    maxLength={ALERT_FIELD_LIMITS.title}
+                    returnKeyType="next"
                   />
+                  {formErrors.title && touched.title && (
+                    <View style={styles.fieldErrorRow}>
+                      <Ionicons name="alert-circle" size={13} color="#EF4444" />
+                      <ThemedText style={styles.fieldError}>{formErrors.title}</ThemedText>
+                    </View>
+                  )}
                 </View>
 
+                {/* Alert Type */}
                 <View style={styles.typeOptionsRow}>
                   {(Object.keys(ALERT_META) as AlertType[]).map((type) => {
                     const active = form.alertType === type;
@@ -490,13 +540,10 @@ export default function AlertsScreen() {
                     return (
                       <TouchableOpacity
                         key={type}
-                        style={[
-                          styles.typeOption,
-                          {
-                            backgroundColor: active ? meta.bg : C.card,
-                            borderColor: active ? meta.color : C.border,
-                          },
-                        ]}
+                        style={[styles.typeOption, {
+                          backgroundColor: active ? meta.bg : C.card,
+                          borderColor: active ? meta.color : C.border,
+                        }]}
                         onPress={() => handleFieldChange('alertType', type)}
                         activeOpacity={0.8}>
                         <Ionicons name={meta.icon} size={16} color={meta.color} />
@@ -508,57 +555,113 @@ export default function AlertsScreen() {
                   })}
                 </View>
 
+                {/* Crop Type + District */}
                 <View style={styles.rowTwo}>
                   <View style={[styles.formGroup, styles.halfWidth]}>
                     <ThemedText style={[styles.formLabel, { color: C.text }]}>Crop Type</ThemedText>
                     <TextInput
-                      style={[styles.formInput, { backgroundColor: C.card, borderColor: C.border, color: C.text }]}
+                      style={[styles.formInput, {
+                        backgroundColor: C.card,
+                        borderColor: formErrors.cropType && touched.cropType ? '#EF4444' : C.border,
+                        color: C.text,
+                      }]}
                       placeholder="Paddy"
                       placeholderTextColor={C.muted}
                       value={form.cropType}
-                      onChangeText={(value) => handleFieldChange('cropType', value)}
+                      onChangeText={(v) => handleFieldChange('cropType', v)}
+                      onBlur={() => handleBlur('cropType')}
+                      maxLength={ALERT_FIELD_LIMITS.cropType}
+                      returnKeyType="next"
                     />
+                    {formErrors.cropType && touched.cropType && (
+                      <View style={styles.fieldErrorRow}>
+                        <Ionicons name="alert-circle" size={13} color="#EF4444" />
+                        <ThemedText style={styles.fieldError}>{formErrors.cropType}</ThemedText>
+                      </View>
+                    )}
                   </View>
 
                   <View style={[styles.formGroup, styles.halfWidth]}>
                     <ThemedText style={[styles.formLabel, { color: C.text }]}>District</ThemedText>
                     <TextInput
-                      style={[styles.formInput, { backgroundColor: C.card, borderColor: C.border, color: C.text }]}
+                      style={[styles.formInput, {
+                        backgroundColor: C.card,
+                        borderColor: formErrors.district && touched.district ? '#EF4444' : C.border,
+                        color: C.text,
+                      }]}
                       placeholder="Kurunegala"
                       placeholderTextColor={C.muted}
                       value={form.district}
-                      onChangeText={(value) => handleFieldChange('district', value)}
+                      onChangeText={(v) => handleFieldChange('district', v)}
+                      onBlur={() => handleBlur('district')}
+                      maxLength={ALERT_FIELD_LIMITS.district}
+                      returnKeyType="next"
                     />
+                    {formErrors.district && touched.district && (
+                      <View style={styles.fieldErrorRow}>
+                        <Ionicons name="alert-circle" size={13} color="#EF4444" />
+                        <ThemedText style={styles.fieldError}>{formErrors.district}</ThemedText>
+                      </View>
+                    )}
                   </View>
                 </View>
 
+                {/* Season */}
                 <View style={styles.formGroup}>
                   <ThemedText style={[styles.formLabel, { color: C.text }]}>Season</ThemedText>
                   <TextInput
-                    style={[styles.formInput, { backgroundColor: C.card, borderColor: C.border, color: C.text }]}
+                    style={[styles.formInput, {
+                      backgroundColor: C.card,
+                      borderColor: formErrors.season && touched.season ? '#EF4444' : C.border,
+                      color: C.text,
+                    }]}
                     placeholder="Yala 2026"
                     placeholderTextColor={C.muted}
                     value={form.season}
-                    onChangeText={(value) => handleFieldChange('season', value)}
+                    onChangeText={(v) => handleFieldChange('season', v)}
+                    onBlur={() => handleBlur('season')}
+                    maxLength={ALERT_FIELD_LIMITS.season}
+                    returnKeyType="next"
                   />
+                  {formErrors.season && touched.season && (
+                    <View style={styles.fieldErrorRow}>
+                      <Ionicons name="alert-circle" size={13} color="#EF4444" />
+                      <ThemedText style={styles.fieldError}>{formErrors.season}</ThemedText>
+                    </View>
+                  )}
                 </View>
 
+                {/* Message */}
                 <View style={styles.formGroup}>
-                  <ThemedText style={[styles.formLabel, { color: C.text }]}>Message</ThemedText>
+                  <View style={styles.formLabelRow}>
+                    <ThemedText style={[styles.formLabel, { color: C.text }]}>Message</ThemedText>
+                    <ThemedText style={[styles.charCount, {
+                      color: form.message.length > ALERT_FIELD_LIMITS.message * 0.85 ? '#EF4444' : C.muted
+                    }]}>{form.message.length}/{ALERT_FIELD_LIMITS.message}</ThemedText>
+                  </View>
                   <TextInput
-                    style={[
-                      styles.formInput,
-                      styles.messageInput,
-                      { backgroundColor: C.card, borderColor: C.border, color: C.text },
-                    ]}
-                    placeholder="Write the advisory message here"
+                    style={[styles.formInput, styles.messageInput, {
+                      backgroundColor: C.card,
+                      borderColor: formErrors.message && touched.message ? '#EF4444' : C.border,
+                      color: C.text,
+                    }]}
+                    placeholder="Write the advisory message here (min 10 characters)"
                     placeholderTextColor={C.muted}
                     value={form.message}
-                    onChangeText={(value) => handleFieldChange('message', value)}
+                    onChangeText={(v) => handleFieldChange('message', v)}
+                    onBlur={() => handleBlur('message')}
                     multiline
                     textAlignVertical="top"
+                    maxLength={ALERT_FIELD_LIMITS.message}
                   />
+                  {formErrors.message && touched.message && (
+                    <View style={styles.fieldErrorRow}>
+                      <Ionicons name="alert-circle" size={13} color="#EF4444" />
+                      <ThemedText style={styles.fieldError}>{formErrors.message}</ThemedText>
+                    </View>
+                  )}
                 </View>
+
               </ScrollView>
 
               <View style={styles.modalActions}>
@@ -731,15 +834,19 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 22, fontWeight: '800' },
   modalSubtitle: { fontSize: 12, marginTop: 4 },
   formGroup: { marginBottom: Spacing.md },
-  formLabel: { fontSize: 13, fontWeight: '700', marginBottom: 7 },
+  formLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
+  formLabel: { fontSize: 13, fontWeight: '700' },
+  charCount: { fontSize: 11, fontWeight: '600' },
   formInput: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderRadius: Radius.md,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 14,
   },
   messageInput: { minHeight: 110 },
+  fieldErrorRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 },
+  fieldError: { fontSize: 11, fontWeight: '600', color: '#EF4444', flex: 1 },
   typeOptionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: Spacing.md },
   typeOption: {
     flexDirection: 'row',
