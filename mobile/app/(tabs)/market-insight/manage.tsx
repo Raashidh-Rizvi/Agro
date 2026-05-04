@@ -8,6 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import { MarketPriceService } from '@/services/MarketPriceService';
+import { useAuth } from '@/context/AuthContext';
 import ValidationModal from '@/components/ValidationModal';
 
 const DISTRICTS = [
@@ -26,8 +27,11 @@ const TRENDS = [
 
 export default function ManageMarketPriceScreen() {
     const { id } = useLocalSearchParams<{ id?: string }>();
+    const { user } = useAuth();
     const C = useAppColors();
     const router = useRouter();
+
+    const isAdmin = user?.role === 'Admin';
 
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -70,7 +74,7 @@ export default function ManageMarketPriceScreen() {
             setFormData({
                 cropName: data.cropName,
                 district: data.district,
-                price: data.price.toString(),
+                price: data.price ? data.price.toString() : '',
                 unit: data.unit,
                 trend: data.trend
             });
@@ -144,8 +148,10 @@ export default function ManageMarketPriceScreen() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={C.text} />
                 </TouchableOpacity>
-                <ThemedText style={styles.headerTitle}>{id ? 'Edit Price' : 'Add New Price'}</ThemedText>
-                {!!id && (
+                <ThemedText style={styles.headerTitle}>
+                    {id ? (isAdmin ? 'Edit Price' : 'Price Details') : 'Add New Price'}
+                </ThemedText>
+                {!!id && isAdmin && (
                     <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
                         <Ionicons name="trash-outline" size={22} color="#EF4444" />
                     </TouchableOpacity>
@@ -156,11 +162,12 @@ export default function ManageMarketPriceScreen() {
                 <View style={styles.formGroup}>
                     <ThemedText style={styles.label}>Crop Name *</ThemedText>
                     <TextInput
-                        style={[styles.input, { backgroundColor: C.card, borderColor: C.border, color: C.text }]}
+                        style={[styles.input, { backgroundColor: C.card, borderColor: C.border, color: C.text }, !isAdmin && { opacity: 0.7 }]}
                         placeholder="e.g., Rice, Carrot, Onion"
                         placeholderTextColor={C.muted}
                         value={formData.cropName}
                         onChangeText={(val) => setFormData(prev => ({ ...prev, cropName: val }))}
+                        editable={isAdmin}
                     />
                 </View>
 
@@ -175,7 +182,8 @@ export default function ManageMarketPriceScreen() {
                                     { borderColor: C.border },
                                     formData.district === d && { backgroundColor: C.primary, borderColor: C.primary }
                                 ]}
-                                onPress={() => setFormData(prev => ({ ...prev, district: d }))}
+                                onPress={() => isAdmin && setFormData(prev => ({ ...prev, district: d }))}
+                                disabled={!isAdmin}
                             >
                                 <ThemedText style={[
                                     styles.tagText,
@@ -190,22 +198,24 @@ export default function ManageMarketPriceScreen() {
                     <View style={[styles.formGroup, { flex: 1, marginRight: 10 }]}>
                         <ThemedText style={styles.label}>Price (Rs.) *</ThemedText>
                         <TextInput
-                            style={[styles.input, { backgroundColor: C.card, borderColor: C.border, color: C.text }]}
+                            style={[styles.input, { backgroundColor: C.card, borderColor: C.border, color: C.text }, !isAdmin && { opacity: 0.7 }]}
                             placeholder="0.00"
                             placeholderTextColor={C.muted}
                             keyboardType="numeric"
                             value={formData.price}
                             onChangeText={(val) => setFormData(prev => ({ ...prev, price: val }))}
+                            editable={isAdmin}
                         />
                     </View>
                     <View style={[styles.formGroup, { flex: 0.6 }]}>
                         <ThemedText style={styles.label}>Unit</ThemedText>
                         <TextInput
-                            style={[styles.input, { backgroundColor: C.card, borderColor: C.border, color: C.text }]}
+                            style={[styles.input, { backgroundColor: C.card, borderColor: C.border, color: C.text }, !isAdmin && { opacity: 0.7 }]}
                             placeholder="kg"
                             placeholderTextColor={C.muted}
                             value={formData.unit}
                             onChangeText={(val) => setFormData(prev => ({ ...prev, unit: val }))}
+                            editable={isAdmin}
                         />
                     </View>
                 </View>
@@ -221,7 +231,8 @@ export default function ManageMarketPriceScreen() {
                                     { borderColor: C.border },
                                     formData.trend === t.value && { backgroundColor: t.color + '20', borderColor: t.color }
                                 ]}
-                                onPress={() => setFormData(prev => ({ ...prev, trend: t.value as any }))}
+                                onPress={() => isAdmin && setFormData(prev => ({ ...prev, trend: t.value as any }))}
+                                disabled={!isAdmin}
                             >
                                 <Ionicons name={t.icon as any} size={20} color={formData.trend === t.value ? t.color : C.muted} />
                                 <ThemedText style={[
@@ -233,17 +244,19 @@ export default function ManageMarketPriceScreen() {
                     </View>
                 </View>
 
-                <TouchableOpacity
-                    style={[styles.submitButton, { backgroundColor: C.primary }]}
-                    onPress={handleSave}
-                    disabled={submitting}
-                >
-                    {submitting ? (
-                        <ActivityIndicator color="#FFF" />
-                    ) : (
-                        <ThemedText style={styles.submitButtonText}>{id ? 'Update Insight' : 'Publish Insight'}</ThemedText>
-                    )}
-                </TouchableOpacity>
+                {isAdmin && (
+                    <TouchableOpacity
+                        style={[styles.submitButton, { backgroundColor: C.primary }]}
+                        onPress={handleSave}
+                        disabled={submitting}
+                    >
+                        {submitting ? (
+                            <ActivityIndicator color="#FFF" />
+                        ) : (
+                            <ThemedText style={styles.submitButtonText}>{id ? 'Update Insight' : 'Publish Insight'}</ThemedText>
+                        )}
+                    </TouchableOpacity>
+                )}
             </ScrollView>
             <ValidationModal
                 visible={modalVisible}

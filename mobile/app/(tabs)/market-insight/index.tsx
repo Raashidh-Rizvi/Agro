@@ -62,7 +62,7 @@ export default function MarketInsightScreen() {
     const renderPriceCard = ({ item }: { item: MarketPrice }) => (
         <TouchableOpacity 
             style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]}
-            onPress={() => isAdmin && router.push({ pathname: '/(tabs)/market-insight/manage', params: { id: item._id } })}
+            onPress={() => router.push({ pathname: '/(tabs)/market-insight/manage', params: { id: item._id } })}
         >
             <View style={styles.cardHeader}>
                 <View style={styles.cropInfo}>
