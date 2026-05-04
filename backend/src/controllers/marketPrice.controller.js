@@ -1,5 +1,5 @@
 const MarketPrice = require('../models/MarketPrice');
-
+//
 // @desc    Get all market prices
 // @route   GET /api/market-prices
 // @access  Protected
