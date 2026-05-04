@@ -3,47 +3,30 @@ const MarketPrice = require('../models/MarketPrice');
 // @desc    Get all market prices
 // @route   GET /api/market-prices
 // @access  Protected
-exports.getMarketPrices = async (req, res, next) => {
+exports.getAllMarketPrices = async (req, res, next) => {
     try {
-        let query;
+        const { district, cropName } = req.query;
+        let query = {};
 
-        // Copy req.query
-        const reqQuery = { ...req.query };
-
-        // Fields to exclude from direct match
-        const removeFields = ['select', 'sort', 'page', 'limit'];
-        removeFields.forEach(param => delete reqQuery[param]);
-
-        // Support case-insensitive regex filtering for cropName and district if provided
-        if (reqQuery.cropName) {
-            reqQuery.cropName = { $regex: reqQuery.cropName, $options: 'i' };
-        }
-        if (reqQuery.district) {
-            reqQuery.district = { $regex: reqQuery.district, $options: 'i' };
+        if (district) {
+            query.district = { $regex: district, $options: 'i' };
         }
 
-        query = MarketPrice.find(reqQuery).populate({
-            path: 'recordedBy',
-            select: 'name role'
-        });
-
-        // Sort by recordedAt descending by default
-        if (req.query.sort) {
-            const sortBy = req.query.sort.split(',').join(' ');
-            query = query.sort(sortBy);
-        } else {
-            query = query.sort('-recordedAt');
+        if (cropName) {
+            query.cropName = { $regex: cropName, $options: 'i' };
         }
 
-        const prices = await query;
+        const marketPrices = await MarketPrice.find(query)
+            .populate('addedBy', 'name')
+            .sort({ date: -1 });
 
         res.status(200).json({
             success: true,
-            count: prices.length,
-            data: prices
+            count: marketPrices.length,
+            data: marketPrices
         });
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -52,86 +35,91 @@ exports.getMarketPrices = async (req, res, next) => {
 // @access  Protected
 exports.getMarketPriceById = async (req, res, next) => {
     try {
-        const price = await MarketPrice.findById(req.params.id).populate({
-            path: 'recordedBy',
-            select: 'name role'
-        });
+        const marketPrice = await MarketPrice.findById(req.params.id).populate('addedBy', 'name');
 
-        if (!price) {
-            return res.status(404).json({ success: false, message: `No market price found with id of ${req.params.id}` });
+        if (!marketPrice) {
+            return res.status(404).json({
+                success: false,
+                message: 'Market price not found'
+            });
         }
 
         res.status(200).json({
             success: true,
-            data: price
+            data: marketPrice
         });
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 };
 
 // @desc    Create new market price
 // @route   POST /api/market-prices
-// @access  Protected (Admin Only)
+// @access  Protected/Admin
 exports.createMarketPrice = async (req, res, next) => {
     try {
-        // Add user to req.body
-        req.body.recordedBy = req.user.id;
+        req.body.addedBy = req.user.id;
 
-        const price = await MarketPrice.create(req.body);
+        const marketPrice = await MarketPrice.create(req.body);
 
         res.status(201).json({
             success: true,
-            data: price
+            data: marketPrice
         });
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 };
 
 // @desc    Update market price
 // @route   PUT /api/market-prices/:id
-// @access  Protected (Admin Only)
+// @access  Protected/Admin
 exports.updateMarketPrice = async (req, res, next) => {
     try {
-        let price = await MarketPrice.findById(req.params.id);
+        let marketPrice = await MarketPrice.findById(req.params.id);
 
-        if (!price) {
-            return res.status(404).json({ success: false, message: `No market price found with id of ${req.params.id}` });
+        if (!marketPrice) {
+            return res.status(404).json({
+                success: false,
+                message: 'Market price not found'
+            });
         }
 
-        price = await MarketPrice.findByIdAndUpdate(req.params.id, req.body, {
+        marketPrice = await MarketPrice.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
         });
 
         res.status(200).json({
             success: true,
-            data: price
+            data: marketPrice
         });
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 };
 
 // @desc    Delete market price
 // @route   DELETE /api/market-prices/:id
-// @access  Protected (Admin Only)
+// @access  Protected/Admin
 exports.deleteMarketPrice = async (req, res, next) => {
     try {
-        const price = await MarketPrice.findById(req.params.id);
+        const marketPrice = await MarketPrice.findById(req.params.id);
 
-        if (!price) {
-            return res.status(404).json({ success: false, message: `No market price found with id of ${req.params.id}` });
+        if (!marketPrice) {
+            return res.status(404).json({
+                success: false,
+                message: 'Market price not found'
+            });
         }
 
-        await price.deleteOne();
+        await marketPrice.deleteOne();
 
         res.status(200).json({
             success: true,
             data: {}
         });
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 };
