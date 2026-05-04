@@ -118,6 +118,28 @@ export default function CartScreen() {
     );
   };
 
+  const handleClearCart = () => {
+    const performClear = async () => {
+      setLoading(true);
+      try {
+        await CartService.clearCart();
+        setCart({ userId: cart?.userId || '', items: [], totalAmount: 0 });
+      } catch (error: any) {
+        showModal('Error', error.message || 'Failed to clear cart');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    showModal(
+      'Clear Cart',
+      'Are you sure you want to remove all items from your cart?',
+      'confirm',
+      performClear,
+      'Clear All'
+    );
+  };
+
   const renderItem = ({ item }: { item: CartItem }) => (
     <View style={[styles.cartItem, { backgroundColor: C.card, borderColor: C.border }]}>
       <View style={[styles.itemImageContainer, { backgroundColor: C.surface }]}>
@@ -172,6 +194,17 @@ export default function CartScreen() {
           headerShadowVisible: false,
           headerStyle: { backgroundColor: C.bg },
           headerTintColor: C.text,
+          headerRight: () => (
+            (cart && cart.items.length > 0) ? (
+              <TouchableOpacity 
+                onPress={handleClearCart}
+                style={styles.headerClearBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="trash-outline" size={22} color="#EF4444" />
+              </TouchableOpacity>
+            ) : null
+          )
         }} 
       />
       <StatusBar style={C.statusBar} />
@@ -322,4 +355,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
   },
   checkoutBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  headerClearBtn: {
+    marginRight: 4,
+    padding: 4,
+  },
 });
