@@ -1,13 +1,15 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform,
+  ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useRouter } from 'expo-router';
 import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import { ThemeOverrideProvider } from '@/context/ThemeOverrideContext';
+import ValidationModal from '@/components/ValidationModal';
+import { validatePassword } from '../../utils/passwordValidation';
 
 // ─── Light Auth Palette ────────────────────────────────────────────────────────
 const L = {
@@ -37,41 +39,62 @@ export default function RegisterScreen() {
   const [name, setName]                 = useState('');
   const [email, setEmail]               = useState('');
   const [password, setPassword]         = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole]                 = useState<Role>('Farmer');
   const [nameFocused, setNameFocused]   = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passFocused, setPassFocused]   = useState(false);
+  const [confirmPassFocused, setConfirmPassFocused] = useState(false);
   const { register, isLoading }         = useAuth();
   const router                          = useRouter();
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
 
   const nameRef  = useRef<TextInput>(null);
   const emailRef = useRef<TextInput>(null);
   const passRef  = useRef<TextInput>(null);
+  const confirmPassRef = useRef<TextInput>(null);
+
+  const showError = (title: string, message: string) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalVisible(true);
+  };
 
   const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password) {
-      Alert.alert('Missing Fields', 'Please fill in all fields to continue.');
+    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
+      showError('Missing Fields', 'Please fill in all fields to continue.');
       return;
     }
     if (name.trim().length < 2) {
-      Alert.alert('Invalid Name', 'Name must be at least 2 characters.');
+      showError('Invalid Name', 'Name must be at least 2 characters.');
       return;
     }
     const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      showError('Invalid Email', 'Please enter a valid email address.');
       return;
     }
-    if (password.length < 6) {
-      Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+    const passwordErrors = validatePassword(password, { name, email });
+    if (passwordErrors.length > 0) {
+      showError('Weak Password', passwordErrors.join('\n'));
       return;
     }
+    
+    if (password !== confirmPassword) {
+      showError('Mismatch', 'Passwords do not match.');
+      return;
+    }
+
     try {
       await register({ name: name.trim(), email: email.trim().toLowerCase(), password, role });
       router.replace('/(tabs)');
     } catch (err: any) {
-      Alert.alert('Registration Failed', err.toString());
+      showError('Registration Failed', err.toString());
     }
   };
 
@@ -156,13 +179,35 @@ export default function RegisterScreen() {
                   style={[styles.input, { paddingRight: 48 }]}
                   placeholder="Choose a strong password" placeholderTextColor={L.muted}
                   value={password} onChangeText={setPassword} secureTextEntry={!showPassword}
-                  returnKeyType="done" onSubmitEditing={handleRegister}
+                  returnKeyType="next" onSubmitEditing={() => confirmPassRef.current?.focus()}
                   onFocus={() => setPassFocused(true)} onBlur={() => setPassFocused(false)}
                 />
                 <TouchableOpacity style={styles.eyeIcon}
                   onPress={() => setShowPassword(!showPassword)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={L.muted} />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
+
+            {/* Confirm Password */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <TouchableOpacity activeOpacity={1} style={[styles.inputWrapper, confirmPassFocused && styles.inputFocused]} onPress={() => confirmPassRef.current?.focus()}>
+                <Ionicons name="shield-checkmark-outline" size={18}
+                  color={confirmPassFocused ? L.primary : L.muted} style={styles.inputIcon} />
+                <TextInput
+                  ref={confirmPassRef}
+                  style={[styles.input, { paddingRight: 48 }]}
+                  placeholder="Confirm your password" placeholderTextColor={L.muted}
+                  value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={!showConfirmPassword}
+                  returnKeyType="done" onSubmitEditing={handleRegister}
+                  onFocus={() => setConfirmPassFocused(true)} onBlur={() => setConfirmPassFocused(false)}
+                />
+                <TouchableOpacity style={styles.eyeIcon}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={L.muted} />
                 </TouchableOpacity>
               </TouchableOpacity>
             </View>
@@ -232,6 +277,12 @@ export default function RegisterScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ValidationModal
+        visible={modalVisible}
+        title={modalTitle}
+        message={modalMessage}
+        onClose={() => setModalVisible(false)}
+      />
     </ThemeOverrideProvider>
   );
 }

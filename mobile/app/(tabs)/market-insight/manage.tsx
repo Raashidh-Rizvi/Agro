@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, View, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, ScrollView, View, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
@@ -8,6 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import { MarketPriceService } from '@/services/MarketPriceService';
+import ValidationModal from '@/components/ValidationModal';
 
 const DISTRICTS = [
     'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
@@ -38,6 +39,24 @@ export default function ManageMarketPriceScreen() {
         trend: 'stable' as 'up' | 'down' | 'stable'
     });
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState<{
+        title: string;
+        message: string;
+        type: 'error' | 'success' | 'confirm';
+        onConfirm?: () => void;
+        confirmText?: string;
+    }>({
+        title: '',
+        message: '',
+        type: 'error'
+    });
+
+    const showModal = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', onConfirm?: () => void, confirmText?: string) => {
+        setModalConfig({ title, message, type, onConfirm, confirmText });
+        setModalVisible(true);
+    };
+
     useEffect(() => {
         if (id) {
             fetchPriceDetails();
@@ -57,7 +76,7 @@ export default function ManageMarketPriceScreen() {
             });
         } catch (error) {
             console.error('Error fetching details:', error);
-            Alert.alert('Error', 'Failed to load price details');
+            showModal('Error', 'Failed to load price details');
         } finally {
             setLoading(false);
         }
@@ -65,7 +84,7 @@ export default function ManageMarketPriceScreen() {
 
     const handleSave = async () => {
         if (!formData.cropName || !formData.district || !formData.price) {
-            Alert.alert('Missing Fields', 'Please fill in all required fields');
+            showModal('Missing Fields', 'Please fill in all required fields');
             return;
         }
 
@@ -78,42 +97,36 @@ export default function ManageMarketPriceScreen() {
 
             if (id) {
                 await MarketPriceService.update(id, payload);
-                Alert.alert('Success', 'Market price updated successfully');
+                showModal('Success', 'Market price updated successfully', 'success', () => router.back());
             } else {
                 await MarketPriceService.create(payload);
-                Alert.alert('Success', 'Market price added successfully');
+                showModal('Success', 'Market price added successfully', 'success', () => router.back());
             }
-            router.back();
         } catch (error: any) {
             console.error('Error saving:', error);
-            Alert.alert('Error', error.message || 'Failed to save market price');
+            showModal('Error', error.message || 'Failed to save market price');
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDelete = () => {
-        Alert.alert(
+        showModal(
             'Delete Price',
             'Are you sure you want to delete this market price?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            setSubmitting(true);
-                            await MarketPriceService.delete(id!);
-                            router.back();
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to delete price');
-                        } finally {
-                            setSubmitting(false);
-                        }
-                    }
+            'confirm',
+            async () => {
+                try {
+                    setSubmitting(true);
+                    await MarketPriceService.delete(id!);
+                    router.back();
+                } catch (error) {
+                    showModal('Error', 'Failed to delete price');
+                } finally {
+                    setSubmitting(false);
                 }
-            ]
+            },
+            'Delete'
         );
     };
 
@@ -132,7 +145,7 @@ export default function ManageMarketPriceScreen() {
                     <Ionicons name="arrow-back" size={24} color={C.text} />
                 </TouchableOpacity>
                 <ThemedText style={styles.headerTitle}>{id ? 'Edit Price' : 'Add New Price'}</ThemedText>
-                {id && (
+                {!!id && (
                     <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
                         <Ionicons name="trash-outline" size={22} color="#EF4444" />
                     </TouchableOpacity>
@@ -232,6 +245,15 @@ export default function ManageMarketPriceScreen() {
                     )}
                 </TouchableOpacity>
             </ScrollView>
+            <ValidationModal
+                visible={modalVisible}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                type={modalConfig.type}
+                onConfirm={modalConfig.onConfirm}
+                confirmText={modalConfig.confirmText}
+                onClose={() => setModalVisible(false)}
+            />
         </ThemedView>
     );
 }

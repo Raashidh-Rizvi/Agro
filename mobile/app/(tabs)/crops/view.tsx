@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import api from '@/services/api';
@@ -8,6 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { Spacing, Radius } from '@/constants/theme';
+import ValidationModal from '@/components/ValidationModal';
 
 export default function ViewCropScreen() {
   const C = useAppColors();
@@ -18,6 +19,14 @@ export default function ViewCropScreen() {
   const [crop, setCrop] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ title: '', message: '', type: 'error' as 'error' | 'success' });
+
+  const showModal = (title: string, message: string, type: 'error' | 'success' = 'error') => {
+      setModalConfig({ title, message, type });
+      setModalVisible(true);
+  };
+
 
   useEffect(() => {
     const fetchCrop = async () => {
@@ -26,8 +35,7 @@ export default function ViewCropScreen() {
         const res = await api.get(`/crops/${id}`);
         setCrop(res.data.data);
       } catch (err: any) {
-        Alert.alert('Error', err.response?.data?.message || 'Failed to fetch crop');
-        router.back();
+        showModal('Error', err.response?.data?.message || 'Failed to fetch crop');
       } finally {
         setLoading(false);
       }
@@ -100,6 +108,18 @@ export default function ViewCropScreen() {
           </View>
         </View>
       </ScrollView>
+      <ValidationModal
+        visible={modalVisible}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onClose={() => {
+            setModalVisible(false);
+            if (modalConfig.type === 'error') {
+                router.back();
+            }
+        }}
+      />
     </ThemedView>
   );
 }

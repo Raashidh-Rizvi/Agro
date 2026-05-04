@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View, Alert, Platform, ScrollView } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Platform, ScrollView } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -11,6 +11,7 @@ import { useAppColors } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import { DiagnosisResult, DiagnosisService } from '../../services/DiagnosisService';
 import { ScanResultModal } from '@/components/ScanResultModal';
+import ValidationModal from '@/components/ValidationModal';
 
 export default function DiagnosisLandingScreen() {
   const C = useAppColors();
@@ -21,12 +22,28 @@ export default function DiagnosisLandingScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  const [validationVisible, setValidationVisible] = useState(false);
+  const [validationConfig, setValidationConfig] = useState<{
+      title: string;
+      message: string;
+      type: 'error' | 'success';
+  }>({
+      title: '',
+      message: '',
+      type: 'error'
+  });
+
+  const showValidation = (title: string, message: string, type: 'error' | 'success' = 'error') => {
+      setValidationConfig({ title, message, type });
+      setValidationVisible(true);
+  };
+
   const handlePickImage = async (useCamera: boolean) => {
     try {
       let permissionResult;
       if (useCamera) {
         if (Platform.OS === 'web') {
-          alert('Camera is not supported in the browser. Please use the Expo Go app.');
+          showValidation('Not Supported', 'Camera is not supported in the browser. Please use the Expo Go app.');
           return;
         }
         permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -36,8 +53,7 @@ export default function DiagnosisLandingScreen() {
 
       if (!permissionResult.granted) {
         const msg = `We need ${useCamera ? 'camera' : 'gallery'} permissions to analyze your crop.`;
-        if (Platform.OS === 'web') alert(msg);
-        else Alert.alert('Permission Denied', msg);
+        showValidation('Permission Denied', msg);
         return;
       }
 
@@ -68,8 +84,7 @@ export default function DiagnosisLandingScreen() {
       setModalVisible(false);
       console.error('Diagnosis Error:', error);
       const msg = error.message || 'Could not analyze the image. Please try again.';
-      if (Platform.OS === 'web') alert('Analysis Failed: ' + msg);
-      else Alert.alert('Analysis Failed', msg);
+      showValidation('Analysis Failed', msg);
     } finally {
       setIsScanning(false);
     }
@@ -91,7 +106,7 @@ export default function DiagnosisLandingScreen() {
         {/* Hero Section */}
         <View style={styles.heroSection}>
           <View style={[styles.iconContainer, { backgroundColor: C.primaryDim }]}>
-            <MaterialCommunityIcons name="leaf-searching" size={80} color={C.primary} />
+            <MaterialCommunityIcons name="leaf" size={80} color={C.primary} />
           </View>
           <ThemedText style={styles.title}>Instant Diagnosis</ThemedText>
           <ThemedText style={[styles.subtitle, { color: C.subtext }]}>
@@ -157,6 +172,13 @@ export default function DiagnosisLandingScreen() {
         result={result}
         isLoading={isScanning}
         selectedImage={selectedImage}
+      />
+      <ValidationModal
+        visible={validationVisible}
+        title={validationConfig.title}
+        message={validationConfig.message}
+        type={validationConfig.type}
+        onClose={() => setValidationVisible(false)}
       />
     </ThemedView>
   );

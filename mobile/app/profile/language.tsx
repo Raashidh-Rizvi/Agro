@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Radius, Spacing, Shadows } from '@/constants/theme';
+import ValidationModal from '@/components/ValidationModal';
 
 const LANGUAGES = [
     { id: 'en', label: 'English', native: 'English' },
@@ -18,10 +19,16 @@ export default function LanguageScreen() {
     const C = useAppColors();
     const [selected, setSelected] = useState('en');
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState({ title: '', message: '', type: 'error' as 'error' | 'success' });
+
+    const showModal = (title: string, message: string, type: 'error' | 'success' = 'error') => {
+        setModalConfig({ title, message, type });
+        setModalVisible(true);
+    };
+
     const handleSave = () => {
-        Alert.alert('Success', 'Language settings updated successfully!', [
-            { text: 'OK', onPress: () => router.back() }
-        ]);
+        showModal('Success', 'Language settings updated successfully!', 'success');
     };
 
     return (
@@ -73,6 +80,18 @@ export default function LanguageScreen() {
                     <ThemedText style={styles.saveBtnText}>Save Language</ThemedText>
                 </TouchableOpacity>
             </ScrollView>
+            <ValidationModal
+                visible={modalVisible}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                type={modalConfig.type}
+                onClose={() => {
+                    setModalVisible(false);
+                    if (modalConfig.type === 'success') {
+                        router.back();
+                    }
+                }}
+            />
         </ThemedView>
     );
 }

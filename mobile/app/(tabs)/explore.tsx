@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, View, TextInput, ActivityIndicator, RefreshControl, Alert, Modal, ScrollView, Platform } from 'react-native';
+import { StyleSheet, FlatList, TouchableOpacity, View, TextInput, ActivityIndicator, RefreshControl, Modal, ScrollView, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -14,6 +14,7 @@ import { BASE_URL } from '@/constants/Config';
 import { useAuth } from '@/context/AuthContext';
 import { CartService } from '@/services/CartService';
 import { useRouter, useFocusEffect } from 'expo-router';
+import ValidationModal from '@/components/ValidationModal';
 
 const CATEGORIES = ['All', 'Seeds', 'Fertilizers', 'Tools', 'Pesticides', 'Other'];
 const FORM_CATEGORIES = ['Seeds', 'Fertilizers', 'Tools', 'Pesticides', 'Other'];
@@ -44,6 +45,24 @@ export default function MarketplaceScreen() {
   const [cartCount, setCartCount] = useState(0);
   const router = useRouter();
 
+  const [validationVisible, setValidationVisible] = useState(false);
+  const [validationConfig, setValidationConfig] = useState<{
+      title: string;
+      message: string;
+      type: 'error' | 'success' | 'confirm';
+      onConfirm?: () => void;
+      confirmText?: string;
+  }>({
+      title: '',
+      message: '',
+      type: 'error'
+  });
+
+  const showValidation = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', onConfirm?: () => void, confirmText?: string) => {
+      setValidationConfig({ title, message, type, onConfirm, confirmText });
+      setValidationVisible(true);
+  };
+
   const fetchCartCount = useCallback(async () => {
     try {
       const cart = await CartService.getCart();
@@ -66,8 +85,7 @@ export default function MarketplaceScreen() {
       setProducts(data);
     } catch (error: any) {
       console.error('Fetch products error:', error);
-      if (Platform.OS === 'web') alert(error.message || 'Could not load products');
-      else Alert.alert('Error', error.message || 'Could not load products');
+      showValidation('Error', error.message || 'Could not load products');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -101,20 +119,15 @@ export default function MarketplaceScreen() {
 
   const handleSave = async () => {
     if (!form.name || !form.description || !form.price || !form.category) {
-      Alert.alert('Validation', 'Please fill in all required fields');
+      showValidation('Validation', 'Please fill in all required fields');
       return;
     }
 
     setSaving(true);
     try {
-      if (editingId) {
-        await ProduceService.update(editingId, {
-          name: form.name,
-          description: form.description,
-          price: parseFloat(form.price),
-          category: form.category,
+           category: form.category,
         }, form.imageUri.startsWith('http') ? undefined : form.imageUri);
-        Alert.alert('Success', 'Listing updated successfully');
+        showValidation('Success', 'Listing updated successfully', 'success');
       } else {
         await ProduceService.create({
           name: form.name,
@@ -122,13 +135,12 @@ export default function MarketplaceScreen() {
           price: parseFloat(form.price),
           category: form.category,
         }, form.imageUri);
-        Alert.alert('Success', 'Listing created successfully');
+        showValidation('Success', 'Listing created successfully', 'success');
       }
       setModalVisible(false);
       fetchProducts(false);
     } catch (error: any) {
-      if (Platform.OS === 'web') alert(error.message || 'Failed to save listing');
-      else Alert.alert('Error', error.message || 'Failed to save listing');
+      showValidation('Error', error.message || 'Failed to save listing');
     } finally {
       setSaving(false);
     }
@@ -155,18 +167,10 @@ export default function MarketplaceScreen() {
   const handleAddToCart = async (item: ProduceListing) => {
     try {
       await CartService.addToCart(item._id, 1);
-      if (Platform.OS === 'web') {
-        alert(`${item.name} added to cart!`);
-      } else {
-        Alert.alert('Success', `${item.name} added to cart!`);
-      }
+      showValidation('Success', `${item.name} added to cart!`, 'success');
       fetchCartCount();
     } catch (error: any) {
-      if (Platform.OS === 'web') {
-        alert(error.message || 'Failed to add to cart');
-      } else {
-        Alert.alert('Error', error.message || 'Failed to add to cart');
-      }
+      showValidation('Error', error.message || 'Failed to add to cart');
     }
   };
 
@@ -182,7 +186,7 @@ export default function MarketplaceScreen() {
           />
         ) : (
           <Ionicons name="image-outline" size={32} color={C.muted} />
-        )}{item.badge && (
+        )}{!!item.badge && (
           <View
             style={[
               styles.cardBadge,
@@ -205,21 +209,14 @@ export default function MarketplaceScreen() {
             <TouchableOpacity
               style={[styles.deleteBtn, { borderColor: C.border }]}
               onPress={() => {
-                Alert.alert('Delete', 'Are you sure?', [
-                  { text: 'Cancel', style: 'cancel' },
-                  {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                      try {
+                showValidation('Delete', 'Are you sure?', 'confirm', async () => {
+                    try {
                         await ProduceService.delete(item._id);
                         fetchProducts(false);
-                      } catch (e: any) {
-                        Alert.alert('Error', e.message);
-                      }
-                    },
-                  },
-                ]);
+                    } catch (e: any) {
+                        showValidation('Error', e.message);
+                    }
+                }, 'Delete');
               }}
             >
               <Ionicons name="trash-outline" size={14} color="#EF4444" />
@@ -387,6 +384,15 @@ export default function MarketplaceScreen() {
           </View>
         </View>
       </Modal>
+      <ValidationModal
+        visible={validationVisible}
+        title={validationConfig.title}
+        message={validationConfig.message}
+        type={validationConfig.type}
+        onConfirm={validationConfig.onConfirm}
+        confirmText={validationConfig.confirmText}
+        onClose={() => setValidationVisible(false)}
+      />
     </ThemedView>
   );
 }

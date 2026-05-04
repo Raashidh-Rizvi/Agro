@@ -1,15 +1,5 @@
 const User = require('../models/User');
-
-// Simple safe email validation - avoids ReDoS by using only string operations
-const isValidEmail = (email) => {
-    if (!email || typeof email !== 'string' || email.length > 254) return false;
-    const atIndex = email.indexOf('@');
-    if (atIndex < 1 || atIndex !== email.lastIndexOf('@')) return false;
-    const domain = email.slice(atIndex + 1);
-    const dotIndex = domain.lastIndexOf('.');
-    if (dotIndex < 1 || dotIndex === domain.length - 1) return false;
-    return true;
-};
+const { isValidEmail, isValidRole } = require('../utils/validation');
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -48,6 +38,9 @@ exports.createUser = async (req, res, next) => {
         if (password.length < 6)
             return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
 
+        if (role && !isValidRole(role))
+            return res.status(400).json({ success: false, message: 'Invalid role provided' });
+
         const exists = await User.findOne({ email });
         if (exists)
             return res.status(400).json({ success: false, message: 'Email already in use' });
@@ -72,6 +65,9 @@ exports.updateUser = async (req, res, next) => {
             if (exists)
                 return res.status(400).json({ success: false, message: 'Email already in use' });
         }
+
+        if (role && !isValidRole(role))
+            return res.status(400).json({ success: false, message: 'Invalid role provided' });
 
         const user = await User.findByIdAndUpdate(
             req.params.id,

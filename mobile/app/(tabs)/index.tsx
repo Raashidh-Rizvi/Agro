@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect } from '@react-navigation/native';
@@ -18,6 +18,7 @@ import {
   formatAlertRelativeTime,
   getAlertErrorMessage,
 } from '@/features/alerts/alertSupport';
+import ValidationModal from '@/components/ValidationModal';
 
 const quickActions = [
   { id: '1', title: 'Scan Disease', icon: 'camera-outline', color: '#0F9D58', bg: '#E6F4EA', route: '/diagnosis' },
@@ -49,6 +50,14 @@ export default function FarmerDashboard() {
   const [recentAlerts, setRecentAlerts] = useState<AdvisoryAlert[]>([]);
   const [isLoadingAlerts, setIsLoadingAlerts] = useState(true);
   const [alertsError, setAlertsError] = useState<string | null>(null);
+  
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ title: '', message: '' });
+
+  const showInfoModal = (title: string, message: string) => {
+    setModalConfig({ title, message });
+    setModalVisible(true);
+  };
 
   const openAlerts = () => {
     router.push('/(tabs)/alerts');
@@ -137,7 +146,7 @@ export default function FarmerDashboard() {
               key={metric.id}
               style={[styles.metricCard, { backgroundColor: C.card, borderColor: C.border }]}
               activeOpacity={0.7}
-              onPress={() => Alert.alert('Available Soon', 'This feature will be available soon')}>
+              onPress={() => showInfoModal('Available Soon', 'This feature will be available soon')}>
               <View style={styles.metricHeader}>
                 <Ionicons name={metric.icon} size={15} color={C.primary} />
                 <ThemedText style={[styles.metricDelta, { color: metric.good ? C.accent : C.danger }]}>
@@ -269,6 +278,12 @@ export default function FarmerDashboard() {
 
         <View style={{ height: Spacing.xxl }} />
       </ScrollView>
+      <ValidationModal
+        visible={modalVisible}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onClose={() => setModalVisible(false)}
+      />
     </ThemedView>
   );
 }

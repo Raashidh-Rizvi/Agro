@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Radius, Spacing, Shadows } from '@/constants/theme';
 import api from '@/services/api';
+import ValidationModal from '@/components/ValidationModal';
 
 export default function EditProfileScreen() {
     const { user, updateProfile, logout } = useAuth();
@@ -18,17 +19,40 @@ export default function EditProfileScreen() {
     const [email, setEmail] = useState(user?.email || '');
     const [loading, setLoading] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalType, setModalType] = useState<'error' | 'success' | 'confirm'>('error');
+    const [modalTitle, setModalTitle] = useState('');
+    const [modalMessage, setModalMessage] = useState('');
+    const [modalCallback, setModalCallback] = useState<(() => void) | null>(null);
+    const [modalConfirmText, setModalConfirmText] = useState('Okay');
+
+    const showModal = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', callback?: () => void, confirmText = 'Okay') => {
+        setModalTitle(title);
+        setModalMessage(message);
+        setModalType(type);
+        setModalCallback(() => callback);
+        setModalConfirmText(confirmText);
+        setModalVisible(true);
+    };
+
+    const handleModalClose = () => {
+        setModalVisible(false);
+        if (modalCallback) {
+            modalCallback();
+        }
+    };
 
     const validate = () => {
         if (!name.trim() || !email.trim()) {
-            Alert.alert('Error', 'Name and email are required'); return false;
+            showModal('Error', 'Name and email are required', 'error'); return false;
         }
         if (name.trim().length < 2) {
-            Alert.alert('Error', 'Name must be at least 2 characters'); return false;
+            showModal('Error', 'Name must be at least 2 characters', 'error'); return false;
         }
         const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
         if (!emailRegex.test(email.trim())) {
-            Alert.alert('Error', 'Please enter a valid email address'); return false;
+            showModal('Error', 'Please enter a valid email address', 'error'); return false;
         }
         return true;
     };
@@ -38,36 +62,31 @@ export default function EditProfileScreen() {
         setLoading(true);
         try {
             await updateProfile({ name: name.trim(), email: email.trim().toLowerCase() });
-            Alert.alert('Success', 'Profile updated successfully', [
-                { text: 'OK', onPress: () => router.back() }
-            ]);
+            showModal('Success', 'Profile updated successfully', 'success', () => router.back());
         } catch (error: any) {
-            Alert.alert('Error', error);
+            showModal('Error', error.toString(), 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteAccount = () => {
-        Alert.alert(
+        showModal(
             'Delete Account',
             'Are you sure? This will permanently deactivate your account and you will be logged out.',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete', style: 'destructive', onPress: async () => {
-                        setDeleting(true);
-                        try {
-                            await api.delete(`/users/${user?.id || user?._id}`);
-                            await logout();
-                        } catch (error: any) {
-                            Alert.alert('Error', error.response?.data?.message || 'Failed to delete account');
-                        } finally {
-                            setDeleting(false);
-                        }
-                    }
+            'confirm',
+            async () => {
+                setDeleting(true);
+                try {
+                    await api.delete(`/users/${user?.id || user?._id}`);
+                    await logout();
+                } catch (error: any) {
+                    showModal('Error', error.response?.data?.message || 'Failed to delete account');
+                } finally {
+                    setDeleting(false);
                 }
-            ]
+            },
+            'Delete'
         );
     };
 
@@ -140,6 +159,16 @@ export default function EditProfileScreen() {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+
+            <ValidationModal
+                visible={modalVisible}
+                title={modalTitle}
+                message={modalMessage}
+                type={modalType}
+                onConfirm={modalCallback || undefined}
+                confirmText={modalConfirmText}
+                onClose={handleModalClose}
+            />
         </ThemedView>
     );
 }

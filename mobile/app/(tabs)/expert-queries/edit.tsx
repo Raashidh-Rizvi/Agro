@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform, useColorScheme } from 'react-native';
+import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Platform, useColorScheme } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Tabs, useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
+import ValidationModal from '@/components/ValidationModal';
 
 export default function MyQueryEdit() {
   const { id } = useLocalSearchParams();
@@ -21,6 +22,24 @@ export default function MyQueryEdit() {
   const [submitting, setSubmitting] = useState(false);
   const [newImage, setNewImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [removePhoto, setRemovePhoto] = useState(false);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+      title: string;
+      message: string;
+      type: 'error' | 'success' | 'confirm';
+      onConfirm?: () => void;
+      confirmText?: string;
+  }>({
+      title: '',
+      message: '',
+      type: 'error'
+  });
+
+  const showModal = (title: string, message: string, type: 'error' | 'success' | 'confirm' = 'error', onConfirm?: () => void, confirmText?: string) => {
+      setModalConfig({ title, message, type, onConfirm, confirmText });
+      setModalVisible(true);
+  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -51,11 +70,10 @@ export default function MyQueryEdit() {
         setNewImage(null);
         setRemovePhoto(false);
       } else {
-        Alert.alert('Error', 'Query not editable or not found');
-        router.back();
+        showModal('Error', 'Query not editable or not found', 'error', () => router.back());
       }
     } catch (error) {
-      Alert.alert('Error', 'Network error');
+      showModal('Error', 'Network error');
     } finally {
       setLoading(false);
     }
@@ -67,7 +85,7 @@ export default function MyQueryEdit() {
 
   const handleUpdate = async () => {
     if (!editingTitle.trim() || !editingDescription.trim()) {
-      Alert.alert('Error', 'Title and description required');
+      showModal('Error', 'Title and description required');
       return;
     }
 
@@ -106,13 +124,12 @@ export default function MyQueryEdit() {
       });
       const data = await res.json();
       if (data.success) {
-        Alert.alert('Updated', 'Query updated successfully');
-        router.back();
+        showModal('Updated', 'Query updated successfully', 'success', () => router.back());
       } else {
-        Alert.alert('Error', data.message || 'Update failed');
+        showModal('Error', data.message || 'Update failed');
       }
     } catch (err) {
-      Alert.alert('Error', 'Network error');
+      showModal('Error', 'Network error');
     } finally {
       setSubmitting(false);
     }
@@ -128,36 +145,24 @@ export default function MyQueryEdit() {
         });
         const data = await res.json();
         if (data.success) {
-          Alert.alert('Deleted', 'Query deleted');
-          router.back();
+          showModal('Deleted', 'Query deleted', 'success', () => router.back());
         } else {
-          Alert.alert('Error', data.message || 'Delete failed');
+          showModal('Error', data.message || 'Delete failed');
         }
       } catch (err) {
-        Alert.alert('Error', 'Network error while deleting');
+        showModal('Error', 'Network error while deleting');
       } finally {
         setSubmitting(false);
       }
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm('Delete Query: Are you sure?')) {
-        executeDelete();
-      }
-    } else {
-      Alert.alert(
-        'Delete Query',
-        'Are you sure?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: executeDelete
-          }
-        ]
-      );
-    }
+    showModal(
+      'Delete Query',
+      'Are you sure?',
+      'confirm',
+      executeDelete,
+      'Delete'
+    );
   };
 
   const theme = useColorScheme() ?? 'light';
@@ -317,6 +322,15 @@ export default function MyQueryEdit() {
           )}
         </ThemedView>
       </ScrollView>
+      <ValidationModal
+        visible={modalVisible}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+        confirmText={modalConfig.confirmText}
+        onClose={() => setModalVisible(false)}
+      />
     </ThemedView>
   );
 }
