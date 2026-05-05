@@ -5,7 +5,7 @@ const getBaseUrl = () => {
         return process.env.EXPO_PUBLIC_API_URL.replace('/api', '');
     }
     if (Platform.OS === 'web') return 'http://localhost:5000';
-    return 'http://192.168.1.101:5000';
+    return 'http://10.36.83.11:5000';
 };
 
 export const BASE_URL = getBaseUrl();
