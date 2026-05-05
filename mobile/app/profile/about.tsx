@@ -44,7 +44,6 @@ export default function AboutScreen() {
                     <View style={styles.featureList}>
                         {[
                             { icon: 'scan', text: 'AI Disease Diagnosis' },
-                            { icon: 'stats-chart', text: 'Real-time Market Prices' },
                             { icon: 'people', text: 'Expert Consultations' },
                             { icon: 'notifications', text: 'Weather & Pest Alerts' },
                         ].map((f) => (

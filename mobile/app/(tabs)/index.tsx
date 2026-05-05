@@ -240,42 +240,6 @@ export default function FarmerDashboard() {
           })
         )}
 
-        <View style={[styles.sectionRow, { marginTop: Spacing.lg }]}>
-          <ThemedText style={[styles.sectionTitle, { color: C.text }]}>Market Prices</ThemedText>
-          <TouchableOpacity 
-            activeOpacity={0.8}
-            onPress={() => router.push('/(tabs)/explore')}>
-            <ThemedText style={[styles.viewAll, { color: C.primary }]}>View All</ThemedText>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.priceScroll}>
-          {[
-            { crop: 'Rice', price: 'Rs. 120/kg', change: '+5%', up: true },
-            { crop: 'Maize', price: 'Rs. 85/kg', change: '-2%', up: false },
-            { crop: 'Tomato', price: 'Rs. 200/kg', change: '+12%', up: true },
-            { crop: 'Coconut', price: 'Rs. 45/nut', change: '+1%', up: true },
-          ].map((price) => (
-            <TouchableOpacity 
-              key={price.crop} 
-              style={[styles.priceCard, { backgroundColor: C.card, borderColor: C.border }]}
-              onPress={() => router.push('/(tabs)/explore')}>
-              <ThemedText style={[styles.priceCrop, { color: C.subtext }]}>{price.crop}</ThemedText>
-              <ThemedText style={[styles.priceValue, { color: C.text }]}>{price.price}</ThemedText>
-              <View style={[styles.priceChangePill, { backgroundColor: price.up ? C.primaryDim : '#FEE2E2' }]}>
-                <Ionicons
-                  name={price.up ? 'trending-up' : 'trending-down'}
-                  size={12}
-                  color={price.up ? C.primary : C.danger}
-                />
-                <ThemedText style={[styles.priceChange, { color: price.up ? C.primary : C.danger }]}>
-                  {price.change}
-                </ThemedText>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
         <View style={{ height: Spacing.xxl }} />
       </ScrollView>
       <ValidationModal
@@ -422,25 +386,4 @@ const styles = StyleSheet.create({
   alertMessage: { fontSize: 12, lineHeight: 17, marginBottom: 3 },
   alertTime: { fontSize: 10, fontWeight: '600' },
 
-  priceScroll: { marginBottom: Spacing.sm },
-  priceCard: {
-    borderRadius: Radius.lg,
-    padding: 14,
-    marginRight: 12,
-    minWidth: 130,
-    borderWidth: 1,
-    ...Shadows.sm,
-  },
-  priceCrop: { fontSize: 13, fontWeight: '600', marginBottom: 4 },
-  priceValue: { fontSize: 15, fontWeight: '800', marginBottom: 6 },
-  priceChangePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radius.pill,
-    alignSelf: 'flex-start',
-  },
-  priceChange: { fontSize: 11, fontWeight: '700' },
 });

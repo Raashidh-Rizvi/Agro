@@ -16,7 +16,6 @@ export default function NotificationsScreen() {
         push: true,
         email: false,
         alerts: true,
-        market: true,
         news: false
     });
 
@@ -95,7 +94,6 @@ export default function NotificationsScreen() {
                     <View style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]}>
                         {[
                             { key: 'alerts', label: 'Agricultural Alerts', desc: 'Weather & pest warnings' },
-                            { key: 'market', label: 'Market Prices', desc: 'Price changes for your crops' },
                             { key: 'news', label: 'AgriNews', desc: 'Latest farming news in SL' },
                         ].map((item, idx) => (
                             <React.Fragment key={item.key}>
@@ -111,7 +109,7 @@ export default function NotificationsScreen() {
                                         thumbColor={settings[item.key as keyof typeof settings] ? C.primary : '#f4f3f4'}
                                     />
                                 </View>
-                                {idx < 2 && <View style={[styles.divider, { backgroundColor: C.divider }]} />}
+                                {idx < 1 && <View style={[styles.divider, { backgroundColor: C.divider }]} />}
                             </React.Fragment>
                         ))}
                     </View>
