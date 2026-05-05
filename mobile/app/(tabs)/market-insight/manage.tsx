@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, View, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, ScrollView, View, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal, Pressable, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
@@ -8,6 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAppColors } from '@/context/AppThemeContext';
 import { Shadows, Radius, Spacing, Typography } from '@/constants/theme';
 import { MarketPriceService } from '@/services/MarketPriceService';
+import ValidationModal from '@/components/ValidationModal';
 
 const DISTRICTS = [
     'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
@@ -38,6 +39,17 @@ export default function ManageMarketPriceScreen() {
         trend: 'stable' as 'up' | 'down' | 'stable'
     });
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalTitle, setModalTitle] = useState('');
+    const [modalMessage, setModalMessage] = useState('');
+    const [showDistrictModal, setShowDistrictModal] = useState(false);
+
+    const showError = (title: string, message: string) => {
+        setModalTitle(title);
+        setModalMessage(message);
+        setModalVisible(true);
+    };
+
     useEffect(() => {
         if (id) {
             fetchPriceDetails();
@@ -64,8 +76,14 @@ export default function ManageMarketPriceScreen() {
     };
 
     const handleSave = async () => {
-        if (!formData.cropName || !formData.district || !formData.price) {
-            Alert.alert('Missing Fields', 'Please fill in all required fields');
+        if (!formData.cropName || !formData.district || !formData.price || !formData.unit || !formData.trend) {
+            showError('Missing Fields', 'Please fill in all required fields');
+            return;
+        }
+
+        const priceValue = parseFloat(formData.price);
+        if (isNaN(priceValue) || priceValue <= 0) {
+            showError('Invalid Price', 'Price must be a positive number');
             return;
         }
 
@@ -83,39 +101,16 @@ export default function ManageMarketPriceScreen() {
                 await MarketPriceService.create(payload);
                 Alert.alert('Success', 'Market price added successfully');
             }
-            router.back();
+            router.push('/(tabs)/market-insight');
         } catch (error: any) {
             console.error('Error saving:', error);
-            Alert.alert('Error', error.message || 'Failed to save market price');
+            showError('Error', error.message || 'Failed to save market price');
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleDelete = () => {
-        Alert.alert(
-            'Delete Price',
-            'Are you sure you want to delete this market price?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            setSubmitting(true);
-                            await MarketPriceService.delete(id!);
-                            router.back();
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to delete price');
-                        } finally {
-                            setSubmitting(false);
-                        }
-                    }
-                }
-            ]
-        );
-    };
+
 
     if (loading) {
         return (
@@ -132,11 +127,7 @@ export default function ManageMarketPriceScreen() {
                     <Ionicons name="arrow-back" size={24} color={C.text} />
                 </TouchableOpacity>
                 <ThemedText style={styles.headerTitle}>{id ? 'Edit Price' : 'Add New Price'}</ThemedText>
-                {id && (
-                    <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-                        <Ionicons name="trash-outline" size={22} color="#EF4444" />
-                    </TouchableOpacity>
-                )}
+                <View style={{ width: 30 }} />
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -153,24 +144,18 @@ export default function ManageMarketPriceScreen() {
 
                 <View style={styles.formGroup}>
                     <ThemedText style={styles.label}>District *</ThemedText>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tagScroll}>
-                        {DISTRICTS.map(d => (
-                            <TouchableOpacity
-                                key={d}
-                                style={[
-                                    styles.tag,
-                                    { borderColor: C.border },
-                                    formData.district === d && { backgroundColor: C.primary, borderColor: C.primary }
-                                ]}
-                                onPress={() => setFormData(prev => ({ ...prev, district: d }))}
-                            >
-                                <ThemedText style={[
-                                    styles.tagText,
-                                    formData.district === d && { color: '#FFF' }
-                                ]}>{d}</ThemedText>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
+                    <TouchableOpacity 
+                        style={[styles.dropdownTrigger, { backgroundColor: C.card, borderColor: C.border }]}
+                        onPress={() => setShowDistrictModal(true)}
+                    >
+                        <ThemedText style={[
+                            styles.dropdownText, 
+                            { color: formData.district ? C.text : C.muted }
+                        ]}>
+                            {formData.district || 'Select a district'}
+                        </ThemedText>
+                        <Ionicons name="chevron-down" size={20} color={C.muted} />
+                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.row}>
@@ -232,6 +217,57 @@ export default function ManageMarketPriceScreen() {
                     )}
                 </TouchableOpacity>
             </ScrollView>
+            <ValidationModal
+                visible={modalVisible}
+                title={modalTitle}
+                message={modalMessage}
+                onClose={() => setModalVisible(false)}
+            />
+
+            {/* District Selector Modal */}
+            <Modal
+                visible={showDistrictModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowDistrictModal(false)}
+            >
+                <Pressable 
+                    style={styles.modalOverlay} 
+                    onPress={() => setShowDistrictModal(false)}
+                >
+                    <ThemedView style={[styles.modalContent, { backgroundColor: C.card }]}>
+                        <View style={styles.modalHeader}>
+                            <ThemedText style={styles.modalTitle}>Select District</ThemedText>
+                            <TouchableOpacity onPress={() => setShowDistrictModal(false)}>
+                                <Ionicons name="close" size={24} color={C.text} />
+                            </TouchableOpacity>
+                        </View>
+                        <FlatList
+                            data={DISTRICTS}
+                            keyExtractor={item => item}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity 
+                                    style={[
+                                        styles.districtOption, 
+                                        { borderBottomColor: C.border },
+                                        formData.district === item && { backgroundColor: C.primary + '15' }
+                                    ]}
+                                    onPress={() => {
+                                        setFormData(prev => ({ ...prev, district: item }));
+                                        setShowDistrictModal(false);
+                                    }}
+                                >
+                                    <ThemedText style={[
+                                        styles.districtOptionText, 
+                                        formData.district === item && { color: C.primary, fontWeight: '700' }
+                                    ]}>{item}</ThemedText>
+                                    {formData.district === item && <Ionicons name="checkmark" size={20} color={C.primary} />}
+                                </TouchableOpacity>
+                            )}
+                        />
+                    </ThemedView>
+                </Pressable>
+            </Modal>
         </ThemedView>
     );
 }
@@ -258,16 +294,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.md,
         fontSize: 16,
     },
-    row: { flexDirection: 'row' },
-    tagScroll: { marginHorizontal: -Spacing.lg, paddingHorizontal: Spacing.lg },
-    tag: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: Radius.pill,
+    dropdownTrigger: {
+        height: 50,
+        borderRadius: Radius.md,
         borderWidth: 1,
-        marginRight: 8,
+        paddingHorizontal: Spacing.md,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
-    tagText: { fontSize: 13, fontWeight: '600' },
+    dropdownText: { fontSize: 16 },
     trendRow: { flexDirection: 'row', gap: 10 },
     trendOption: {
         flex: 1,
@@ -290,4 +326,41 @@ const styles = StyleSheet.create({
     },
     submitButtonText: { color: '#FFF', fontSize: 16, fontWeight: '800' },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        height: '70%',
+        borderTopLeftRadius: Radius.xl,
+        borderTopRightRadius: Radius.xl,
+        padding: Spacing.lg,
+        ...Shadows.lg,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: Spacing.lg,
+        paddingBottom: Spacing.sm,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+    },
+    districtOption: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: Spacing.sm,
+        borderBottomWidth: 1,
+    },
+    districtOptionText: {
+        fontSize: 16,
+        fontWeight: '500',
+    },
 });

@@ -58,6 +58,23 @@ exports.getMarketPriceById = async (req, res, next) => {
 // @access  Protected/Admin
 exports.createMarketPrice = async (req, res, next) => {
     try {
+        const { cropName, district, price, unit, trend } = req.body;
+
+        // Validation
+        if (!cropName || !district || price === undefined || !unit || !trend) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide all required fields: cropName, district, price, unit, and trend'
+            });
+        }
+
+        if (price <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Price must be a positive number'
+            });
+        }
+
         req.body.addedBy = req.user.id;
 
         const marketPrice = await MarketPrice.create(req.body);
@@ -76,6 +93,23 @@ exports.createMarketPrice = async (req, res, next) => {
 // @access  Protected/Admin
 exports.updateMarketPrice = async (req, res, next) => {
     try {
+        const { cropName, district, price, unit, trend } = req.body;
+
+        // Validation
+        if (!cropName || !district || price === undefined || !unit || !trend) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide all required fields'
+            });
+        }
+
+        if (price <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Price must be a positive number'
+            });
+        }
+
         let marketPrice = await MarketPrice.findById(req.params.id);
 
         if (!marketPrice) {
@@ -104,6 +138,7 @@ exports.updateMarketPrice = async (req, res, next) => {
 // @access  Protected/Admin
 exports.deleteMarketPrice = async (req, res, next) => {
     try {
+        console.log(`DELETE request received for ID: ${req.params.id} by user: ${req.user.id}`);
         const marketPrice = await MarketPrice.findById(req.params.id);
 
         if (!marketPrice) {
