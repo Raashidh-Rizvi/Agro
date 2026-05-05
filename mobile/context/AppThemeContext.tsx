@@ -42,63 +42,72 @@ export function useAppTheme() {
 type StatusBarStyle = 'light' | 'dark';
 
 interface ColorPalette {
-  bg: string; card: string; surface: string; border: string; divider: string;
+  bg: string; card: string; cardElevated: string; surface: string; border: string; divider: string;
   text: string; subtext: string; muted: string;
   primary: string; primaryDim: string; accent: string;
   danger: string; dangerDim: string; warning: string; info: string; success: string;
   tabBar: string; tabBorder: string; tabInactive: string;
-  heroOverlay: string;
+  heroOverlay: string; heroGradientStart: string; heroGradientEnd: string;
+  glassOverlay: string;
   statusBar: StatusBarStyle;
 }
 
 // ─── Dark Palette ─────────────────────────────────────────────────────────────
 export const DARK_COLORS: ColorPalette = {
-  bg:         '#0A0F0D',
-  card:       '#141F18',
-  surface:    '#1A2620',
-  border:     '#243020',
-  divider:    '#1E2E22',
-  text:       '#E8F0EC',
-  subtext:    '#7DA090',
-  muted:      '#4A6358',
-  primary:    '#0F9D58',
-  primaryDim: 'rgba(15,157,88,0.15)',
-  accent:     '#34C759',
-  danger:     '#EF4444',
-  dangerDim:  '#4A1F1F',
-  warning:    '#F59E0B',
-  info:       '#3B82F6',
-  success:    '#34C759',
-  tabBar:     '#141F18',
-  tabBorder:  '#243020',
-  tabInactive:'#4A6358',
-  heroOverlay:'rgba(11,107,58,0.45)',
-  statusBar:  'light',
+  bg:                 '#070C09',
+  card:               '#121A15',
+  cardElevated:       '#182318',
+  surface:            '#1A2620',
+  border:             '#1E3528',
+  divider:            '#172416',
+  text:               '#E8F0EC',
+  subtext:            '#7DA090',
+  muted:              '#4A6358',
+  primary:            '#0F9D58',
+  primaryDim:         'rgba(15,157,88,0.15)',
+  accent:             '#34C759',
+  danger:             '#F87171',
+  dangerDim:          '#3D1515',
+  warning:            '#FBBF24',
+  info:               '#60A5FA',
+  success:            '#34C759',
+  tabBar:             '#0E1812',
+  tabBorder:          '#1E3528',
+  tabInactive:        '#3D5A4C',
+  heroOverlay:        'rgba(7,22,13,0.55)',
+  heroGradientStart:  '#13B463',
+  heroGradientEnd:    '#096040',
+  glassOverlay:       'rgba(18,26,21,0.75)',
+  statusBar:          'light',
 };
 
 // ─── Light Palette ────────────────────────────────────────────────────────────
 export const LIGHT_COLORS: ColorPalette = {
-  bg:         '#F4F9F6',
-  card:       '#FFFFFF',
-  surface:    '#F0F7F3',
-  border:     '#E2EDE8',
-  divider:    '#EEF5F0',
-  text:       '#0D1F17',
-  subtext:    '#4A6358',
-  muted:      '#8FA89E',
-  primary:    '#0F9D58',
-  primaryDim: '#E6F4EA',
-  accent:     '#34C759',
-  danger:     '#EF4444',
-  dangerDim:  '#FDE7EF',
-  warning:    '#F59E0B',
-  info:       '#3B82F6',
-  success:    '#16A34A',
-  tabBar:     '#FFFFFF',
-  tabBorder:  '#E2EDE8',
-  tabInactive:'#9DB8AD',
-  heroOverlay:'rgba(11,107,58,0.30)',
-  statusBar:  'dark',
+  bg:                 '#F2F8F4',
+  card:               '#FFFFFF',
+  cardElevated:       '#FAFFFE',
+  surface:            '#EEF7F1',
+  border:             '#DDE9E3',
+  divider:            '#EBF4EE',
+  text:               '#0A1C13',
+  subtext:            '#3D5E50',
+  muted:              '#8BA89E',
+  primary:            '#0F9D58',
+  primaryDim:         '#E3F4EB',
+  accent:             '#34C759',
+  danger:             '#EF4444',
+  dangerDim:          '#FEE2E2',
+  warning:            '#F59E0B',
+  info:               '#3B82F6',
+  success:            '#16A34A',
+  tabBar:             '#FFFFFF',
+  tabBorder:          '#DDE9E3',
+  tabInactive:        '#9DB8AD',
+  heroOverlay:        'rgba(11,107,58,0.22)',
+  heroGradientStart:  '#13B463',
+  heroGradientEnd:    '#0B6B3A',
+  glassOverlay:       'rgba(255,255,255,0.80)',
+  statusBar:          'dark',
 };
 
 export type AppColors = ColorPalette;
