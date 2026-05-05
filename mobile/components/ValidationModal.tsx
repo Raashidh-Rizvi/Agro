@@ -14,53 +14,53 @@ interface ValidationModalProps {
   cancelText?: string;
 }
 
-export default function ValidationModal({ 
-  visible, 
-  title, 
-  message, 
-  type = 'error', 
-  onClose,
-  onConfirm,
-  confirmText = 'Okay',
-  cancelText = 'Cancel'
-}: ValidationModalProps) {
-  const isSuccess = type === 'success';
-  const isConfirm = type === 'confirm';
-  const color = isSuccess ? '#0F9D58' : isConfirm ? '#0F9D58' : '#E53935';
-  const iconName = isSuccess ? 'checkmark-circle' : isConfirm ? 'help-circle' : 'alert-circle';
+const CONFIG = {
+  success: { color: '#0F9D58', iconBg: '#E3F4EB', icon: 'checkmark-circle' as const,  accentColor: '#0F9D58' },
+  confirm: { color: '#3B82F6', iconBg: '#EFF6FF', icon: 'help-circle'       as const,  accentColor: '#3B82F6' },
+  error:   { color: '#EF4444', iconBg: '#FEE2E2', icon: 'alert-circle'      as const,  accentColor: '#EF4444' },
+};
 
-  const handleConfirm = () => {
-    if (onConfirm) {
-      onConfirm();
-    }
-    onClose();
-  };
+export default function ValidationModal({
+  visible, title, message, type = 'error', onClose, onConfirm, confirmText = 'Okay', cancelText = 'Cancel',
+}: ValidationModalProps) {
+  const cfg = CONFIG[type];
+  const isConfirm = type === 'confirm';
+
+  const handleConfirm = () => { onConfirm?.(); onClose(); };
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <View style={styles.iconContainer}>
-            <Ionicons name={iconName as any} size={56} color={color} />
+          {/* Top accent bar */}
+          <View style={[styles.accentBar, { backgroundColor: cfg.color }]} />
+
+          {/* Icon with glow ring */}
+          <View style={[styles.iconOuter, { backgroundColor: cfg.iconBg }]}>
+            <View style={[styles.iconInner, { backgroundColor: cfg.color + '20' }]}>
+              <Ionicons name={cfg.icon} size={40} color={cfg.color} />
+            </View>
           </View>
+
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
-          <View style={isConfirm ? styles.buttonRow : styles.singleButtonContainer}>
+
+          <View style={isConfirm ? styles.buttonRow : styles.singleBtn}>
             {isConfirm && (
-              <TouchableOpacity 
-                style={[styles.button, styles.cancelButton, { borderColor: color }]} 
-                onPress={onClose} 
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.buttonText, { color: color }]}>{cancelText}</Text>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelBtn, { borderColor: cfg.color + '50' }]}
+                onPress={onClose}
+                activeOpacity={0.8}>
+                <Text style={[styles.buttonText, { color: cfg.color }]}>{cancelText}</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity 
-              style={[styles.button, { backgroundColor: color, flex: isConfirm ? 1 : undefined }]} 
-              onPress={handleConfirm} 
-              activeOpacity={0.8}
-            >
-              <Text style={styles.buttonText}>{isConfirm ? confirmText : 'Okay'}</Text>
+            <TouchableOpacity
+              style={[styles.button, styles.confirmBtn, { backgroundColor: cfg.color }, Shadows.colored(cfg.color), isConfirm && { flex: 1 }]}
+              onPress={handleConfirm}
+              activeOpacity={0.85}>
+              {/* Shine */}
+              <View style={styles.btnShine} />
+              <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>{isConfirm ? confirmText : 'Got it'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -72,58 +72,93 @@ export default function ValidationModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: Radius.lg,
-    padding: Spacing.xl,
+    borderRadius: Radius.xl,
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 350,
     alignItems: 'center',
-    ...Shadows.lg,
+    overflow: 'hidden',
+    ...Shadows.xl,
   },
-  iconContainer: {
+  accentBar: {
+    width: '100%',
+    height: 4,
+    marginBottom: Spacing.lg,
+  },
+  iconOuter: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: Spacing.md,
+  },
+  iconInner: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     ...Typography.h3,
-    color: '#0D1F17',
-    marginBottom: Spacing.sm,
+    color: '#0A1C13',
+    marginBottom: 8,
     textAlign: 'center',
+    paddingHorizontal: Spacing.lg,
   },
   message: {
     ...Typography.body,
     color: '#4A6358',
     textAlign: 'center',
     marginBottom: Spacing.xl,
-  },
-  button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: Radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 100,
+    paddingHorizontal: Spacing.lg,
+    lineHeight: 22,
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    gap: Spacing.sm,
     width: '100%',
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
   },
-  singleButtonContainer: {
+  singleBtn: {
     width: '100%',
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
   },
-  cancelButton: {
+  button: {
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  cancelBtn: {
+    flex: 1,
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    flex: 1,
+  },
+  confirmBtn: {
+    width: '100%',
+  },
+  btnShine: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    height: '50%',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: Radius.pill,
   },
   buttonText: {
     ...Typography.bodyBold,
-    color: '#fff',
+    fontSize: 15,
   },
 });

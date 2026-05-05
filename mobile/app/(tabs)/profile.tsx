@@ -94,7 +94,6 @@ export default function ProfileScreen() {
     }, [token])
   );
 
-
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
     : 'AS';
@@ -113,154 +112,172 @@ export default function ProfileScreen() {
     router.push(`/(tabs)/${tab}` as any);
   };
 
+  const statsData = [
+    { label: 'Crops',   value: stats.crops.toString(),   icon: 'leaf-outline'          as const, tab: 'crops',          color: '#0F9D58', bg: 'rgba(15,157,88,0.12)' },
+    { label: 'Queries', value: stats.queries.toString(), icon: 'chatbubble-outline'    as const, tab: 'expert-queries',  color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
+    { label: 'Alerts',  value: stats.alerts.toString(),  icon: 'notifications-outline' as const, tab: 'alerts',          color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
+  ];
+
   return (
     <ThemedView style={[styles.container, { backgroundColor: C.bg }]}>
       <StatusBar style={C.statusBar} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={[styles.avatarRing, Shadows.colored('#0F9D58')]}>
-            <View style={styles.avatar}>
-              <ThemedText style={styles.avatarText}>{initials}</ThemedText>
+        {/* ── Profile Header ── */}
+        <View style={[styles.profileHeaderBg, { backgroundColor: C.card, borderColor: C.border }]}>
+          {/* Decorative bubbles */}
+          <View style={[styles.headerBubble1, { backgroundColor: C.primary + '12' }]} />
+          <View style={[styles.headerBubble2, { backgroundColor: C.primary + '08' }]} />
+
+          <View style={[styles.avatarOuterRing, Shadows.glow(C.primary)]}>
+            <View style={[styles.avatarInnerRing, { borderColor: C.primary + '50' }]}>
+              <View style={[styles.avatar, { backgroundColor: '#096040' }]}>
+                <ThemedText style={styles.avatarText}>{initials}</ThemedText>
+              </View>
             </View>
           </View>
+
           <ThemedText style={[styles.userName, { color: C.text }]}>{user?.name || 'User'}</ThemedText>
           <ThemedText style={[styles.userEmail, { color: C.muted }]}>{user?.email || 'user@agrisense.lk'}</ThemedText>
-          <View style={[styles.roleBadge, { backgroundColor: C.primaryDim, borderColor: C.primary + '40' }]}>
-            <MaterialCommunityIcons 
-              name={user?.role === 'Expert' ? 'school-outline' : user?.role === 'Admin' ? 'shield-account' : 'tractor'} 
-              size={13} 
-              color={C.primary} 
+          <View style={[styles.roleBadge, { backgroundColor: C.primaryDim, borderColor: C.primary + '35' }]}>
+            <MaterialCommunityIcons
+              name={user?.role === 'Expert' ? 'school-outline' : user?.role === 'Admin' ? 'shield-account' : 'tractor'}
+              size={13}
+              color={C.primary}
             />
             <ThemedText style={[styles.roleBadgeText, { color: C.primary }]}>{user?.role || 'Farmer'}</ThemedText>
           </View>
         </View>
 
-        {/* Farm Stats */}
+        {/* ── Farm Stats ── */}
         <View style={styles.statsRow}>
-          {[
-            { label: 'Crops',   value: stats.crops.toString(),   icon: 'leaf-outline'          as const, tab: 'crops' },
-            { label: 'Queries', value: stats.queries.toString(), icon: 'chatbubble-outline'    as const, tab: 'expert-queries' },
-            { label: 'Alerts',  value: stats.alerts.toString(),  icon: 'notifications-outline' as const, tab: 'alerts' },
-          ].map((stat) => (
-
-            <TouchableOpacity 
-              key={stat.label} 
-              style={[styles.statCard, { backgroundColor: C.card, borderColor: C.border }]}
+          {statsData.map((stat) => (
+            <TouchableOpacity
+              key={stat.label}
+              style={[styles.statCard, { backgroundColor: C.card, borderColor: C.border }, Shadows.sm]}
               onPress={() => navigateToTab(stat.tab)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name={stat.icon} size={18} color={C.primary} />
+              activeOpacity={0.7}>
+              <View style={[styles.statIconWrap, { backgroundColor: stat.bg }]}>
+                <Ionicons name={stat.icon} size={18} color={stat.color} />
+              </View>
               <ThemedText style={[styles.statValue, { color: C.text }]}>{stat.value}</ThemedText>
               <ThemedText style={[styles.statLabel, { color: C.muted }]}>{stat.label}</ThemedText>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* AI Advisor Banner */}
-        <TouchableOpacity 
-          style={[styles.aiBanner, { backgroundColor: C.primaryDim, borderColor: C.primary + '40' }]}
+        {/* ── AI Advisor Banner ── */}
+        <TouchableOpacity
+          style={[styles.aiBanner, Shadows.colored(C.primary)]}
           onPress={() => showInfoModal('Available Soon', 'The AgriSense Pro subscription will be available soon!')}
-          activeOpacity={0.8}
-        >
+          activeOpacity={0.85}>
+          {/* Banner decorative circles */}
+          <View style={styles.bannerBubble1} />
+          <View style={styles.bannerBubble2} />
+
           <View style={styles.aiBannerLeft}>
-            <View style={[styles.aiBadge, { backgroundColor: C.primary + '20' }]}>
-              <MaterialCommunityIcons name="chip" size={11} color={C.primary} />
-              <ThemedText style={[styles.aiBadgeText, { color: C.primary }]}>AI ADVISOR</ThemedText>
+            <View style={styles.aiBadge}>
+              <MaterialCommunityIcons name="chip" size={11} color="#FFFFFF" />
+              <ThemedText style={styles.aiBadgeText}>AI ADVISOR</ThemedText>
             </View>
-            <ThemedText style={[styles.aiBannerTitle, { color: C.text }]}>Upgrade to Pro</ThemedText>
-            <ThemedText style={[styles.aiBannerSubtitle, { color: C.subtext }]}>
-              Get unlimited AI insights, expert consultations & price alerts.
+            <ThemedText style={styles.aiBannerTitle}>Upgrade to Pro</ThemedText>
+            <ThemedText style={styles.aiBannerSubtitle}>
+              Unlimited AI insights, expert consultations & price alerts.
             </ThemedText>
           </View>
-          <MaterialCommunityIcons name="robot-happy-outline" size={52} color={C.primary} style={{ opacity: 0.3 }} />
+          <View style={styles.aiBannerRight}>
+            <MaterialCommunityIcons name="robot-happy-outline" size={56} color="rgba(255,255,255,0.35)" />
+          </View>
         </TouchableOpacity>
 
-        {/* Admin Section */}
+        {/* ── Admin Section ── */}
         {user?.role === 'Admin' && (
           <View style={styles.settingsSection}>
             <ThemedText style={[styles.settingsSectionTitle, { color: C.muted }]}>{ADMIN_SETTINGS.section}</ThemedText>
-            <View style={[styles.settingsGroup, { backgroundColor: C.card, borderColor: C.border }]}>
+            <View style={[styles.settingsGroup, { backgroundColor: C.card, borderColor: C.border }, Shadows.sm]}>
               {ADMIN_SETTINGS.items.map((item, idx) => (
                 <TouchableOpacity
                   key={item.id}
                   style={[styles.settingsItem, idx < ADMIN_SETTINGS.items.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}
                   activeOpacity={0.7}
-                  onPress={() => handlePress(item)}
-                >
-                  <View style={[styles.settingsIconWrap, { backgroundColor: item.color + '15' }]}>
+                  onPress={() => handlePress(item)}>
+                  <View style={[styles.settingsIconWrap, { backgroundColor: item.color + '18' }]}>
                     <Ionicons name={item.icon as any} size={19} color={item.color} />
                   </View>
                   <ThemedText style={[styles.settingsLabel, { color: C.text }]}>{item.label}</ThemedText>
-                  <Ionicons name="chevron-forward" size={16} color={C.muted} />
+                  <View style={[styles.chevronWrap, { backgroundColor: C.surface }]}>
+                    <Ionicons name="chevron-forward" size={14} color={C.muted} />
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         )}
 
-        {/* Expert Section */}
+        {/* ── Expert Section ── */}
         {(user?.role === 'Expert' || user?.role === 'Admin') && (
           <View style={styles.settingsSection}>
             <ThemedText style={[styles.settingsSectionTitle, { color: C.muted }]}>{EXPERT_SETTINGS.section}</ThemedText>
-            <View style={[styles.settingsGroup, { backgroundColor: C.card, borderColor: C.border }]}>
+            <View style={[styles.settingsGroup, { backgroundColor: C.card, borderColor: C.border }, Shadows.sm]}>
               {EXPERT_SETTINGS.items.map((item, idx) => (
                 <TouchableOpacity
                   key={item.id}
                   style={[styles.settingsItem, idx < EXPERT_SETTINGS.items.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}
                   activeOpacity={0.7}
-                  onPress={() => handlePress(item)}
-                >
-                  <View style={[styles.settingsIconWrap, { backgroundColor: item.color + '15' }]}>
+                  onPress={() => handlePress(item)}>
+                  <View style={[styles.settingsIconWrap, { backgroundColor: item.color + '18' }]}>
                     <Ionicons name={item.icon as any} size={19} color={item.color} />
                   </View>
                   <ThemedText style={[styles.settingsLabel, { color: C.text }]}>{item.label}</ThemedText>
-                  <Ionicons name="chevron-forward" size={16} color={C.muted} />
+                  <View style={[styles.chevronWrap, { backgroundColor: C.surface }]}>
+                    <Ionicons name="chevron-forward" size={14} color={C.muted} />
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         )}
 
-        {/* Settings */}
+        {/* ── Settings ── */}
         {SETTINGS.map((section) => (
           <View key={section.section} style={styles.settingsSection}>
             <ThemedText style={[styles.settingsSectionTitle, { color: C.muted }]}>{section.section}</ThemedText>
-            <View style={[styles.settingsGroup, { backgroundColor: C.card, borderColor: C.border }]}>
+            <View style={[styles.settingsGroup, { backgroundColor: C.card, borderColor: C.border }, Shadows.sm]}>
               {section.items.map((item, idx) => (
                 <TouchableOpacity
                   key={item.id}
                   style={[styles.settingsItem, idx < section.items.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.divider }]}
                   activeOpacity={0.7}
-                  onPress={() => handlePress(item)}
-                >
-                  <View style={[styles.settingsIconWrap, { backgroundColor: item.color + '15' }]}>
-                    <Ionicons 
-                      name={item.id === 'theme' ? (mode === 'dark' ? 'sunny-outline' : 'moon-outline') : item.icon as any} 
-                      size={19} 
-                      color={item.color} 
+                  onPress={() => handlePress(item)}>
+                  <View style={[styles.settingsIconWrap, { backgroundColor: item.color + '18' }]}>
+                    <Ionicons
+                      name={item.id === 'theme' ? (mode === 'dark' ? 'sunny-outline' : 'moon-outline') : item.icon as any}
+                      size={19}
+                      color={item.color}
                     />
                   </View>
                   <ThemedText style={[styles.settingsLabel, { color: C.text }]}>
                     {item.id === 'theme' ? (mode === 'dark' ? 'Light Mode' : 'Dark Mode') : item.label}
                   </ThemedText>
-                  <Ionicons name="chevron-forward" size={16} color={C.muted} />
+                  <View style={[styles.chevronWrap, { backgroundColor: C.surface }]}>
+                    <Ionicons name="chevron-forward" size={14} color={C.muted} />
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         ))}
 
-        {/* Logout */}
-        <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.85}>
+        {/* ── Logout ── */}
+        <TouchableOpacity style={[styles.logoutBtn, Shadows.xs]} onPress={logout} activeOpacity={0.85}>
           <Ionicons name="log-out-outline" size={20} color="#EF4444" />
           <ThemedText style={styles.logoutText}>Sign Out</ThemedText>
         </TouchableOpacity>
 
         <ThemedText style={[styles.version, { color: C.muted }]}>AgriSense Lanka v1.0.0</ThemedText>
-        <View style={{ height: Spacing.xxl }} />
+        <View style={{ height: Spacing.xxl + 32 }} />
       </ScrollView>
+
       <ValidationModal
         visible={modalVisible}
         title={modalConfig.title}
@@ -273,32 +290,135 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingTop: Spacing.xxl + Spacing.sm },
-  profileHeader: { alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.xl },
-  avatarRing: { width: 96, height: 96, borderRadius: 48, padding: 3, backgroundColor: '#0F9D58', marginBottom: Spacing.md },
-  avatar: { flex: 1, borderRadius: 44, backgroundColor: '#0B6B3A', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 28, fontWeight: '800', color: '#FFFFFF' },
-  userName: { fontSize: 22, fontWeight: '800', marginBottom: 4 },
+  scroll: { paddingTop: Spacing.xxl + Spacing.md },
+
+  // ── Profile Header ──────────────────────────────
+  profileHeaderBg: {
+    alignItems: 'center',
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
+    borderRadius: Radius.xl,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  headerBubble1: {
+    position: 'absolute', width: 160, height: 160, borderRadius: 80,
+    top: -60, right: -40,
+  },
+  headerBubble2: {
+    position: 'absolute', width: 100, height: 100, borderRadius: 50,
+    bottom: -30, left: -20,
+  },
+  avatarOuterRing: {
+    width: 106,
+    height: 106,
+    borderRadius: 53,
+    backgroundColor: '#0F9D58',
+    padding: 3,
+    marginBottom: Spacing.md,
+  },
+  avatarInnerRing: {
+    flex: 1,
+    borderRadius: 50,
+    borderWidth: 2,
+    overflow: 'hidden',
+  },
+  avatar: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { fontSize: 30, fontWeight: '800', color: '#FFFFFF' },
+  userName: { fontSize: 22, fontWeight: '800', marginBottom: 4, letterSpacing: -0.3 },
   userEmail: { fontSize: 13, marginBottom: Spacing.sm },
-  roleBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 5, borderRadius: Radius.pill, borderWidth: 1 },
+  roleBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 5,
+    borderRadius: Radius.pill, borderWidth: 1,
+  },
   roleBadgeText: { fontSize: 12, fontWeight: '700' },
+
+  // ── Stats ──────────────────────────────────────
   statsRow: { flexDirection: 'row', marginHorizontal: Spacing.lg, gap: 10, marginBottom: Spacing.lg },
-  statCard: { flex: 1, borderRadius: Radius.md, padding: 14, alignItems: 'center', borderWidth: 1, ...Shadows.sm },
-  statValue: { fontSize: 20, fontWeight: '800', marginTop: 6 },
+  statCard: {
+    flex: 1, borderRadius: Radius.lg, padding: 14,
+    alignItems: 'center', borderWidth: 1,
+  },
+  statIconWrap: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 8,
+  },
+  statValue: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
   statLabel: { fontSize: 11, fontWeight: '600', marginTop: 2 },
-  aiBanner: { flexDirection: 'row', alignItems: 'center', marginHorizontal: Spacing.lg, borderRadius: Radius.xl, padding: Spacing.md, borderWidth: 1.5, marginBottom: Spacing.lg, overflow: 'hidden' },
-  aiBannerLeft: { flex: 1 },
-  aiBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 3, borderRadius: Radius.pill, alignSelf: 'flex-start', marginBottom: 6 },
-  aiBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  aiBannerTitle: { fontSize: 16, fontWeight: '800', marginBottom: 4 },
-  aiBannerSubtitle: { fontSize: 12, lineHeight: 17 },
+
+  // ── AI Banner ─────────────────────────────────
+  aiBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: Spacing.lg,
+    borderRadius: Radius.xl,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    backgroundColor: '#0F9D58',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  bannerBubble1: {
+    position: 'absolute', width: 140, height: 140, borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.08)', top: -60, right: 40,
+  },
+  bannerBubble2: {
+    position: 'absolute', width: 80, height: 80, borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.06)', bottom: -30, left: -20,
+  },
+  aiBannerLeft: { flex: 1, zIndex: 1 },
+  aiBannerRight: { zIndex: 1 },
+  aiBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.22)', paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: Radius.pill, alignSelf: 'flex-start', marginBottom: 8,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.30)',
+  },
+  aiBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1.2, color: '#FFFFFF' },
+  aiBannerTitle: { fontSize: 17, fontWeight: '800', color: '#FFFFFF', marginBottom: 5, letterSpacing: -0.3 },
+  aiBannerSubtitle: { fontSize: 12, lineHeight: 17, color: 'rgba(255,255,255,0.82)' },
+
+  // ── Settings ──────────────────────────────────
   settingsSection: { marginBottom: Spacing.lg, paddingHorizontal: Spacing.lg },
-  settingsSectionTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 },
-  settingsGroup: { borderRadius: Radius.lg, borderWidth: 1, overflow: 'hidden', ...Shadows.xs },
-  settingsItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: Spacing.md, gap: 14 },
-  settingsIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  settingsSectionTitle: {
+    fontSize: 11, fontWeight: '700', letterSpacing: 1.0,
+    textTransform: 'uppercase', marginBottom: 8,
+  },
+  settingsGroup: {
+    borderRadius: Radius.xl, borderWidth: 1,
+    overflow: 'hidden',
+  },
+  settingsItem: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 15, paddingHorizontal: Spacing.md, gap: 14,
+  },
+  settingsIconWrap: {
+    width: 38, height: 38, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+  },
   settingsLabel: { flex: 1, fontSize: 15, fontWeight: '500' },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginHorizontal: Spacing.lg, paddingVertical: 15, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: '#EF444440', backgroundColor: '#FEE2E2' },
+  chevronWrap: {
+    width: 28, height: 28, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
+  },
+
+  // ── Logout ────────────────────────────────────
+  logoutBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    marginHorizontal: Spacing.lg, paddingVertical: 16,
+    borderRadius: Radius.pill, borderWidth: 1.5,
+    borderColor: '#EF444440', backgroundColor: '#FEE2E2',
+  },
   logoutText: { fontSize: 15, fontWeight: '700', color: '#EF4444' },
   version: { fontSize: 11, textAlign: 'center', marginTop: Spacing.lg },
 });
