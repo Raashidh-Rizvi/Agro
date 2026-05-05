@@ -28,7 +28,7 @@ exports.predictDisease = async (req, res) => {
         });
 
         // 2. Call ML service
-        const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
+        const mlServiceUrl = (process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
         console.log(`--- [DEBUG] Calling ML Service: ${mlServiceUrl}/predict ---`);
         
         const response = await axios.post(`${mlServiceUrl}/predict`, form, {
