@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, FlatList, View, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput, Modal, Pressable } from 'react-native';
+import { StyleSheet, FlatList, View, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput, Modal, Pressable, Alert, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -29,12 +29,15 @@ export default function MarketInsightScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [districtFilter, setDistrictFilter] = useState('All Districts');
     const [showDistrictModal, setShowDistrictModal] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const isAdmin = user?.role === 'Admin';
 
-    useEffect(() => {
-        fetchPrices();
-    }, []);
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchPrices();
+        }, [])
+    );
 
     const fetchPrices = async () => {
         try {
@@ -54,6 +57,36 @@ export default function MarketInsightScreen() {
         fetchPrices();
     };
 
+    const handleDelete = (item: MarketPrice) => {
+        const confirmDelete = async () => {
+            try {
+                setDeletingId(item._id);
+                await MarketPriceService.delete(item._id);
+                setPrices(prev => prev.filter(p => p._id !== item._id));
+            } catch (error) {
+                console.error('Error deleting price:', error);
+                Alert.alert('Error', 'Failed to delete market price');
+            } finally {
+                setDeletingId(null);
+            }
+        };
+
+        if (Platform.OS === 'web') {
+            if (window.confirm(`Are you sure you want to delete the price for "${item.cropName}" in ${item.district}?`)) {
+                confirmDelete();
+            }
+        } else {
+            Alert.alert(
+                'Delete Price',
+                `Are you sure you want to delete the price for "${item.cropName}" in ${item.district}?`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Delete', style: 'destructive', onPress: confirmDelete }
+                ]
+            );
+        }
+    };
+
     const filteredPrices = prices.filter(item => 
         item.cropName.toLowerCase().includes(searchQuery.toLowerCase()) &&
         (districtFilter === 'All Districts' || item.district === districtFilter)
@@ -62,7 +95,7 @@ export default function MarketInsightScreen() {
     const renderPriceCard = ({ item }: { item: MarketPrice }) => (
         <TouchableOpacity 
             style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]}
-            onPress={() => router.push({ pathname: '/(tabs)/market-insight/manage', params: { id: item._id } })}
+            onPress={() => isAdmin && router.push({ pathname: '/(tabs)/market-insight/manage', params: { id: item._id } })}
         >
             <View style={styles.cardHeader}>
                 <View style={styles.cropInfo}>
@@ -72,9 +105,31 @@ export default function MarketInsightScreen() {
                         <ThemedText style={[styles.districtText, { color: C.primary }]}>{item.district}</ThemedText>
                     </View>
                 </View>
-                <View style={styles.priceContainer}>
-                    <ThemedText style={[styles.priceText, { color: C.text }]}>Rs. {item.price}</ThemedText>
-                    <ThemedText style={[styles.unitText, { color: C.muted }]}>/ {item.unit}</ThemedText>
+                <View style={styles.priceRightSection}>
+                    <View style={styles.priceContainer}>
+                        <ThemedText style={[styles.priceText, { color: C.text }]}>Rs. {item.price}</ThemedText>
+                        <ThemedText style={[styles.unitText, { color: C.muted }]}>/ {item.unit}</ThemedText>
+                    </View>
+                    {isAdmin && (
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.deleteCardButton,
+                                { opacity: pressed ? 0.6 : 1, zIndex: 999 }
+                            ]}
+                            onPress={(e) => {
+                                if (e && e.stopPropagation) e.stopPropagation();
+                                handleDelete(item);
+                            }}
+                            disabled={deletingId === item._id}
+                            hitSlop={15}
+                        >
+                            {deletingId === item._id ? (
+                                <ActivityIndicator size="small" color="#EF4444" />
+                            ) : (
+                                <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                            )}
+                        </Pressable>
+                    )}
                 </View>
             </View>
             
@@ -277,9 +332,18 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     districtText: { fontSize: 12, marginLeft: 2, fontWeight: '600' },
+    priceRightSection: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     priceContainer: { alignItems: 'flex-end' },
     priceText: { fontSize: 20, fontWeight: '800' },
     unitText: { fontSize: 12, marginTop: 2 },
+    deleteCardButton: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        backgroundColor: '#FEE2E2',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     cardFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
