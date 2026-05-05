@@ -1,4 +1,5 @@
-import api from './api';
+import axios from 'axios';
+import { API_URL } from '../constants/Config';
 
 export interface MarketPrice {
     _id: string;
@@ -17,7 +18,7 @@ export interface MarketPrice {
 
 export const MarketPriceService = {
     getAll: async (filters?: { district?: string; cropName?: string }): Promise<MarketPrice[]> => {
-        const response = await api.get('/market-prices', { params: filters });
+        const response = await axios.get(`${API_URL}/market-prices`, { params: filters });
         if (response.data.success) {
             return response.data.data;
         } else {
@@ -26,7 +27,7 @@ export const MarketPriceService = {
     },
 
     getById: async (id: string): Promise<MarketPrice> => {
-        const response = await api.get(`/market-prices/${id}`);
+        const response = await axios.get(`${API_URL}/market-prices/${id}`);
         if (response.data.success) {
             return response.data.data;
         } else {
@@ -35,7 +36,7 @@ export const MarketPriceService = {
     },
 
     create: async (data: Partial<MarketPrice>): Promise<MarketPrice> => {
-        const response = await api.post('/market-prices', data);
+        const response = await axios.post(`${API_URL}/market-prices`, data);
         if (response.data.success) {
             return response.data.data;
         } else {
@@ -44,7 +45,7 @@ export const MarketPriceService = {
     },
 
     update: async (id: string, data: Partial<MarketPrice>): Promise<MarketPrice> => {
-        const response = await api.put(`/market-prices/${id}`, data);
+        const response = await axios.put(`${API_URL}/market-prices/${id}`, data);
         if (response.data.success) {
             return response.data.data;
         } else {
@@ -53,7 +54,7 @@ export const MarketPriceService = {
     },
 
     delete: async (id: string): Promise<void> => {
-        const response = await api.delete(`/market-prices/${id}`);
+        const response = await axios.delete(`${API_URL}/market-prices/${id}`);
         if (!response.data.success) {
             throw new Error(response.data.message || 'Failed to delete market price');
         }

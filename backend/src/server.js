@@ -48,6 +48,8 @@ const produceRoutes = require('./routes/produce.routes');
 const userRoutes = require('./routes/user.routes');
 const statsRoutes = require('./routes/stats.routes');
 const cartRoutes = require('./routes/cart.routes');
+const marketPriceRoutes = require('./routes/marketPrice.routes');
+
 
 
 // Use Routes
@@ -60,7 +62,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/produce', produceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stats', statsRoutes);
-
+app.use('/api/market-prices', marketPriceRoutes);
 
 
 
