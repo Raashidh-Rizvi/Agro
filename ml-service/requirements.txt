@@ -1,8 +1,9 @@
-fastapi
-uvicorn
-onnxruntime
-pillow
-joblib
-numpy
-python-multipart
-python-dotenv
+fastapi>=0.125.0
+uvicorn>=0.48.0
+onnxruntime>=1.26.0
+pillow>=12.0.0
+joblib>=1.5.0
+numpy>=2.0.0
+python-multipart>=0.0.29
+python-dotenv>=1.0.0
+pydantic>=2.0.0

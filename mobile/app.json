@@ -37,17 +37,13 @@
           }
         }
       ],
-      "expo-secure-store",
       [
         "expo-image-picker",
         {
           "photosPermission": "The app needs access to your gallery to scan plant diseases.",
           "cameraPermission": "The app needs access to your camera to scan plant diseases."
         }
-      ],
-      "@react-native-community/datetimepicker",
-      "expo-web-browser",
-      "expo-font"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

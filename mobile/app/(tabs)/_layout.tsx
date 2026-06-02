@@ -103,21 +103,6 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="market-insight/index"
-          options={{
-            title: 'Insights',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'trending-up' : 'trending-up-outline'} size={24} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="market-insight/manage"
-          options={{
-            href: null, // Hide from tab bar but keep in router
-          }}
-        />
-        <Tabs.Screen
           name="alerts"
           options={{
             title: 'Alerts',

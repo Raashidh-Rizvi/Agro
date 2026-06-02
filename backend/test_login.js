@@ -5,7 +5,7 @@ const loginUser = (email, password) => {
         const data = JSON.stringify({ email, password });
 
         const options = {
-            hostname: 'localhost',
+            hostname: '192.168.8.106',
             port: 5000,
             path: '/api/auth/login',
             method: 'POST',
@@ -36,16 +36,10 @@ const loginUser = (email, password) => {
 
 async function testLogins() {
     console.log('=== Testing Admin Login ===');
-    await loginUser('admin_new@agro.lk', 'AdminPassword123');
+    await loginUser('admin@agro.lk', 'AdminPassword@123');
 
     console.log('\n=== Testing Farmer Login ===');
-    await loginUser('farmer_new@agro.lk', 'FarmerPassword123');
-
-    console.log('\n=== Testing Old Admin Login ===');
-    await loginUser('admin@agro.lk', 'Admin@1234');
-
-    console.log('\n=== Testing Manager Login ===');
-    await loginUser('manager@agro.lk', 'AgroManager@2026');
+    await loginUser('farmer@agro.lk', 'FarmerPassword@123');
 }
 
 testLogins();
